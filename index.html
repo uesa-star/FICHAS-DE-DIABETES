@@ -34,7 +34,7 @@
       border-color: #1e3a8a !important;
     }
     
-    /* Estructura Oficial de Ficha (Alineación perfecta image_7a5f75.png) */
+    /* Estructura Oficial de Ficha (Alineación perfecta) */
     .sheet-grid {
       border: 1px solid #000000;
     }
@@ -70,7 +70,7 @@
       transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Estilos de Selección de Pacientes de Alta Visibilidad (Fiel a image_446dbd.png) */
+    /* Estilos de Selección de Pacientes de Alta Visibilidad */
     .active-patient-card {
       background-color: #e0f2fe !important; 
       border-left: 6px solid #1e3a8a !important; 
@@ -89,7 +89,7 @@
       color: #1e3a8a !important;
     }
     
-    /* CONFIGURACIÓN ULTRA-COMPACTA DE IMPRESIÓN (Garantiza 1 Sola Hoja A4 y elimina vacíos - image_7a5f75.png) */
+    /* CONFIGURACIÓN ULTRA-COMPACTA DE IMPRESIÓN (Garantiza 1 Sola Hoja A4 y elimina vacíos) */
     @media print {
       @page {
         size: A4 portrait;
@@ -275,7 +275,7 @@
       <!-- PRINT CONTAINER LAYOUT -->
       <div class="print-container w-full max-w-[210mm] flex justify-center" id="sheetContainer">
         
-        <!-- HOJA DE FICHA OFICIAL A4 COMPACTA (Ajustada según image_7a5f75.png) -->
+        <!-- HOJA DE FICHA OFICIAL A4 COMPACTA -->
         <div id="printSheet" class="w-full bg-white p-3 text-black border border-black flex flex-col justify-between overflow-hidden relative" style="box-sizing: border-box; width: 210mm; height: 265mm;">
           
           <!-- CABECERA INSTITUCIONAL MINSA -->
@@ -1243,7 +1243,7 @@
         col_ldl: "154.00",
         col_hdl: "31.00",
         creatinina: "1.10",
-        estado: "descompensated",
+        estado: "descompensado",
         comorbilidades: { hta: false, obesity: true, dislipidemia: true, anemia: false, vih: false },
         complicaciones: { neuro: false, renal: false, retino: false, pie_sa: true },
         tratamiento: "Insulina de acción prolongada según esquema de urgencias.",
@@ -1342,7 +1342,7 @@
         col_ldl: "55.61",
         col_hdl: "23.33",
         creatinina: "0.82",
-        estado: "descompensated",
+        estado: "descompensado",
         comorbilidades: { hta: false, obesity: false, dislipidemia: true, anemia: false, vih: true },
         complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
         tratamiento: "Metformina 850 mg diario con dieta dirigida.",
@@ -1375,7 +1375,7 @@
         col_ldl: "124.60",
         col_hdl: "39.00",
         creatinina: "1.05",
-        estado: "descompensated",
+        estado: "descompensado",
         comorbilidades: { hta: false, obesity: false, dislipidemia: true, anemia: false, vih: false },
         complicaciones: { neuro: true, renal: false, retino: false, pie_sa: false },
         tratamiento: "Metformina 850 mg + Complejo Neurobión.",
@@ -1408,7 +1408,7 @@
         col_ldl: "136.60",
         col_hdl: "35.00",
         creatinina: "0.98",
-        estado: "descompensated",
+        estado: "descompensado",
         comorbilidades: { hta: false, obesity: true, dislipidemia: true, anemia: false, vih: false },
         complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
         tratamiento: "Metformina 850 mg diario posterior alimentos.",
@@ -1450,6 +1450,7 @@
       }
     ];
 
+    // Variables globales de control
     let database = [];
     let currentActiveId = 1;
     let sidebarOpen = true;
@@ -1462,11 +1463,59 @@
       "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"
     ];
 
-    // Estados de colapso de acordeón
     const activeYears = {};
     const activeMonths = {};
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    function parseExcelDate(dateVal) {
+      if (!dateVal) return "";
+      
+      // Si ya es un objeto Date nativo de JS
+      if (dateVal instanceof Date) {
+        return formatDateToDDMMYYYY(dateVal);
+      }
+      
+      // Si es un número secuencial de Excel (Serial Date)
+      if (typeof dateVal === 'number' || (!isNaN(dateVal) && !isNaN(parseFloat(dateVal)) && !String(dateVal).includes('-') && !String(dateVal).includes('/'))) {
+        const num = parseFloat(dateVal);
+        if (num > 20000 && num < 60000) {
+          const date = new Date((num - 25569) * 86400 * 1000);
+          const adjustedDate = new Date(date.getTime() + date.getTimezoneOffset() * 60000);
+          return formatDateToDDMMYYYY(adjustedDate);
+        }
+      }
+      
+      let str = String(dateVal).trim();
+      
+      // Formato ISO: YYYY-MM-DD (frecuente en descargas de sistemas)
+      const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
+      if (isoMatch) {
+        return `${isoMatch[3].padStart(2, '0')}/${isoMatch[2].padStart(2, '0')}/${isoMatch[1]}`;
+      }
+      
+      // Formato Estándar: DD/MM/YYYY o DD-MM-YYYY
+      const stdMatch = str.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
+      if (stdMatch) {
+        return `${stdMatch[1].padStart(2, '0')}/${stdMatch[2].padStart(2, '0')}/${stdMatch[3]}`;
+      }
+      
+      // Intento de parseo general
+      const parsedTimestamp = Date.parse(str);
+      if (!isNaN(parsedTimestamp)) {
+        const parsedDate = new Date(parsedTimestamp);
+        return formatDateToDDMMYYYY(parsedDate);
+      }
+      
+      return str;
+    }
+
+    function formatDateToDDMMYYYY(date) {
+      const dd = String(date.getDate()).padStart(2, '0');
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const yyyy = date.getFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    }
 
     function saveDatabaseToLocalStorage() {
       localStorage.setItem('clinical_database', JSON.stringify(database));
@@ -1499,8 +1548,9 @@
         database = JSON.parse(JSON.stringify(defaultDatabase));
       }
 
-      // Inicializar estados de colapso por defecto
+      // Normalizar todas las fechas de la BD en memoria y estructurar carpetas colapsables
       database.forEach(p => {
+        p.date = parseExcelDate(p.date);
         const parts = p.date.split("/");
         if (parts.length === 3) {
           const year = parts[2];
@@ -1520,7 +1570,7 @@
       const accordionContainer = document.getElementById('accordionContainer');
       accordionContainer.innerHTML = '';
 
-      // Agrupamos jerárquicamente por Año -> Mes
+      // Agrupamos de forma estructurada jerárquica por Año -> Mes
       const hierarchy = {}; 
       database.forEach(p => {
         const parts = p.date.split("/");
@@ -1536,13 +1586,13 @@
         hierarchy[year][monthName].push(p);
       });
 
-      // Ordenar años de forma descendente (más recientes arriba)
+      // Ordenar años de forma descendente (los más nuevos arriba en pantalla)
       const sortedYears = Object.keys(hierarchy).sort((a, b) => b - a);
 
       sortedYears.forEach(year => {
         const isYearExpanded = activeYears[year] !== false;
 
-        // Header de Año
+        // Cabecera del Año
         const yearHeader = document.createElement('div');
         yearHeader.className = "bg-slate-200/80 hover:bg-slate-200 border-b border-slate-300 p-3 flex justify-between items-center cursor-pointer transition select-none sticky top-0 z-20";
         yearHeader.onclick = () => toggleYear(year);
@@ -1559,7 +1609,7 @@
           const yearContent = document.createElement('div');
           yearContent.className = "bg-slate-50/40";
 
-          // Ordenar meses cronológicamente
+          // Meses ordenados cronológicamente
           const monthsInYear = Object.keys(hierarchy[year]).sort((a, b) => {
             return monthNames.indexOf(a) - monthNames.indexOf(b);
           });
@@ -1569,7 +1619,7 @@
             const isMonthExpanded = activeMonths[monthKey] !== false;
             const patients = hierarchy[year][month];
 
-            // Header de Mes (Indentado con pl-6)
+            // Subpestaña del Mes (Indentado para mejorar navegación)
             const monthHeader = document.createElement('div');
             monthHeader.className = "pl-6 pr-3 py-2.5 bg-slate-100/70 hover:bg-slate-100 border-b border-slate-200 flex justify-between items-center cursor-pointer transition select-none";
             monthHeader.onclick = () => toggleMonth(monthKey);
@@ -1780,7 +1830,7 @@
       resetCheckboxes(["t_seg_0", "t_seg_1", "t_seg_2", "t_seg_3", "t_seg_4", "t_seg_5", "t_seg_6", "t_seg_7", "t_seg_8", "t_seg_9", "t_seg_10", "t_seg_11"]);
       document.getElementById("t_seg_1").className = "w-2.5 h-2.5 bg-black inline-block";
 
-      // II. Captación
+      // II. Captación de Caso
       document.getElementById('f_captacion_val').innerText = p.date;
       document.getElementById('f_edad_diag').innerText = `${parseInt(p.edad) - 2} años`;
 
@@ -1947,7 +1997,10 @@
       p.nombres = document.getElementById('edit_nombres').value.toUpperCase();
       p.dni = document.getElementById('edit_dni').value;
       p.hc = document.getElementById('edit_hc').value;
-      p.date = document.getElementById('edit_date').value;
+      
+      // Sanitizar la fecha ingresada por edición
+      p.date = parseExcelDate(document.getElementById('edit_date').value);
+      
       p.direccion = document.getElementById('edit_direccion').value;
       p.peso = document.getElementById('edit_peso').value;
       p.talla = document.getElementById('edit_talla').value;
@@ -1963,7 +2016,7 @@
 
       saveDatabaseToLocalStorage();
 
-      // Recalcular jerarquías de ser necesario
+      // Forzar activación de la pestaña correspondiente
       const parts = p.date.split("/");
       if (parts.length === 3) {
         const year = parts[2];
@@ -1993,7 +2046,6 @@
       selectedFileType = file.type;
       const fileName = file.name.toLowerCase();
 
-      // Detectar e importar según el tipo de archivo (Soporte para Libros de Excel y CSV)
       if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls") || file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
         processExcelFile(file);
       } else if (fileName.endsWith(".csv") || file.type === "text/csv" || file.type === "application/vnd.ms-excel") {
@@ -2065,7 +2117,6 @@
 
           saveDatabaseToLocalStorage();
           
-          // Activar carpetas de colapso para cada registro importado
           database.forEach(p => {
             const parts = p.date.split("/");
             if (parts.length === 3) {
@@ -2099,7 +2150,8 @@
       reader.onload = function(e) {
         try {
           const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, {type: 'array'});
+          // cellDates: true permite que SheetJS formatee las fechas internamente
+          const workbook = XLSX.read(data, {type: 'array', cellDates: true});
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
           const rows = XLSX.utils.sheet_to_json(worksheet);
@@ -2146,28 +2198,40 @@
     }
 
     function mapCSVRow(row) {
-      // Normalizar claves a minúsculas
       const normalizedRow = {};
       Object.keys(row).forEach(key => {
         normalizedRow[key.toLowerCase().trim()] = row[key];
       });
 
-      const getVal = (keys) => {
+      const getRawVal = (keys) => {
         for (let key of keys) {
-          if (normalizedRow[key] !== undefined) return normalizedRow[key].toString().trim();
+          if (normalizedRow[key] !== undefined) return normalizedRow[key];
         }
         return "";
       };
 
+      const getVal = (keys) => {
+        const val = getRawVal(keys);
+        return val !== undefined ? val.toString().trim() : "";
+      };
+
+      // Priorizar mapeo exacto de las columnas de fecha de captación hospitalaria
+      const captacionRawDate = getRawVal([
+        "fecha_captacion", "fecha captacion", "fecha de captacion", "fecha de captación",
+        "fec_captacion", "fec_capt", "fecha_atencion", "fecha atencion", "fecha de atencion", 
+        "fecha de atención", "fec_aten", "fecha", "date", "atencion", "atención"
+      ]);
+
       return {
-        date: getVal(["fecha", "date", "fecha_captacion", "fecha captación", "fecha de captacion", "fecha de captación", "atencion", "atención"]),
+        // Sanitizar y mapear usando la función inteligente parseExcelDate
+        date: parseExcelDate(captacionRawDate),
         dni: getVal(["dni", "documento", "n_doc", "n_documento", "identidad"]),
         hc: getVal(["hc", "historia", "n_hc", "historia_clinica", "h.c.", "historia clínica"]),
         paterno: getVal(["paterno", "apellido_paterno", "ap_paterno", "apellido paterno", "ap. paterno"]),
         materno: getVal(["materno", "apellido_materno", "ap_materno", "apellido materno", "ap. materno"]),
         nombres: getVal(["nombres", "nombre", "nombres_completos"]),
         sexo: getVal(["sexo", "sex", "genero", "género"]),
-        nacimiento: getVal(["nacimiento", "f_nac", "fecha_nac", "fecha_nacimiento", "fecha de nacimiento"]),
+        nacimiento: parseExcelDate(getRawVal(["nacimiento", "f_nac", "fecha_nac", "fecha_nacimiento", "fecha de nacimiento"])),
         edad: getVal(["edad", "age"]),
         direccion: getVal(["direccion", "dirección", "domicilio", "residencia"]),
         peso: getVal(["peso", "weight"]),
@@ -2186,6 +2250,7 @@
       
       const newItem = {
         item: database.length + 1,
+        // Forzar asignación de la fecha de captación correctamente calculada
         date: data.date || todayDate,
         dni: data.dni || "00000000",
         hc: data.hc || "00000",
@@ -2353,14 +2418,14 @@
       
       const newItem = {
         item: database.length + 1,
-        date: data.date || todayDate,
+        date: parseExcelDate(data.date) || todayDate,
         dni: data.dni || "00000000",
         hc: data.hc || "00000",
         paterno: (data.paterno || "NUEVO").toUpperCase(),
         materno: (data.materno || "PACIENTE").toUpperCase(),
         nombres: (data.nombres || "REGISTRADO").toUpperCase(),
         sexo: data.sexo || "F",
-        nacimiento: data.nacimiento || "01/01/1980",
+        nacimiento: parseExcelDate(data.nacimiento) || "01/01/1980",
         edad: data.edad || "46",
         direccion: data.direccion || "Distrito de Ventanilla, Callao",
         tipo_caso: data.tipo_caso || "prevalente",
@@ -2397,7 +2462,6 @@
       };
 
       database.push(newItem);
-      
       saveDatabaseToLocalStorage();
       
       const parts = newItem.date.split("/");
