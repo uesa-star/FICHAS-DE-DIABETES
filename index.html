@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MINSA - Ficha Epidemiológica de Diabetes Mellitus - Hospital de Ventanilla</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Inter Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <!-- PDF.js para lectura de documentos clínicos del usuario -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      overflow-x: hidden;
+    }
+    
+    .minsa-blue-bg {
+      background-color: #1e3a8a !important;
+    }
+    .minsa-blue-text {
+      color: #1e3a8a !important;
+    }
+    .minsa-blue-border {
+      border-color: #1e3a8a !important;
+    }
+    .field-box {
+      background-color: #f1f5f9;
+      border-radius: 6px;
+      padding: 4px 10px;
+    }
+    .field-label {
+      font-size: 10px;
+      color: #64748b;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.025em;
+    }
+    .field-value {
+      font-size: 12px;
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    #printSheet {
+      transform-origin: top center;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Estilos Premium de selección de pacientes (image_446dbd.png) */
+    .active-patient-card {
+      background-color: #e0f2fe !important; /* Celeste claro sanitario */
+      border-left: 6px solid #1e3a8a !important; /* Borde izquierdo azul marino institucional grueso */
+      box-shadow: inset 0 -1px 0 0 rgba(30, 58, 138, 0.1);
+    }
+    .active-patient-card .patient-item-badge {
+      background-color: #1e3a8a !important; /* Fondo azul oscuro para el item seleccionado */
+      color: #ffffff !important;
+    }
+    .inactive-patient-card {
+      background-color: #ffffff !important;
+      border-left: 6px solid transparent !important;
+    }
+    .inactive-patient-card .patient-item-badge {
+      background-color: #dbeafe !important;
+      color: #1e3a8a !important;
+    }
+    
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm 10mm 8mm 10mm !important; /* Márgenes físicos de impresora óptimos */
+      }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      /* Ocultar absolutamente toda la interfaz web usando visibilidad para no romper flujos */
+      body * {
+        visibility: hidden !important;
+      }
+      html, body, main, div {
+        background: transparent !important;
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+        height: auto !important;
+      }
+      /* Mostrar única y exclusivamente el lienzo de la ficha de notificación */
+      .print-container, .print-container * {
+        visibility: visible !important;
+      }
+      .print-container {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+      }
+      /* Forzar tamaño de hoja A4 exacto y centrado (image_445262.png) */
+      #printSheet {
+        transform: scale(1) !important; /* Desactiva el zoom de pantalla en la hoja física */
+        position: relative !important;
+        margin: 0 auto !important;
+        width: 190mm !important;
+        height: 265mm !important;
+        max-height: 265mm !important;
+        page-break-inside: avoid !important;
+        page-break-after: avoid !important;
+        overflow: hidden !important;
+        padding: 4mm 5mm !important;
+        box-sizing: border-box !important;
+        border: 1.5px solid #1e3a8a !important;
+        border-radius: 6px !important;
+        background-color: #ffffff !important;
+      }
+      .field-box {
+        background-color: #f1f5f9 !important;
+        padding: 2.5px 7px !important;
+      }
+      .field-label {
+        font-size: 7.5px !important;
+      }
+      .field-value {
+        font-size: 9.5px !important;
+      }
+      h2 {
+        font-size: 11px !important;
+      }
+      .section-header {
+        font-size: 9px !important;
+        padding: 2px 7px !important;
+      }
+    }
+    
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+    
+    .transition-width {
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out;
+    }
+  </style>
+</head>
+<body class="text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- TOP BAR (no-print) -->
+  <header class="bg-[#1e3a8a] text-white p-4 shadow-sm no-print flex flex-col md:flex-row justify-between items-center gap-4 z-30 border-b border-blue-950">
+    <div class="flex items-center space-x-3">
+      <div class="bg-blue-950/50 p-2 rounded-lg text-white shadow-md">
+        <i class="fa-solid fa-hospital-user text-2xl"></i>
+      </div>
+      <div>
+        <h1 class="text-md font-extrabold tracking-wide flex items-center gap-2 text-white">
+          MINSA - Hospital de Ventanilla
+        </h1>
+        <p class="text-xs text-blue-200 font-medium">Vigilancia Epidemiológica de Diabetes Mellitus</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap gap-2">
+      <button onclick="toggleImportPanel()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition border border-white/10 shadow">
+        <i class="fa-solid fa-file-import"></i>
+        <span>Importador de Texto Clínico / PDFs</span>
+      </button>
+      <button onclick="toggleEditPanel()" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1.5 transition border border-white/10">
+        <i class="fa-solid fa-pen-to-square"></i> <span>Editar Casillas</span>
+      </button>
+      <!-- Botón de impresión verde oficial según solicitado -->
+      <button onclick="printSheet()" class="bg-[#10b981] hover:bg-[#059669] text-white px-4 py-2 rounded-lg text-xs font-bold shadow flex items-center space-x-2 transition">
+        <i class="fa-solid fa-print"></i>
+        <span>Imprimir Ficha</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <div class="flex-1 flex overflow-hidden relative bg-slate-50">
+    
+    <!-- Botón flotante para restaurar la barra lateral cuando está oculta (no-print) -->
+    <button id="btnRestoreSidebar" onclick="toggleSidebar()" class="hidden fixed left-4 top-4 z-40 bg-white hover:bg-slate-100 text-[#1e3a8a] p-3 rounded-lg shadow-xl border border-slate-200 transition-all no-print" title="Mostrar Lista de Pacientes">
+      <i class="fa-solid fa-angles-right"></i>
+    </button>
+
+    <!-- LEFT SIDEBAR: PATIENT REGISTRY (no-print) -->
+    <aside id="patientSidebar" class="w-[320px] bg-white border-r border-slate-200 overflow-y-auto no-print flex flex-col flex-shrink-0 transition-width z-20">
+      <div class="p-4 bg-slate-50 border-b border-slate-200">
+        <div class="flex justify-between items-center mb-3">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-clipboard-list text-blue-800"></i>
+            <h2 class="font-bold text-slate-800 text-xs uppercase tracking-wider">
+              LISTA MAESTRA DE PACIENTES
+            </h2>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-black border border-blue-200" id="badgeTotalCases">15</span>
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-700 p-1 rounded transition" title="Ocultar Panel">
+              <i class="fa-solid fa-angles-left text-sm"></i>
+            </button>
+          </div>
+        </div>
+        <input type="text" id="searchBar" onkeyup="filterPatients()" placeholder="Buscar por Nombre, DNI, H.C..." class="w-full text-xs p-2 bg-white text-slate-800 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <!-- Contenedor Maestre del Acordeón por Meses (image_4317a5.png) -->
+      <div class="flex-1 overflow-y-auto custom-scrollbar bg-white" id="accordionContainer">
+        <!-- Generado dinámicamente -->
+      </div>
+    </aside>
+
+    <!-- RIGHT MAIN CONTENT: FORM VIEWER -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-100 flex flex-col items-center custom-scrollbar relative" id="formMainArea">
+      
+      <!-- CONTROLES DE ZOOM Y BARRA DE ESTADO (no-print) -->
+      <div class="w-full max-w-[210mm] no-print flex justify-between items-center bg-white border border-slate-200 p-3 mb-4 rounded-xl shadow-sm gap-4">
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-xs text-slate-600 font-semibold" id="txtActiveCaseName">Cargando caso...</span>
+        </div>
+        
+        <!-- CONTROLES DE ZOOM -->
+        <div class="flex items-center space-x-2 bg-slate-50 p-1 rounded-lg border border-slate-200">
+          <button onclick="zoomOut()" class="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition font-bold text-sm" title="Reducir Vista">-</button>
+          <span id="txtZoomLevel" class="text-xs font-mono text-slate-700 px-2 font-bold select-none">120%</span>
+          <button onclick="zoomIn()" class="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition font-bold text-sm" title="Aumentar Vista">+</button>
+          <div class="w-[1px] h-4 bg-slate-300 mx-1"></div>
+          <button onclick="resetZoom()" class="text-[10px] text-blue-600 hover:text-blue-700 px-2 font-bold uppercase tracking-wider">Reset</button>
+        </div>
+      </div>
+
+      <!-- PRINT CONTAINER LAYOUT -->
+      <div class="print-container w-full max-w-[210mm] flex justify-center" id="sheetContainer">
+        
+        <!-- SINGLE PAGE A4 SHEET (Ficha Epidemiológica Oficial - finvestigacion_2.pdf y image_41a407.png) -->
+        <div id="printSheet" class="w-full bg-white p-5 text-black border border-slate-300 rounded-lg shadow-lg flex flex-col justify-between overflow-hidden relative" style="box-sizing: border-box; width: 210mm; height: 265mm;">
+          
+          <!-- SECCIÓN CABECERA PRINCIPAL -->
+          <div>
+            <div class="flex justify-between items-center border-b-2 minsa-blue-border pb-2 mb-2">
+              <div class="w-[30%] flex items-center space-x-2">
+                <div class="text-[10px] font-black text-red-600 border-2 border-red-600 px-2 py-0.5 rounded text-center leading-none">PERÚ</div>
+                <div class="text-[8px] leading-tight font-extrabold text-slate-800">
+                  Ministerio<br>de Salud
+                </div>
+              </div>
+              <div class="w-[45%] text-center flex flex-col justify-center">
+                <h2 class="text-[11px] font-extrabold uppercase tracking-wide text-slate-950 leading-tight">DIABETES FICHA EPIDEMIOLÓGICA</h2>
+                <p class="text-[6.5px] text-slate-500 font-medium leading-none mt-0.5">Centro Nacional de Epidemiología, Prevención y Control de Enfermedades</p>
+              </div>
+              <div class="w-[25%] flex flex-col justify-center text-[7.5px] text-right">
+                <div class="font-semibold text-slate-600">Establecimiento: <span class="font-extrabold text-slate-900 underline" id="f_est">Hospital de Ventanilla</span></div>
+              </div>
+            </div>
+
+            <!-- FILTRO / INFO BOXES SUPERIORES -->
+            <div class="grid grid-cols-2 gap-3 mb-2.5">
+              <div class="border border-blue-200 bg-blue-50/20 p-2 rounded-lg">
+                <span class="text-[7.5px] uppercase font-black text-blue-800 tracking-wider">N° de Ficha Correlativa</span>
+                <div class="text-[14px] font-black text-slate-900 mt-0.5" id="f_correlative_num">001</div>
+              </div>
+              <div class="border border-blue-200 bg-blue-50/20 p-2 rounded-lg">
+                <span class="text-[7.5px] uppercase font-black text-blue-800 tracking-wider">N° Historia Clínica (H.C.)</span>
+                <div class="text-[14px] font-black text-slate-900 mt-0.5" id="f_hc_num">87921</div>
+              </div>
+            </div>
+
+            <!-- I. DATOS DEL PACIENTE -->
+            <div class="border border-slate-200 rounded-lg overflow-hidden mb-2.5">
+              <div class="minsa-blue-bg text-[8.5px] font-bold px-3 py-1 uppercase tracking-wide text-white section-header">I. Datos del Paciente</div>
+              <div class="grid grid-cols-12 gap-2 p-2.5">
+                
+                <!-- Apellidos y Nombres -->
+                <div class="col-span-4 field-box">
+                  <span class="field-label">Apellido Paterno</span>
+                  <div class="field-value uppercase" id="f_paterno">-</div>
+                </div>
+                <div class="col-span-4 field-box">
+                  <span class="field-label">Apellido Materno</span>
+                  <div class="field-value uppercase" id="f_materno">-</div>
+                </div>
+                <div class="col-span-4 field-box">
+                  <span class="field-label">Nombres</span>
+                  <div class="field-value uppercase" id="f_nombres">-</div>
+                </div>
+
+                <!-- Nacimiento, Edad, Sexo -->
+                <div class="col-span-4 field-box">
+                  <span class="field-label">Fecha de Nacimiento</span>
+                  <div class="field-value" id="f_nacimiento">-</div>
+                </div>
+                <div class="col-span-4 field-box">
+                  <span class="field-label">Edad</span>
+                  <div class="field-value" id="f_edad">-</div>
+                </div>
+                <div class="col-span-4 field-box">
+                  <span class="field-label">Sexo</span>
+                  <div class="flex space-x-3 font-semibold mt-0.5 text-[9px] text-slate-700">
+                    <span id="sex_m_indicator" class="flex items-center space-x-1.5">
+                      <span class="w-2.5 h-2.5 rounded-full border border-slate-400 inline-block" id="sex_m_circle"></span>
+                      <span>1. M</span>
+                    </span>
+                    <span id="sex_f_indicator" class="flex items-center space-x-1.5">
+                      <span class="w-2.5 h-2.5 rounded-full border border-slate-400 inline-block" id="sex_f_circle"></span>
+                      <span>2. F</span>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Documento, Seguro, Tipo -->
+                <div class="col-span-4 field-box">
+                  <span class="field-label">DNI / Documento de Identidad</span>
+                  <div class="field-value tracking-wider" id="f_dni">-</div>
+                </div>
+                <div class="col-span-4 field-box">
+                  <span class="field-label">¿Tiene un Seguro de Salud?</span>
+                  <div class="flex space-x-3 font-semibold mt-0.5 text-[9px] text-slate-700">
+                    <span class="flex items-center space-x-1.5">
+                      <span class="w-2.5 h-2.5 rounded-full border border-slate-400 inline-block" id="seg_si_circle"></span>
+                      <span>1. Sí</span>
+                    </span>
+                    <span class="flex items-center space-x-1.5">
+                      <span class="w-2.5 h-2.5 rounded-full border border-slate-400 inline-block" id="seg_no_circle"></span>
+                      <span>2. No</span>
+                    </span>
+                  </div>
+                </div>
+                <div class="col-span-4 field-box">
+                  <span class="field-label">Tipo de Seguro de Salud</span>
+                  <div class="field-value" id="f_seguro_tipo">1. SIS</div>
+                </div>
+
+                <!-- Residencia -->
+                <div class="col-span-12 field-box">
+                  <span class="field-label">Dirección de Residencia Actual</span>
+                  <div class="field-value truncate" id="f_direccion">-</div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- II. FECHA DE CAPTACIÓN & III. DATOS DE LABORATORIO (Distribución en Paralelo) -->
+            <div class="grid grid-cols-12 gap-3 mb-2.5">
+              
+              <!-- COLUMNA IZQUIERDA: CAPTACIÓN -->
+              <div class="col-span-6 border border-slate-200 rounded-lg overflow-hidden flex flex-col justify-between bg-white">
+                <div class="minsa-blue-bg text-[8.5px] font-bold px-3 py-1 uppercase tracking-wide text-white section-header">II. Fecha de Captación</div>
+                <div class="p-2.5 space-y-2 flex-1 flex flex-col justify-between">
+                  
+                  <div class="field-box">
+                    <span class="field-label">Fecha de Captación (Atención)</span>
+                    <div class="field-value text-slate-900" id="f_fecha_captacion_val">-</div>
+                  </div>
+
+                  <div class="grid grid-cols-2 gap-2">
+                    <div class="field-box">
+                      <span class="field-label">Tipo de Caso</span>
+                      <div class="flex flex-col space-y-1 text-[8.5px] font-bold text-slate-700 mt-0.5">
+                        <span class="flex items-center space-x-1.5">
+                          <span class="w-2 h-2 rounded-full border border-slate-400 inline-block" id="caso_nuevo_circle"></span>
+                          <span>1. Nuevo</span>
+                        </span>
+                        <span class="flex items-center space-x-1.5">
+                          <span class="w-2 h-2 rounded-full border border-slate-400 inline-block" id="caso_prev_circle"></span>
+                          <span>2. Prevalente</span>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="field-box">
+                      <span class="field-label">Tipo de Diabetes</span>
+                      <div class="flex flex-col space-y-1 text-[8.5px] font-bold text-slate-700 mt-0.5">
+                        <span class="flex items-center space-x-1.5">
+                          <span class="w-2 h-2 rounded-full border border-slate-400 inline-block" id="db_t1_circle"></span>
+                          <span>1. Tipo 1</span>
+                        </span>
+                        <span class="flex items-center space-x-1.5">
+                          <span class="w-2 h-2 rounded-full border border-slate-400 inline-block" id="db_t2_circle"></span>
+                          <span>2. Tipo 2</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="grid grid-cols-4 gap-1.5">
+                    <div class="field-box text-center">
+                      <span class="field-label !text-[6.5px]">Peso Corp.</span>
+                      <div class="field-value text-[11px]" id="f_peso_val">-</div>
+                      <span class="text-[6px] text-slate-400 font-bold block">Kg.</span>
+                    </div>
+                    <div class="field-box text-center">
+                      <span class="field-label !text-[6.5px]">Talla</span>
+                      <div class="field-value text-[11px]" id="f_talla_val">-</div>
+                      <span class="text-[6px] text-slate-400 font-bold block">m</span>
+                    </div>
+                    <div class="field-box text-center">
+                      <span class="field-label !text-[6.5px]">PA Sis.</span>
+                      <div class="field-value text-[11px]" id="f_pa_sis_val">-</div>
+                      <span class="text-[6px] text-slate-400 font-bold block">mm Hg</span>
+                    </div>
+                    <div class="field-box text-center">
+                      <span class="field-label !text-[6.5px]">PA Dia.</span>
+                      <div class="field-value text-[11px]" id="f_pa_dia_val">-</div>
+                      <span class="text-[6px] text-slate-400 font-bold block">mm Hg</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              <!-- COLUMNA DERECHA: LABORATORIOS -->
+              <div class="col-span-6 border border-slate-200 rounded-lg overflow-hidden flex flex-col justify-between bg-white">
+                <div class="minsa-blue-bg text-[8.5px] font-bold px-3 py-1 uppercase tracking-wide text-white section-header">III. Datos de Laboratorio</div>
+                <div class="p-2.5 space-y-1 flex-1 flex flex-col justify-between">
+                  
+                  <div class="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span class="font-bold text-slate-600 text-[9px]">Glicemia (ayunas):</span>
+                    <div class="font-black text-slate-900 text-[11px]"><span id="f_glicemia_val">-</span> <span class="text-[6.5px] text-slate-400 font-bold">mg/dL</span></div>
+                  </div>
+
+                  <div class="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span class="font-bold text-slate-600 text-[9px]">Hemoglobina Glicosilada:</span>
+                    <div class="font-black text-slate-900 text-[11px]"><span id="f_hba1c_val">-</span> <span class="text-[6.5px] text-slate-400 font-bold">%</span></div>
+                  </div>
+
+                  <div class="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span class="font-bold text-slate-600 text-[9px]">Colesterol Total:</span>
+                    <div class="font-bold text-slate-800 text-[10px]"><span id="f_col_total_val">-</span> <span class="text-[6.5px] text-slate-400 font-bold">mg/dL</span></div>
+                  </div>
+
+                  <div class="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span class="font-bold text-slate-600 text-[9px]">Triglicéridos:</span>
+                    <div class="font-bold text-slate-800 text-[10px]"><span id="f_triglyceridos_val">-</span> <span class="text-[6.5px] text-slate-400 font-bold">mg/dL</span></div>
+                  </div>
+
+                  <div class="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span class="font-bold text-slate-600 text-[9px]">Colesterol HDL / LDL:</span>
+                    <div class="font-bold text-slate-800 text-[10px]"><span id="f_col_hdl_val">-</span> / <span id="f_col_ldl_val">-</span> <span class="text-[6.5px] text-slate-400 font-bold">mg/dL</span></div>
+                  </div>
+
+                  <div class="flex justify-between items-center py-0.5 border-b border-slate-100">
+                    <span class="font-bold text-slate-600 text-[9px]">Creatinina sérica:</span>
+                    <div class="font-black text-slate-900 text-[11px]"><span id="f_creatinina_val">-</span> <span class="text-[6.5px] text-slate-400 font-bold">mg/dL</span></div>
+                  </div>
+
+                  <div class="pt-1">
+                    <span class="text-[7.5px] text-slate-400 block uppercase font-black leading-none mb-1">Estado del Caso</span>
+                    <div class="flex justify-between text-[8.5px] font-bold">
+                      <span class="flex items-center space-x-1.5 text-emerald-800">
+                        <span class="w-2.5 h-2.5 rounded-full border border-emerald-300 inline-block" id="est_controlado_circle"></span>
+                        <span>1. Controlado</span>
+                      </span>
+                      <span class="flex items-center space-x-1.5 text-red-600">
+                        <span class="w-2.5 h-2.5 rounded-full border border-red-300 inline-block" id="est_descompensado_circle"></span>
+                        <span>2. Descompensado</span>
+                      </span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+            <!-- IV. COMORBILIDAD & V. COMPLICACIONES (Paralelo) -->
+            <div class="grid grid-cols-12 gap-3 mb-2.5">
+              
+              <!-- IV. COMORBILIDAD -->
+              <div class="col-span-6 border border-slate-200 rounded-lg overflow-hidden bg-white flex flex-col justify-between">
+                <div class="minsa-blue-bg text-[8.5px] font-bold px-3 py-1 uppercase tracking-wide text-white section-header">IV. Comorbilidad</div>
+                <div class="p-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[8.5px] font-semibold text-slate-700 flex-1">
+                  <span class="flex items-center space-x-2">
+                    <span class="w-3 h-3 border border-slate-300 flex items-center justify-center text-[8px] rounded" id="c_hta_box"></span>
+                    <span>Hipertensión Art.</span>
+                  </span>
+                  <span class="flex items-center space-x-2">
+                    <span class="w-3 h-3 border border-slate-300 flex items-center justify-center text-[8px] rounded" id="c_obesidad_box"></span>
+                    <span>Obesidad</span>
+                  </span>
+                  <span class="flex items-center space-x-2">
+                    <span class="w-3 h-3 border border-slate-300 flex items-center justify-center text-[8px] rounded" id="c_dislipidemia_box"></span>
+                    <span>Dislipidemia</span>
+                  </span>
+                  <span class="flex items-center space-x-2">
+                    <span class="w-3 h-3 border border-slate-300 flex items-center justify-center text-[8px] rounded" id="c_anemia_box"></span>
+                    <span>Anemia</span>
+                  </span>
+                  <span class="flex items-center space-x-2 text-red-700">
+                    <span class="w-3 h-3 border border-red-300 flex items-center justify-center text-[8px] rounded" id="c_vih_box"></span>
+                    <span>Inf. por VIH</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- V. COMPLICACIONES -->
+              <div class="col-span-6 border border-slate-200 rounded-lg overflow-hidden bg-white flex flex-col justify-between">
+                <div class="minsa-blue-bg text-[8.5px] font-bold px-3 py-1 uppercase tracking-wide text-white section-header">V. Complicaciones Detectadas</div>
+                <div class="p-2 grid grid-cols-2 gap-x-3 gap-y-1 text-[8.5px] font-semibold text-slate-700 flex-1">
+                  <span class="flex items-center space-x-2">
+                    <span class="w-3 h-3 border border-slate-300 flex items-center justify-center text-[8px] rounded" id="comp_renal_box"></span>
+                    <span>Nefropatía Diab.</span>
+                  </span>
+                  <span class="flex items-center space-x-2 text-red-600">
+                    <span class="w-3 h-3 border border-red-300 flex items-center justify-center text-[8px] rounded" id="comp_pie_sa_box"></span>
+                    <span>Pie Diabético Act.</span>
+                  </span>
+                  <span class="flex items-center space-x-2">
+                    <span class="w-3 h-3 border border-slate-300 flex items-center justify-center text-[8px] rounded" id="comp_retino_box"></span>
+                    <span>Retinopatía Sosp.</span>
+                  </span>
+                  <span class="flex items-center space-x-2">
+                    <span class="w-3 h-3 border border-slate-300 flex items-center justify-center text-[8px] rounded" id="comp_neuro_box"></span>
+                    <span>Polineuropatía</span>
+                  </span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- VI. TRATAMIENTO Y MÉDICO -->
+            <div class="border border-slate-200 rounded-lg overflow-hidden bg-white mb-2">
+              <div class="minsa-blue-bg text-[8.5px] font-bold px-3 py-1 uppercase tracking-wide text-white section-header">VI. Tratamiento & Personal Responsable</div>
+              <div class="p-3 grid grid-cols-12 gap-3">
+                
+                <div class="col-span-8">
+                  <span class="field-label">Tratamiento Medicamentoso Registrado</span>
+                  <div class="field-box font-semibold text-[10px] text-slate-800 mt-1" id="f_tratamiento_val" style="min-height: 38px;">-</div>
+                </div>
+
+                <div class="col-span-4 border-l border-slate-200 pl-3">
+                  <span class="field-label">Médico Tratante / Servicio</span>
+                  <div class="font-extrabold text-[#1e3a8a] text-[10px] mt-1" id="f_medico_val">-</div>
+                  <div class="text-[9px] text-slate-500 mt-1">Colegiatura CMP: <span class="font-bold text-slate-800" id="f_cmp_val">-</span></div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          <!-- FOOTER DE LA HOJA (Institucional) -->
+          <div class="border-t border-slate-200 pt-1.5 text-center text-[7px] text-slate-400 leading-tight">
+            <p class="font-bold">Centro Nacional de Epidemiología, Prevención y Control de Enfermedades - MINSA</p>
+            <p>Calle Daniel Olaechea N° 199 - Jesús María, Lima 11 | Central: 631-4500 | Correo: notificacion@dge.gob.pe</p>
+          </div>
+
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- MODAL: FAST DATA IMPORT (no-print) WITH GEMINI AI PROCESSING -->
+  <div id="importPanel" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 no-print p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full flex flex-col overflow-hidden border border-slate-300 max-h-[90vh]">
+      <div class="bg-slate-50 text-slate-800 p-4 flex justify-between items-center border-b border-slate-200">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-wand-magic-sparkles text-xl text-[#1e3a8a]"></i>
+          <div>
+            <h3 class="font-bold text-sm">Procesador IA de PDFs e Imágenes Clínicas</h3>
+            <p class="text-[11px] text-slate-500">Sube un informe, receta o análisis para autollenado de fichas</p>
+          </div>
+        </div>
+        <button onclick="toggleImportPanel()" class="text-slate-400 hover:text-slate-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-4 custom-scrollbar bg-white text-slate-700 text-xs">
+        <!-- SECCIÓN DE CONFIGURACIÓN DE API KEY (Para GitHub/Vercel) -->
+        <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg flex flex-col gap-2">
+          <button onclick="toggleApiSettings()" class="flex justify-between items-center font-bold text-amber-800 w-full focus:outline-none">
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-key"></i> Configuración de API Key (para Vercel / GitHub)</span>
+            <i id="apiChevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+          </button>
+          <div id="apiSettingsArea" class="hidden space-y-2 pt-2">
+            <p class="text-[10px] text-amber-700">Si despliegas este proyecto en Vercel o GitHub Pages, ingresa tu API Key de Gemini. Aquí en Canvas se usa la clave de la plataforma automáticamente de forma gratuita.</p>
+            <div class="flex gap-2">
+              <input type="password" id="inputApiKey" placeholder="AIzaSy..." class="flex-1 p-2 border border-amber-300 rounded focus:outline-none text-xs">
+              <button onclick="saveApiKey()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded font-bold transition">Guardar</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ZONE DE ARCHIVO DROP -->
+        <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50 hover:bg-blue-50/20 hover:border-[#1e3a8a] transition cursor-pointer relative" id="dropZone" onclick="document.getElementById('fileInput').click()">
+          <input type="file" id="fileInput" class="hidden" accept="application/pdf,image/*" onchange="handleFileSelect(event)">
+          <div class="space-y-2" id="dropPrompt">
+            <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400"></i>
+            <p class="font-bold text-slate-700">Arrastra aquí tu PDF o Imagen del informe clínico</p>
+            <p class="text-[10px] text-slate-400">Soporta recetas, informes de laboratorio, capturas de pantalla de análisis (Formatos PDF, PNG, JPG)</p>
+          </div>
+          <!-- Loader de carga -->
+          <div class="hidden flex-col items-center justify-center space-y-2 py-4" id="dropLoader">
+            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a8a]"></div>
+            <p class="font-bold text-[#1e3a8a]" id="dropLoaderText">Leyendo archivo...</p>
+          </div>
+        </div>
+
+        <!-- TEXTAREA PARA TEXTO COPIADO (Backup manual) -->
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">O pega texto extraído de la consulta directamente aquí:</label>
+          <textarea id="importRawText" rows="4" class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 font-mono" placeholder="Ejemplo: MURO AREVALO CECILIA, Peso: 60.5 Kg Talla: 1.50 m Glucosa: 161.34 mg/dL..."></textarea>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 p-4 flex justify-end gap-2 border-t border-slate-200">
+        <button onclick="toggleImportPanel()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold transition">Cancelar</button>
+        <button id="btnProcess" onclick="processClinicalData()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Procesar con Inteligencia Artificial
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT PANEL DRAWER (no-print) -->
+  <div id="editPanel" class="fixed right-0 top-0 bottom-0 w-full max-w-md bg-white shadow-2xl border-l border-slate-300 hidden flex-col z-50 no-print">
+    <div class="bg-slate-50 text-slate-800 p-4 flex justify-between items-center border-b border-slate-200">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-pen-to-square text-lg text-[#1e3a8a]"></i>
+        <h3 class="font-bold text-sm">Editar Ficha Epidemiológica</h3>
+      </div>
+      <button onclick="toggleEditPanel()" class="text-slate-400 hover:text-slate-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <div class="p-4 overflow-y-auto flex-1 space-y-4 text-xs custom-scrollbar bg-white text-slate-700">
+      
+      <div class="space-y-3">
+        <h4 class="font-bold text-[#1e3a8a] border-b border-slate-200 pb-1">I. Datos del Paciente</h4>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] text-slate-500">Apellido Paterno</label>
+            <input type="text" id="edit_paterno" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">Apellido Materno</label>
+            <input type="text" id="edit_materno" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-[10px] text-slate-500">Nombres</label>
+            <input type="text" id="edit_nombres" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">DNI / Documento</label>
+            <input type="text" id="edit_dni" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">N° Historia Clínica</label>
+            <input type="text" id="edit_hc" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">Fecha de Captación</label>
+            <input type="text" id="edit_date" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div class="col-span-2">
+            <label class="block text-[10px] text-slate-500">Dirección</label>
+            <input type="text" id="edit_direccion" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3 pt-2">
+        <h4 class="font-bold text-[#1e3a8a] border-b border-slate-200 pb-1">II. Captación e Historial</h4>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] text-slate-500">Peso (Kg)</label>
+            <input type="text" id="edit_peso" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">Talla (m)</label>
+            <input type="text" id="edit_talla" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">PA Sistólica</label>
+            <input type="text" id="edit_pa_sis" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">PA Diastólica</label>
+            <input type="text" id="edit_pa_dia" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3 pt-2">
+        <h4 class="font-bold text-[#1e3a8a] border-b border-slate-200 pb-1">III. Datos de Laboratorio</h4>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10px] text-slate-500">Glicemia (mg/dL)</label>
+            <input type="text" id="edit_glicemia" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">HbA1c (%)</label>
+            <input type="text" id="edit_hba1c" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">Colesterol Total</label>
+            <input type="text" id="edit_col_total" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">Triglicéridos</label>
+            <input type="text" id="edit_trigliceridos" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">Creatinina Sérica</label>
+            <input type="text" id="edit_creatinina" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3 pt-2">
+        <h4 class="font-bold text-[#1e3a8a] border-b border-slate-200 pb-1">VI. Tratamiento y Personal</h4>
+        <div class="space-y-2">
+          <div>
+            <label class="block text-[10px] text-slate-500">Médico Tratante</label>
+            <input type="text" id="edit_medico" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">Colegiatura CMP</label>
+            <input type="text" id="edit_cmp" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800">
+          </div>
+          <div>
+            <label class="block text-[10px] text-slate-500">Tratamiento Registrado</label>
+            <textarea id="edit_tratamiento" rows="3" class="w-full p-2 bg-slate-50 border border-slate-300 rounded text-slate-800"></textarea>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    
+    <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end gap-2">
+      <button onclick="toggleEditPanel()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold">Cancelar</button>
+      <button onclick="saveChanges()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg font-bold">Guardar Cambios</button>
+    </div>
+  </div>
+
+  <!-- STYLED CUSTOM ALERT POPUP -->
+  <div id="alertModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
+    <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full text-center border border-slate-200 space-y-4">
+      <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 text-blue-800 text-2xl" id="alertIcon">
+        <i class="fa-solid fa-circle-info"></i>
+      </div>
+      <div>
+        <h3 class="text-sm font-bold text-slate-800" id="alertTitle">Notificación</h3>
+        <p class="text-xs text-slate-500 mt-1" id="alertMessage">Mensaje del sistema.</p>
+      </div>
+      <button onclick="closeAlert()" class="w-full bg-[#1e3a8a] hover:bg-blue-800 text-white py-2 rounded-lg text-xs font-bold transition">Aceptar</button>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT: MASTER CLINICAL DATABASE (Atenciones de abril 2026) -->
+  <script>
+    const database = [
+      {
+        item: 1,
+        date: "01/04/2026",
+        dni: "80518117",
+        hc: "87921",
+        paterno: "MURO",
+        materno: "AREVALO",
+        nombres: "CECILIA",
+        sexo: "F",
+        nacimiento: "17/11/1979",
+        edad: "46",
+        direccion: "Distrito de Ventanilla, Callao",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "60.5",
+        talla: "1.50",
+        cintura: "88",
+        pa_sis: "110",
+        pa_dia: "62",
+        glicemia: "161.34",
+        hba1c: "8.5",
+        col_total: "208.97",
+        trigliceridos: "154.78",
+        col_ldl: "142.37",
+        col_hdl: "42.75",
+        creatinina: "0.85",
+        estado: "descompensado",
+        comorbilidades: { hta: false, obesidad: true, dislipidemia: true, anemia: false, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg VO con la cena.",
+        medico: "Dr. Oscar Sandoval Evangelista",
+        cmp: "31267"
+      },
+      {
+        item: 2,
+        date: "01/04/2026",
+        dni: "06691190",
+        hc: "321080",
+        paterno: "DAMIAN",
+        materno: "SANTA MARIA",
+        nombres: "ANA ISABEL",
+        sexo: "F",
+        nacimiento: "01/08/1966",
+        edad: "59",
+        direccion: "Distrito de Ventanilla, Callao",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "67.0",
+        talla: "1.56",
+        cintura: "94",
+        pa_sis: "162",
+        pa_dia: "90",
+        glicemia: "183.10",
+        hba1c: "9.2",
+        col_total: "195.40",
+        trigliceridos: "188.00",
+        col_ldl: "122.80",
+        col_hdl: "35.00",
+        creatinina: "1.48",
+        estado: "descompensado",
+        comorbilidades: { hta: true, obesidad: true, dislipidemia: false, anemia: true, vih: false },
+        complicaciones: { neuro: false, renal: true, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg + Losartán 50 mg VO diario.",
+        medico: "Dr. Ricardo M. Barrera Liza",
+        cmp: "30811"
+      },
+      {
+        item: 3,
+        date: "08/04/2026",
+        dni: "46394714",
+        hc: "293957",
+        paterno: "GHILINO",
+        materno: "LICAS",
+        nombres: "JHOVANA MARGOT",
+        sexo: "F",
+        nacimiento: "15/08/1989",
+        edad: "36",
+        direccion: "Av. Pedro Beltrán, Ventanilla",
+        tipo_caso: "nuevo",
+        tipo_db: "t2",
+        peso: "38.5",
+        talla: "1.53",
+        cintura: "72",
+        pa_sis: "130",
+        pa_dia: "70",
+        glicemia: "101.52",
+        hba1c: "6.8",
+        col_total: "152.00",
+        trigliceridos: "110.00",
+        col_ldl: "85.00",
+        col_hdl: "45.00",
+        creatinina: "0.65",
+        estado: "controlado",
+        comorbilidades: { hta: false, obesidad: false, dislipidemia: false, anemia: false, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg VO diario.",
+        medico: "Dr. Robinson Ferro Reyes",
+        cmp: "42104"
+      },
+      {
+        item: 4,
+        date: "10/04/2026",
+        dni: "23091124",
+        hc: "602753",
+        paterno: "SIFUENTES",
+        materno: "VALVERDE",
+        nombres: "GUVERTA",
+        sexo: "F",
+        nacimiento: "20/04/1952",
+        edad: "73",
+        direccion: "Ventanilla, Callao",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "45.5",
+        talla: "1.43",
+        cintura: "80",
+        pa_sis: "100",
+        pa_dia: "62",
+        glicemia: "118.15",
+        hba1c: "8.97",
+        col_total: "178.00",
+        trigliceridos: "145.00",
+        col_ldl: "108.00",
+        col_hdl: "41.00",
+        creatinina: "0.78",
+        estado: "descompensado",
+        comorbilidades: { hta: false, obesidad: false, dislipidemia: false, anemia: true, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg VO nocturno.",
+        medico: "Dr. Yuri D. Maldonado Malpica",
+        cmp: "41546"
+      },
+      {
+        item: 5,
+        date: "11/04/2026",
+        dni: "07980412",
+        hc: "605250",
+        paterno: "CORDOVA",
+        materno: "LOPEZ",
+        nombres: "EFRAIN",
+        sexo: "M",
+        nacimiento: "12/05/1949",
+        edad: "77",
+        direccion: "Ventanilla, Callao",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "83.0",
+        talla: "1.58",
+        cintura: "102",
+        pa_sis: "120",
+        pa_dia: "80",
+        glicemia: "104.57",
+        hba1c: "7.5",
+        col_total: "90.62",
+        trigliceridos: "94.09",
+        col_ldl: "18.82",
+        col_hdl: "38.89",
+        creatinina: "0.92",
+        estado: "controlado",
+        comorbilidades: { hta: false, obesidad: true, dislipidemia: true, anemia: false, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg VO cada 12 hrs.",
+        medico: "Dr. Ricardo M. Barrera Liza",
+        cmp: "30811"
+      },
+      {
+        item: 6,
+        date: "15/04/2026",
+        dni: "25817725",
+        hc: "79239",
+        paterno: "CHUNQUE",
+        materno: "HERAS",
+        nombres: "CRUZ",
+        sexo: "F",
+        nacimiento: "15/10/1973",
+        edad: "52",
+        direccion: "Calle Principal Ventanilla, Callao",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "73.0",
+        talla: "1.52",
+        cintura: "96",
+        pa_sis: "120",
+        pa_dia: "70",
+        glicemia: "140.20",
+        hba1c: "7.9",
+        col_total: "215.00",
+        trigliceridos: "202.00",
+        col_ldl: "136.00",
+        col_hdl: "38.00",
+        creatinina: "0.89",
+        estado: "descompensado",
+        comorbilidades: { hta: false, obesidad: true, dislipidemia: true, anemia: false, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg con el almuerzo.",
+        medico: "Dr. Robinson Ferro Reyes",
+        cmp: "42104"
+      },
+      {
+        item: 7,
+        date: "15/04/2026",
+        dni: "74920122",
+        hc: "91773",
+        paterno: "ORTEGA",
+        materno: "PIANTO",
+        nombres: "JOSE ALONSO",
+        sexo: "M",
+        nacimiento: "12/08/1996",
+        edad: "29",
+        direccion: "Urb. Las Flores, Ventanilla",
+        tipo_caso: "nuevo",
+        tipo_db: "t2",
+        peso: "83.0",
+        talla: "1.60",
+        cintura: "92",
+        pa_sis: "90",
+        pa_dia: "60",
+        glicemia: "141.00",
+        hba1c: "6.9",
+        col_total: "190.00",
+        trigliceridos: "165.00",
+        col_ldl: "115.00",
+        col_hdl: "42.00",
+        creatinina: "0.95",
+        estado: "controlado",
+        comorbilidades: { hta: false, obesidad: true, dislipidemia: false, anemia: false, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg diario posterior alimentos.",
+        medico: "Dr. Robinson Ferro Reyes",
+        cmp: "42104"
+      },
+      {
+        item: 8,
+        date: "20/04/2026",
+        dni: "10031668",
+        hc: "604572",
+        paterno: "OBREGON",
+        materno: "SALCEDO",
+        nombres: "JESUSA GRACIELA",
+        sexo: "F",
+        nacimiento: "24/12/1966",
+        edad: "59",
+        direccion: "Calle 10, Sector C, Ventanilla",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "56.0",
+        talla: "1.51",
+        cintura: "86",
+        pa_sis: "110",
+        pa_dia: "83",
+        glicemia: "115.18",
+        hba1c: "7.8",
+        col_total: "185.00",
+        trigliceridos: "145.00",
+        col_ldl: "116.00",
+        col_hdl: "39.00",
+        creatinina: "0.71",
+        estado: "controlado",
+        comorbilidades: { hta: false, obesidad: false, dislipidemia: false, anemia: false, vih: false },
+        complicaciones: { neuro: true, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg + Complejo B diario.",
+        medico: "Dr. Robinson Ferro Reyes",
+        cmp: "42104"
+      },
+      {
+        item: 9,
+        date: "22/04/2026",
+        dni: "41672075",
+        hc: "106113",
+        paterno: "DAVILA",
+        materno: "ZEVALLOS",
+        nombres: "ANA GRACIELA",
+        sexo: "F",
+        nacimiento: "17/02/1983",
+        edad: "43",
+        direccion: "Av. Pedro Beltrán Mza. C Lote 15, Ventanilla",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "77.5",
+        talla: "1.50",
+        cintura: "105",
+        pa_sis: "110",
+        pa_dia: "71",
+        glicemia: "453.57",
+        hba1c: "12.5",
+        col_total: "245.00",
+        trigliceridos: "298.00",
+        col_ldl: "154.00",
+        col_hdl: "31.00",
+        creatinina: "1.10",
+        estado: "descompensado",
+        comorbilidades: { hta: false, obesidad: true, dislipidemia: true, anemia: false, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: true },
+        tratamiento: "Insulina de acción prolongada según esquema de urgencias.",
+        medico: "Dr. Robinson Ferro Reyes",
+        cmp: "42104"
+      },
+      {
+        item: 10,
+        date: "22/04/2026",
+        dni: "42234771",
+        hc: "411436",
+        paterno: "AVALOS",
+        materno: "VASQUEZ",
+        nombres: "CHARLES AMARO",
+        sexo: "M",
+        nacimiento: "12/04/1982",
+        edad: "43",
+        direccion: "Av. La Loma, Ventanilla, Callao",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "80.2",
+        talla: "1.73",
+        cintura: "98",
+        pa_sis: "110",
+        pa_dia: "70",
+        glicemia: "105.70",
+        hba1c: "6.5",
+        col_total: "165.00",
+        trigliceridos: "135.00",
+        col_ldl: "94.00",
+        col_hdl: "44.00",
+        creatinina: "0.88",
+        estado: "controlado",
+        comorbilidades: { hta: false, obesidad: true, dislipidemia: false, anemia: false, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg VO diario.",
+        medico: "Dr. Robinson Ferro Reyes",
+        cmp: "42104"
+      },
+      {
+        item: 11,
+        date: "22/04/2026",
+        dni: "25822423",
+        hc: "596884",
+        paterno: "VICENTE",
+        materno: "HERENCIA",
+        nombres: "SOFIA SOLEDAD",
+        sexo: "F",
+        nacimiento: "31/01/1956",
+        edad: "70",
+        direccion: "Urb. Angamos, Ventanilla",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "49.5",
+        talla: "1.58",
+        cintura: "82",
+        pa_sis: "120",
+        pa_dia: "60",
+        glicemia: "98.76",
+        hba1c: "6.4",
+        col_total: "148.00",
+        trigliceridos: "120.00",
+        col_ldl: "76.00",
+        col_hdl: "48.00",
+        creatinina: "0.79",
+        estado: "controlado",
+        comorbilidades: { hta: false, obesidad: false, dislipidemia: false, anemia: true, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg diario + Sulfato Ferroso.",
+        medico: "Dr. Robinson Ferro Reyes",
+        cmp: "42104"
+      },
+      {
+        item: 12,
+        date: "22/04/2026",
+        dni: "25866686",
+        hc: "230608",
+        paterno: "ORTIZ",
+        materno: "PALOMINO",
+        nombres: "MAGALY MILAGRITOS",
+        sexo: "F",
+        nacimiento: "04/10/1978",
+        edad: "47",
+        direccion: "Calle Los Robles, Ventanilla",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "59.0",
+        talla: "1.65",
+        cintura: "84",
+        pa_sis: "120",
+        pa_dia: "60",
+        glicemia: "128.91",
+        hba1c: "7.8",
+        col_total: "120.15",
+        trigliceridos: "206.07",
+        col_ldl: "55.61",
+        col_hdl: "23.33",
+        creatinina: "0.82",
+        estado: "descompensado",
+        comorbilidades: { hta: false, obesidad: false, dislipidemia: true, anemia: false, vih: true },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg diario con dieta dirigida.",
+        medico: "Dra. Juana Díaz Marín",
+        cmp: "2180"
+      },
+      {
+        item: 13,
+        date: "22/04/2026",
+        dni: "01003950",
+        hc: "376491",
+        paterno: "SALAZAR",
+        materno: "CORDOVA",
+        nombres: "JORGE",
+        sexo: "M",
+        nacimiento: "10/06/1951",
+        edad: "75",
+        direccion: "Asoc. Micaela Bastidas, Ventanilla",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "61.0",
+        talla: "1.70",
+        cintura: "90",
+        pa_sis: "130",
+        pa_dia: "80",
+        glicemia: "135.20",
+        hba1c: "7.9",
+        col_total: "198.00",
+        trigliceridos: "172.00",
+        col_ldl: "124.60",
+        col_hdl: "39.00",
+        creatinina: "1.05",
+        estado: "descompensado",
+        comorbilidades: { hta: false, obesidad: false, dislipidemia: true, anemia: false, vih: false },
+        complicaciones: { neuro: true, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg + Complejo Neurobión.",
+        medico: "Dr. César Cordero",
+        cmp: "21401"
+      },
+      {
+        item: 14,
+        date: "24/04/2026",
+        dni: "71835903",
+        hc: "579835",
+        paterno: "VENTURA",
+        materno: "AMAYA",
+        nombres: "LUIS CARLOS",
+        sexo: "M",
+        nacimiento: "15/12/1974",
+        edad: "51",
+        direccion: "Urb. Satélite, Ventanilla",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "83.5",
+        talla: "1.70",
+        cintura: "100",
+        pa_sis: "82",
+        pa_dia: "52",
+        glicemia: "160.00",
+        hba1c: "8.1",
+        col_total: "210.00",
+        trigliceridos: "192.00",
+        col_ldl: "136.60",
+        col_hdl: "35.00",
+        creatinina: "0.98",
+        estado: "descompensado",
+        comorbilidades: { hta: false, obesidad: true, dislipidemia: true, anemia: false, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg diario posterior alimentos.",
+        medico: "Dr. Yuri D. Maldonado Malpica",
+        cmp: "41546"
+      },
+      {
+        item: 15,
+        date: "29/04/2026",
+        dni: "20710254",
+        hc: "539958",
+        paterno: "QUISPE",
+        materno: "PACHECO",
+        nombres: "JESUS FRANCISCO",
+        sexo: "M",
+        nacimiento: "24/07/1967",
+        edad: "58",
+        direccion: "A.H. Hijos de Ventanilla",
+        tipo_caso: "prevalente",
+        tipo_db: "t2",
+        peso: "68.0",
+        talla: "1.46",
+        cintura: "88",
+        pa_sis: "110",
+        pa_dia: "60",
+        glicemia: "112.50",
+        hba1c: "7.1",
+        col_total: "172.00",
+        trigliceridos: "138.00",
+        col_ldl: "102.40",
+        col_hdl: "42.00",
+        creatinina: "0.81",
+        estado: "controlado",
+        comorbilidades: { hta: false, obesidad: false, dislipidemia: false, anemia: false, vih: false },
+        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        tratamiento: "Metformina 850 mg VO con la cena de forma regular.",
+        medico: "Dr. Robinson Ferro Reyes",
+        cmp: "42104"
+      }
+    ];
+
+    let currentActiveId = 1;
+    let sidebarOpen = true;
+    let currentZoom = 1.2; 
+    let selectedFileBase64 = null;
+    let selectedFileType = null;
+
+    const monthNames = [
+      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+      "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"
+    ];
+
+    const activeAccordions = {};
+
+    // Configurar librerías PDFJS
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    function initApp() {
+      // Registrar API key guardada si existe
+      const savedKey = localStorage.getItem('gemini_api_key');
+      if (savedKey) {
+        document.getElementById('inputApiKey').value = savedKey;
+      }
+
+      database.forEach(p => {
+        const monthKey = getMonthGroupKey(p.date);
+        if (activeAccordions[monthKey] === undefined) {
+          activeAccordions[monthKey] = true;
+        }
+      });
+      renderPatientList();
+      selectPatient(1);
+    }
+
+    function getMonthGroupKey(dateStr) {
+      if (!dateStr) return "Sin Fecha";
+      const parts = dateStr.split("/");
+      if (parts.length === 3) {
+        const monthIndex = parseInt(parts[1], 10) - 1;
+        const year = parts[2];
+        if (monthIndex >= 0 && monthIndex < 12) {
+          return `${monthNames[monthIndex]} ${year}`;
+        }
+      }
+      return "Otros Meses";
+    }
+
+    function renderPatientList() {
+      const accordionContainer = document.getElementById('accordionContainer');
+      accordionContainer.innerHTML = '';
+
+      const groups = {};
+      database.forEach(p => {
+        const key = getMonthGroupKey(p.date);
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(p);
+      });
+
+      const sortedKeys = Object.keys(groups).sort((a, b) => {
+        const parseKey = (str) => {
+          const parts = str.split(" ");
+          const m = monthNames.indexOf(parts[0]);
+          const y = parseInt(parts[1], 10) || 0;
+          return y * 12 + m;
+        };
+        return parseKey(a) - parseKey(b);
+      });
+
+      sortedKeys.forEach(groupKey => {
+        const patientsInGroup = groups[groupKey];
+        const isCollapsed = !activeAccordions[groupKey];
+
+        const sectionHeader = document.createElement('div');
+        sectionHeader.className = "bg-slate-100 hover:bg-slate-200 border-b border-slate-200 p-3 flex justify-between items-center cursor-pointer transition select-none sticky top-0 z-10";
+        sectionHeader.onclick = () => toggleAccordion(groupKey);
+
+        sectionHeader.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-chevron-right text-[10px] text-slate-500 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-90'}"></i>
+            <span class="font-extrabold text-xs text-slate-700 uppercase tracking-wider">${groupKey}</span>
+          </div>
+          <span class="text-[10px] bg-slate-300 text-slate-800 px-2 py-0.5 rounded-full font-black">${patientsInGroup.length}</span>
+        `;
+        accordionContainer.appendChild(sectionHeader);
+
+        const patientContainer = document.createElement('div');
+        patientContainer.className = `divide-y divide-slate-100 transition-all ${isCollapsed ? 'hidden' : 'block'}`;
+        
+        patientsInGroup.forEach(patient => {
+          const row = document.createElement('div');
+          // Al seleccionar, se sombrea como se requiere en image_446dbd.png
+          row.className = `p-3.5 cursor-pointer hover:bg-slate-50 transition flex items-center justify-between border-b border-slate-100 patient-row inactive-patient-card`;
+          row.id = `patient-row-${patient.item}`;
+          row.onclick = (e) => {
+            e.stopPropagation();
+            selectPatient(patient.item);
+          };
+
+          row.innerHTML = `
+            <div class="flex-1 min-w-0 pr-2">
+              <div class="flex justify-between items-center mb-1">
+                <span class="text-[9px] patient-item-badge px-1.5 py-0.5 rounded font-black transition-colors duration-150">ÍTEM ${patient.item}</span>
+                <span class="text-[9px] text-slate-400 font-bold">${patient.date}</span>
+              </div>
+              <h3 class="font-bold text-[11px] text-slate-800 truncate uppercase">${patient.paterno} ${patient.materno}, ${patient.nombres}</h3>
+              <div class="flex space-x-2 text-[9px] text-slate-400 mt-0.5">
+                <span>H.C.: <strong class="text-slate-600">${patient.hc}</strong></span>
+                <span>DNI: <strong class="text-slate-600">${patient.dni}</strong></span>
+              </div>
+            </div>
+            <div class="flex-shrink-0">
+              <span class="w-2.5 h-2.5 rounded-full block ${patient.estado === 'controlado' ? 'bg-emerald-500' : 'bg-red-500'}" title="${patient.estado === 'controlado' ? 'Controlado' : 'Descompensado'}"></span>
+            </div>
+          `;
+          patientContainer.appendChild(row);
+        });
+
+        accordionContainer.appendChild(patientContainer);
+      });
+
+      document.getElementById('badgeTotalCases').innerText = database.length;
+    }
+
+    function toggleAccordion(key) {
+      activeAccordions[key] = !activeAccordions[key];
+      renderPatientList();
+      selectPatient(currentActiveId);
+    }
+
+    function filterPatients() {
+      const q = document.getElementById('searchBar').value.toLowerCase();
+      if (q.trim() !== '') {
+        database.forEach(p => {
+          const matchText = `${p.paterno} ${p.materno} ${p.nombres} ${p.dni} ${p.hc}`.toLowerCase();
+          if (matchText.includes(q)) {
+            activeAccordions[getMonthGroupKey(p.date)] = true;
+          }
+        });
+      }
+      renderPatientList();
+      database.forEach(p => {
+        const row = document.getElementById(`patient-row-${p.item}`);
+        if (row) {
+          const text = `${p.paterno} ${p.materno} ${p.nombres} ${p.dni} ${p.hc}`.toLowerCase();
+          if (text.includes(q)) {
+            row.classList.remove('hidden');
+          } else {
+            row.classList.add('hidden');
+          }
+        }
+      });
+      selectPatient(currentActiveId);
+    }
+
+    function zoomIn() {
+      if (currentZoom < 1.6) {
+        currentZoom += 0.1;
+        applyZoom();
+      }
+    }
+
+    function zoomOut() {
+      if (currentZoom > 0.6) {
+        currentZoom -= 0.1;
+        applyZoom();
+      }
+    }
+
+    function resetZoom() {
+      currentZoom = 1.2;
+      applyZoom();
+    }
+
+    function applyZoom() {
+      const sheet = document.getElementById('printSheet');
+      sheet.style.transform = `scale(${currentZoom})`;
+      document.getElementById('txtZoomLevel').innerText = `${Math.round(currentZoom * 100)}%`;
+      
+      const container = document.getElementById('sheetContainer');
+      container.style.height = `${265 * 3.7795 * currentZoom}px`;
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('patientSidebar');
+      const restoreBtn = document.getElementById('btnRestoreSidebar');
+      
+      if (sidebarOpen) {
+        sidebar.style.width = '0px';
+        sidebar.style.minWidth = '0px';
+        sidebar.style.opacity = '0';
+        setTimeout(() => {
+          sidebar.classList.add('hidden');
+          restoreBtn.classList.remove('hidden');
+        }, 200);
+      } else {
+        sidebar.classList.remove('hidden');
+        restoreBtn.classList.add('hidden');
+        setTimeout(() => {
+          sidebar.style.width = '320px';
+          sidebar.style.minWidth = '320px';
+          sidebar.style.opacity = '1';
+        }, 10);
+      }
+      sidebarOpen = !sidebarOpen;
+    }
+
+    function selectPatient(id) {
+      currentActiveId = id;
+      
+      database.forEach(p => {
+        const el = document.getElementById(`patient-row-${p.item}`);
+        if (el) {
+          if (p.item === id) {
+            // Sombreado de alta visibilidad según image_446dbd.png
+            el.className = `p-3.5 cursor-pointer hover:bg-slate-50 transition flex items-center justify-between border-b border-slate-100 patient-row active-patient-card`;
+          } else {
+            el.className = `p-3.5 cursor-pointer hover:bg-slate-50 transition flex items-center justify-between border-b border-slate-100 patient-row inactive-patient-card`;
+          }
+        }
+      });
+
+      const p = database.find(item => item.item === id);
+      if(!p) return;
+
+      document.getElementById('txtActiveCaseName').innerText = `Ficha Activa: ${p.paterno} ${p.materno}, ${p.nombres} (H.C. ${p.hc})`;
+
+      document.getElementById('f_correlative_num').innerText = String(p.item).padStart(3, '0');
+      document.getElementById('f_hc_num').innerText = p.hc;
+      document.getElementById('f_paterno').innerText = p.paterno;
+      document.getElementById('f_materno').innerText = p.materno;
+      document.getElementById('f_nombres').innerText = p.nombres;
+      document.getElementById('f_nacimiento').innerText = p.nacimiento;
+      document.getElementById('f_edad').innerText = `${p.edad} años`;
+      document.getElementById('f_dni').innerText = p.dni;
+      document.getElementById('f_direccion').innerText = p.direccion;
+
+      const sexMCircle = document.getElementById('sex_m_circle');
+      const sexFCircle = document.getElementById('sex_f_circle');
+      if (p.sexo === 'M') {
+        sexMCircle.className = "w-2.5 h-2.5 rounded-full minsa-blue-bg inline-block ring-2 ring-blue-300";
+        sexFCircle.className = "w-2.5 h-2.5 rounded-full border border-slate-400 inline-block";
+      } else {
+        sexMCircle.className = "w-2.5 h-2.5 rounded-full border border-slate-400 inline-block";
+        sexFCircle.className = "w-2.5 h-2.5 rounded-full minsa-blue-bg inline-block ring-2 ring-blue-300";
+      }
+
+      document.getElementById('seg_si_circle').className = "w-2.5 h-2.5 rounded-full minsa-blue-bg inline-block ring-2 ring-blue-300";
+      document.getElementById('seg_no_circle').className = "w-2.5 h-2.5 rounded-full border border-slate-400 inline-block";
+
+      document.getElementById('f_fecha_captacion_val').innerText = p.date;
+      
+      const casoNuevoCircle = document.getElementById('caso_nuevo_circle');
+      const casoPrevCircle = document.getElementById('caso_prev_circle');
+      if (p.tipo_caso === 'nuevo') {
+        casoNuevoCircle.className = "w-2 h-2 rounded-full minsa-blue-bg inline-block";
+        casoPrevCircle.className = "w-2 h-2 rounded-full border border-slate-400 inline-block";
+      } else {
+        casoNuevoCircle.className = "w-2 h-2 rounded-full border border-slate-400 inline-block";
+        casoPrevCircle.className = "w-2 h-2 rounded-full minsa-blue-bg inline-block";
+      }
+
+      const dbT1Circle = document.getElementById('db_t1_circle');
+      const dbT2Circle = document.getElementById('db_t2_circle');
+      if (p.tipo_db === 't1') {
+        dbT1Circle.className = "w-2 h-2 rounded-full minsa-blue-bg inline-block";
+        dbT2Circle.className = "w-2 h-2 rounded-full border border-slate-400 inline-block";
+      } else {
+        dbT1Circle.className = "w-2 h-2 rounded-full border border-slate-400 inline-block";
+        dbT2Circle.className = "w-2 h-2 rounded-full minsa-blue-bg inline-block";
+      }
+
+      document.getElementById('f_peso_val').innerText = p.peso;
+      document.getElementById('f_talla_val').innerText = p.talla;
+      document.getElementById('f_pa_sis_val').innerText = p.pa_sis;
+      document.getElementById('f_pa_dia_val').innerText = p.pa_dia;
+
+      document.getElementById('f_glicemia_val').innerText = p.glicemia;
+      document.getElementById('f_hba1c_val').innerText = p.hba1c || 'No reg.';
+      document.getElementById('f_col_ldl_val').innerText = p.col_ldl || 'No reg.';
+      document.getElementById('f_col_total_val').innerText = p.col_total || 'No reg.';
+      document.getElementById('f_triglyceridos_val').innerText = p.trigliceridos || 'No reg.';
+      document.getElementById('f_col_hdl_val').innerText = p.col_hdl || 'No reg.';
+      document.getElementById('f_creatinina_val').innerText = p.creatinina || 'No reg.';
+
+      const estControladoCircle = document.getElementById('est_controlado_circle');
+      const estDescompensatedCircle = document.getElementById('est_descompensado_circle');
+      if (p.estado === 'controlado') {
+        estControladoCircle.className = "w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block";
+        estDescompensatedCircle.className = "w-2.5 h-2.5 rounded-full border border-slate-400 inline-block";
+      } else {
+        estControladoCircle.className = "w-2.5 h-2.5 rounded-full border border-slate-400 inline-block";
+        estDescompensatedCircle.className = "w-2.5 h-2.5 rounded-full bg-red-600 inline-block";
+      }
+
+      drawCustomCheck('c_hta_box', p.comorbilidades.hta);
+      drawCustomCheck('c_obesidad_box', p.comorbilidades.obesidad);
+      drawCustomCheck('c_dislipidemia_box', p.comorbilidades.dislipidemia);
+      drawCustomCheck('c_anemia_box', p.comorbilidades.anemia);
+      drawCustomCheck('c_vih_box', p.comorbilidades.vih);
+
+      drawCustomCheck('comp_renal_box', p.complicaciones.renal);
+      drawCustomCheck('comp_pie_sa_box', p.complicaciones.pie_sa);
+      drawCustomCheck('comp_retino_box', p.complicaciones.retino);
+      drawCustomCheck('comp_neuro_box', p.complicaciones.neuro);
+
+      document.getElementById('f_tratamiento_val').innerText = p.tratamiento;
+      document.getElementById('f_medico_val').innerText = p.medico;
+      document.getElementById('f_cmp_val').innerText = p.cmp;
+      
+      applyZoom();
+    }
+
+    function drawCustomCheck(elementId, isActive) {
+      const el = document.getElementById(elementId);
+      if (el) {
+        if (isActive) {
+          el.className = "w-3 h-3 border border-blue-600 bg-blue-100 flex items-center justify-center text-[9px] text-blue-900 rounded font-black";
+          el.innerText = "✓";
+        } else {
+          el.className = "w-3 h-3 border border-slate-300 flex items-center justify-center text-[9px] text-transparent rounded";
+          el.innerText = "";
+        }
+      }
+    }
+
+    function toggleImportPanel() {
+      const panel = document.getElementById('importPanel');
+      panel.classList.toggle('hidden');
+      panel.classList.toggle('flex');
+    }
+
+    function toggleApiSettings() {
+      const area = document.getElementById('apiSettingsArea');
+      const chev = document.getElementById('apiChevron');
+      area.classList.toggle('hidden');
+      chev.classList.toggle('rotate-180');
+    }
+
+    function saveApiKey() {
+      const key = document.getElementById('inputApiKey').value.trim();
+      localStorage.setItem('gemini_api_key', key);
+      showAlert("Clave Guardada", "La API Key de Gemini ha sido guardada en la memoria local de tu navegador para usar en Vercel/GitHub.", "info");
+    }
+
+    function toggleEditPanel() {
+      const panel = document.getElementById('editPanel');
+      panel.classList.toggle('hidden');
+      panel.classList.toggle('flex');
+      
+      if (!panel.classList.contains('hidden')) {
+        const p = database.find(item => item.item === currentActiveId);
+        if(!p) return;
+        document.getElementById('edit_paterno').value = p.paterno;
+        document.getElementById('edit_materno').value = p.materno;
+        document.getElementById('edit_nombres').value = p.nombres;
+        document.getElementById('edit_dni').value = p.dni;
+        document.getElementById('edit_hc').value = p.hc;
+        document.getElementById('edit_date').value = p.date;
+        document.getElementById('edit_direccion').value = p.direccion;
+        document.getElementById('edit_peso').value = p.peso;
+        document.getElementById('edit_talla').value = p.talla;
+        document.getElementById('edit_pa_sis').value = p.pa_sis;
+        document.getElementById('edit_pa_dia').value = p.pa_dia;
+        document.getElementById('edit_glicemia').value = p.glicemia;
+        document.getElementById('edit_hba1c').value = p.hba1c;
+        document.getElementById('edit_col_total').value = p.col_total;
+        document.getElementById('edit_trigliceridos').value = p.trigliceridos;
+        document.getElementById('edit_creatinina').value = p.creatinina;
+        document.getElementById('edit_medico').value = p.medico;
+        document.getElementById('edit_cmp').value = p.cmp;
+        document.getElementById('edit_tratamiento').value = p.tratamiento;
+      }
+    }
+
+    function saveChanges() {
+      const p = database.find(item => item.item === currentActiveId);
+      if(!p) return;
+
+      p.paterno = document.getElementById('edit_paterno').value.toUpperCase();
+      p.materno = document.getElementById('edit_materno').value.toUpperCase();
+      p.nombres = document.getElementById('edit_nombres').value.toUpperCase();
+      p.dni = document.getElementById('edit_dni').value;
+      p.hc = document.getElementById('edit_hc').value;
+      p.date = document.getElementById('edit_date').value;
+      p.direccion = document.getElementById('edit_direccion').value;
+      p.peso = document.getElementById('edit_peso').value;
+      p.talla = document.getElementById('edit_talla').value;
+      p.pa_sis = document.getElementById('edit_pa_sis').value;
+      p.pa_dia = document.getElementById('edit_pa_dia').value;
+      p.glicemia = document.getElementById('edit_glicemia').value;
+      p.hba1c = document.getElementById('edit_hba1c').value;
+      p.col_total = document.getElementById('edit_col_total').value;
+      p.trigliceridos = document.getElementById('edit_trigliceridos').value;
+      p.creatinina = document.getElementById('edit_creatinina').value;
+      p.medico = document.getElementById('edit_medico').value;
+      p.cmp = document.getElementById('edit_cmp').value;
+      p.tratamiento = document.getElementById('edit_tratamiento').value;
+
+      const monthKey = getMonthGroupKey(p.date);
+      if (activeAccordions[monthKey] === undefined) {
+        activeAccordions[monthKey] = true;
+      }
+
+      renderPatientList();
+      selectPatient(currentActiveId);
+      toggleEditPanel();
+    }
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const dropPrompt = document.getElementById('dropPrompt');
+      const dropLoader = document.getElementById('dropLoader');
+      const dropLoaderText = document.getElementById('dropLoaderText');
+
+      dropPrompt.classList.add('hidden');
+      dropLoader.classList.remove('hidden');
+      dropLoader.classList.add('flex');
+      dropLoaderText.innerText = "Leyendo archivo clínico...";
+
+      selectedFileType = file.type;
+
+      if (file.type === "application/pdf") {
+        const fileReader = new FileReader();
+        fileReader.onload = function() {
+          const typedarray = new Uint8Array(this.result);
+          extractTextFromPdf(typedarray);
+        };
+        fileReader.readAsArrayBuffer(file);
+      } else if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const maxDim = 1200;
+            let w = img.width;
+            let h = img.height;
+            if (w > maxDim || h > maxDim) {
+              if (w > h) {
+                h = Math.round((h * maxDim) / w);
+                w = maxDim;
+              } else {
+                w = Math.round((w * maxDim) / h);
+                h = maxDim;
+              }
+            }
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            selectedFileBase64 = canvas.toDataURL("image/jpeg", 0.8).split(',')[1];
+            
+            dropLoaderText.innerText = "Imagen cargada. Presiona 'Procesar con IA'.";
+            document.getElementById('importRawText').value = "[Imagen cargada correctamente para OCR y análisis de Gemini IA]";
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        showAlert("Error de Archivo", "Formato de archivo no soportado. Por favor sube un PDF o una Imagen.", "error");
+        resetDropZone();
+      }
+    }
+
+    async function extractTextFromPdf(pdfData) {
+      const dropLoaderText = document.getElementById('dropLoaderText');
+      try {
+        const pdf = await pdfjsLib.getDocument({data: pdfData}).promise;
+        let fullText = "";
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map(item => item.str).join(" ");
+          fullText += pageText + "\n";
+        }
+        document.getElementById('importRawText').value = fullText;
+        dropLoaderText.innerText = "PDF leído con éxito. Presiona 'Procesar con IA'.";
+      } catch (err) {
+        console.error("Error al extraer texto PDF: ", err);
+        showAlert("Error de lectura", "No se pudo leer el contenido del PDF.", "error");
+        resetDropZone();
+      }
+    }
+
+    function resetDropZone() {
+      document.getElementById('dropPrompt').classList.remove('hidden');
+      document.getElementById('dropLoader').classList.add('hidden');
+      document.getElementById('dropLoader').classList.remove('flex');
+      selectedFileBase64 = null;
+      selectedFileType = null;
+      document.getElementById('fileInput').value = "";
+    }
+
+    async function processClinicalData() {
+      const rawText = document.getElementById('importRawText').value;
+      const btnProcess = document.getElementById('btnProcess');
+      
+      if (!rawText.trim() && !selectedFileBase64) {
+        showAlert("Entrada Vacía", "Por favor pega texto clínico o sube un PDF/Imagen para procesar.", "info");
+        return;
+      }
+
+      btnProcess.disabled = true;
+      btnProcess.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Procesando con IA...`;
+
+      // Obtener API Key de memoria o usar la clave automática de Canvas
+      const storedKey = localStorage.getItem('gemini_api_key') || "";
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${storedKey}`;
+
+      const systemPrompt = `Actúa como un experto en codificación y auditoría epidemiológica del Ministerio de Salud del Perú (MINSA). Tu objetivo es extraer y mapear minuciosamente la información clínica del paciente provista por el usuario para estructurar un archivo JSON de Ficha Epidemiológica de Diabetes Mellitus.
+Debes respetar estrictamente el siguiente esquema de salida JSON estructurado y no agregar texto descriptivo adicional fuera del JSON:
+{
+  "paterno": "APELLIDO PATERNO",
+  "materno": "APELLIDO MATERNO",
+  "nombres": "NOMBRES",
+  "dni": "DNI de 8 dígitos",
+  "hc": "Historia clínica",
+  "sexo": "M o F",
+  "nacimiento": "DD/MM/AAAA",
+  "edad": "Edad numérica en años",
+  "direccion": "Dirección actual",
+  "tipo_caso": "nuevo" o "prevalente",
+  "tipo_db": "t1" o "t2",
+  "peso": "Peso en Kg (por ejemplo, 65.5)",
+  "talla": "Talla en metros (por ejemplo, 1.62)",
+  "pa_sis": "Presión Sistólica",
+  "pa_dia": "Presión Diastólica",
+  "glicemia": "Glicemia en ayunas",
+  "hba1c": "HbA1c en %",
+  "col_total": "Colesterol Total",
+  "trigliceridos": "Triglicéridos",
+  "col_ldl": "Colesterol LDL",
+  "col_hdl": "Colesterol HDL",
+  "creatinina": "Creatinina sérica",
+  "estado": "controlado" (si glicemia <= 130 o HbA1c < 7.0) o "descompensado",
+  "comorbilidades": {
+    "hta": true o false,
+    "obesidad": true o false,
+    "dislipidemia": true o false,
+    "anemia": true o false,
+    "vih": true o false
+  },
+  "complicaciones": {
+    "neuro": true o false,
+    "renal": true o false,
+    "retino": true o false,
+    "pie_sa": true o false
+  },
+  "tratamiento": "Tratamiento farmacológico detallado",
+  "medico": "Nombre completo del médico tratante",
+  "cmp": "Número de colegiatura CMP"
+}`;
+
+      let contentsPayload = [];
+      if (selectedFileBase64 && selectedFileType.startsWith("image/")) {
+        contentsPayload = [{
+          role: "user",
+          parts: [
+            { text: "Analiza esta imagen y extrae el JSON estructurado según las reglas del sistema:\n" + rawText },
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: selectedFileBase64
+              }
+            }
+          ]
+        }];
+      } else {
+        contentsPayload = [{
+          role: "user",
+          parts: [{ text: "Procesa y analiza el siguiente informe clínico para extraer el JSON epidemiológico:\n\n" + rawText }]
+        }];
+      }
+
+      const payload = {
+        contents: contentsPayload,
+        systemInstruction: {
+          parts: [{ text: systemPrompt }]
+        },
+        generationConfig: {
+          responseMimeType: "application/json"
+        }
+      };
+
+      try {
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error("HTTP error " + response.status);
+        }
+
+        const data = await response.json();
+        const outputJsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (outputJsonText) {
+          const parsedData = JSON.parse(outputJsonText);
+          integrateExtractedCase(parsedData);
+        } else {
+          throw new Error("Respuesta de IA vacía.");
+        }
+      } catch (err) {
+        console.error(err);
+        showAlert("Error de Procesamiento IA", "Ocurrió un error al contactar al motor de IA de Gemini. Verifica tu clave de API si estás en tu propio servidor.", "error");
+      } finally {
+        btnProcess.disabled = false;
+        btnProcess.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Procesar con Inteligencia Artificial`;
+      }
+    }
+
+    function integrateExtractedCase(data) {
+      const todayDate = new Date().toLocaleDateString('es-PE');
+      
+      const newItem = {
+        item: database.length + 1,
+        date: data.date || todayDate,
+        dni: data.dni || "00000000",
+        hc: data.hc || "00000",
+        paterno: (data.paterno || "NUEVO").toUpperCase(),
+        materno: (data.materno || "PACIENTE").toUpperCase(),
+        nombres: (data.nombres || "REGISTRADO").toUpperCase(),
+        sexo: data.sexo || "F",
+        nacimiento: data.nacimiento || "01/01/1980",
+        edad: data.edad || "46",
+        direccion: data.direccion || "Distrito de Ventanilla, Callao",
+        tipo_caso: data.tipo_caso || "prevalente",
+        tipo_db: data.tipo_db || "t2",
+        peso: data.peso || "70.0",
+        talla: data.talla || "1.65",
+        cintura: "90",
+        pa_sis: data.pa_sis || "120",
+        pa_dia: data.pa_dia || "80",
+        glicemia: data.glicemia || "120.00",
+        hba1c: data.hba1c || "7.5",
+        col_total: data.col_total || "200.00",
+        trigliceridos: data.trigliceridos || "150.00",
+        col_ldl: data.col_ldl || "100.00",
+        col_hdl: data.col_hdl || "45.00",
+        creatinina: data.creatinina || "0.80",
+        estado: data.estado || (parseFloat(data.glicemia) > 130 ? "descompensado" : "controlado"),
+        comorbilidades: {
+          hta: data.comorbilidades?.hta || false,
+          obesidad: data.comorbilidades?.obesidad || false,
+          dislipidemia: data.comorbilidades?.dislipidemia || false,
+          anemia: data.comorbilidades?.anemia || false,
+          vih: data.comorbilidades?.vih || false
+        },
+        complicaciones: {
+          neuro: data.complicaciones?.neuro || false,
+          renal: data.complicaciones?.renal || false,
+          retino: data.complicaciones?.retino || false,
+          pie_sa: data.complicaciones?.pie_sa || false
+        },
+        tratamiento: data.tratamiento || "Tratamiento estándar.",
+        medico: data.medico || "MÉDICO NOTIFICADOR",
+        cmp: data.cmp || "99999"
+      };
+
+      database.push(newItem);
+      
+      const monthKey = getMonthGroupKey(newItem.date);
+      activeAccordions[monthKey] = true;
+
+      renderPatientList();
+      selectPatient(newItem.item);
+      toggleImportPanel();
+      resetDropZone();
+      document.getElementById('importRawText').value = "";
+
+      showAlert("Paciente Registrado", `Se ha autocompletado y registrado la ficha epidemiológica de ${newItem.paterno} ${newItem.materno}, ${newItem.nombres}.`, "success");
+    }
+
+    function showAlert(title, message, type = "info") {
+      document.getElementById('alertTitle').innerText = title;
+      document.getElementById('alertMessage').innerText = message;
+      
+      const iconContainer = document.getElementById('alertIcon');
+      if (type === "success") {
+        iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 text-emerald-800 text-2xl";
+        iconContainer.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+      } else if (type === "error") {
+        iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 text-red-800 text-2xl";
+        iconContainer.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i>`;
+      } else {
+        iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 text-blue-800 text-2xl";
+        iconContainer.innerHTML = `<i class="fa-solid fa-circle-info"></i>`;
+      }
+
+      const modal = document.getElementById('alertModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeAlert() {
+      const modal = document.getElementById('alertModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function printSheet() {
+      const originalZoom = currentZoom;
+      currentZoom = 1.0;
+      applyZoom();
+      
+      window.print();
+      
+      setTimeout(() => {
+        currentZoom = originalZoom;
+        applyZoom();
+      }, 500);
+    }
+
+    window.onload = initApp;
+  </script>
+</body>
+</html>
