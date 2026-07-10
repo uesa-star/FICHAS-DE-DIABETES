@@ -34,7 +34,7 @@
       border-color: #1e3a8a !important;
     }
     
-    /* Estructura Oficial de Ficha (Alineación perfecta) */
+    /* Estructura Oficial de Ficha (Alineación perfecta image_7a5f75.png) */
     .sheet-grid {
       border: 1px solid #000000;
     }
@@ -70,7 +70,7 @@
       transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    /* Estilos de Selección de Pacientes de Alta Visibilidad */
+    /* Estilos de Selección de Pacientes de Alta Visibilidad (Fiel a image_446dbd.png) */
     .active-patient-card {
       background-color: #e0f2fe !important; 
       border-left: 6px solid #1e3a8a !important; 
@@ -89,7 +89,7 @@
       color: #1e3a8a !important;
     }
     
-    /* CONFIGURACIÓN ULTRA-COMPACTA DE IMPRESIÓN (Garantiza 1 Sola Hoja A4 y elimina vacíos) */
+    /* CONFIGURACIÓN ULTRA-COMPACTA DE IMPRESIÓN (Garantiza 1 Sola Hoja A4 y elimina vacíos - image_7a5f75.png) */
     @media print {
       @page {
         size: A4 portrait;
@@ -275,7 +275,7 @@
       <!-- PRINT CONTAINER LAYOUT -->
       <div class="print-container w-full max-w-[210mm] flex justify-center" id="sheetContainer">
         
-        <!-- HOJA DE FICHA OFICIAL A4 COMPACTA -->
+        <!-- HOJA DE FICHA OFICIAL A4 COMPACTA (Ajustada según image_7a5f75.png) -->
         <div id="printSheet" class="w-full bg-white p-3 text-black border border-black flex flex-col justify-between overflow-hidden relative" style="box-sizing: border-box; width: 210mm; height: 265mm;">
           
           <!-- CABECERA INSTITUCIONAL MINSA -->
@@ -1450,7 +1450,6 @@
       }
     ];
 
-    // Variables globales de control
     let database = [];
     let currentActiveId = 1;
     let sidebarOpen = true;
@@ -1471,7 +1470,7 @@
     function parseExcelDate(dateVal) {
       if (!dateVal) return "";
       
-      // Si ya es un objeto Date nativo de JS
+      // Si ya es un objeto Date nativo de JS (SheetJS con cellDates: true)
       if (dateVal instanceof Date) {
         return formatDateToDDMMYYYY(dateVal);
       }
@@ -1488,7 +1487,7 @@
       
       let str = String(dateVal).trim();
       
-      // Formato ISO: YYYY-MM-DD (frecuente en descargas de sistemas)
+      // Formato ISO: YYYY-MM-DD
       const isoMatch = str.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
       if (isoMatch) {
         return `${isoMatch[3].padStart(2, '0')}/${isoMatch[2].padStart(2, '0')}/${isoMatch[1]}`;
@@ -1870,15 +1869,15 @@
       document.getElementById('f_proteinuria').innerText = p.proteinuria || "Negat.";
 
       const estControlado = document.getElementById('est_controlado');
-      const estDescompensado = document.getElementById('est_descompensado');
+      const estDescompensated = document.getElementById('est_descompensado');
       const estMuerto = document.getElementById('est_muerto');
       if (p.estado === 'controlado') {
         estControlado.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
-        estDescompensado.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
+        estDescompensated.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
         estMuerto.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
       } else {
         estControlado.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
-        estDescompensado.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
+        estDescompensated.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
         estMuerto.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
       }
 
@@ -2150,7 +2149,7 @@
       reader.onload = function(e) {
         try {
           const data = new Uint8Array(e.target.result);
-          // cellDates: true permite que SheetJS formatee las fechas internamente
+          // cellDates: true permite que SheetJS capture y procese las fechas nativas de Excel
           const workbook = XLSX.read(data, {type: 'array', cellDates: true});
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
@@ -2215,15 +2214,15 @@
         return val !== undefined ? val.toString().trim() : "";
       };
 
-      // Priorizar mapeo exacto de las columnas de fecha de captación hospitalaria
+      // Priorizar mapeo de 'fecha_cap' de tu reporte de Excel hospitalario
       const captacionRawDate = getRawVal([
-        "fecha_captacion", "fecha captacion", "fecha de captacion", "fecha de captación",
-        "fec_captacion", "fec_capt", "fecha_atencion", "fecha atencion", "fecha de atencion", 
-        "fecha de atención", "fec_aten", "fecha", "date", "atencion", "atención"
+        "fecha_cap", "fechacap", "fec_cap", "fecha_captacion", "fecha captacion", 
+        "fecha de captacion", "fecha de captación", "fecha_atencion", "fecha atencion", 
+        "fecha de atencion", "fecha de atención", "fec_aten", "fecha", "date", "atencion", "atención"
       ]);
 
       return {
-        // Sanitizar y mapear usando la función inteligente parseExcelDate
+        // Sanitizar y mapear usando el decodificador parseExcelDate
         date: parseExcelDate(captacionRawDate),
         dni: getVal(["dni", "documento", "n_doc", "n_documento", "identidad"]),
         hc: getVal(["hc", "historia", "n_hc", "historia_clinica", "h.c.", "historia clínica"]),
