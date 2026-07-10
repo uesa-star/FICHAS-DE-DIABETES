@@ -14,6 +14,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <!-- PapaParse para procesamiento nativo y veloz de archivos CSV/Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- SheetJS para lectura directa de Libros de Excel (.xlsx y .xls) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
     body {
@@ -790,11 +792,11 @@
 
         <!-- ZONE DE ARCHIVO DROP -->
         <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50 hover:bg-blue-50/20 hover:border-[#1e3a8a] transition cursor-pointer relative" id="dropZone" onclick="document.getElementById('fileInput').click()">
-          <input type="file" id="fileInput" class="hidden" accept="application/pdf,image/*,.csv,application/vnd.ms-excel" onchange="handleFileSelect(event)">
+          <input type="file" id="fileInput" class="hidden" accept="application/pdf,image/*,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls" onchange="handleFileSelect(event)">
           <div class="space-y-2" id="dropPrompt">
             <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400"></i>
-            <p class="font-bold text-slate-700">Arrastra aquí tu PDF, Imagen o archivo CSV (Excel)</p>
-            <p class="text-[10px] text-slate-400">Soporta PDFs, Imágenes de laboratorio clínicos o planillas CSV con columnas de atenciones.</p>
+            <p class="font-bold text-slate-700">Arrastra aquí tu PDF, Imagen, CSV o Libro de Excel</p>
+            <p class="text-[10px] text-slate-400">Soporta PDFs, Imágenes de laboratorio clínicos, planillas CSV o Libros de Excel (.xlsx, .xls).</p>
           </div>
           <!-- Loader de carga -->
           <div class="hidden flex-col items-center justify-center space-y-2 py-4" id="dropLoader">
@@ -1989,9 +1991,12 @@
       dropLoaderText.innerText = "Leyendo archivo clínico...";
 
       selectedFileType = file.type;
+      const fileName = file.name.toLowerCase();
 
-      // Detectar e importar CSV
-      if (file.name.endsWith(".csv") || file.type === "text/csv" || file.type === "application/vnd.ms-excel") {
+      // Detectar e importar según el tipo de archivo (Soporte para Libros de Excel y CSV)
+      if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls") || file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") {
+        processExcelFile(file);
+      } else if (fileName.endsWith(".csv") || file.type === "text/csv" || file.type === "application/vnd.ms-excel") {
         processCSVFile(file);
       } else if (file.type === "application/pdf") {
         const fileReader = new FileReader();
@@ -2084,6 +2089,60 @@
           resetDropZone();
         }
       });
+    }
+
+    function processExcelFile(file) {
+      const dropLoaderText = document.getElementById('dropLoaderText');
+      dropLoaderText.innerText = "Procesando Libro de Excel (.xlsx)...";
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, {type: 'array'});
+          const firstSheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[firstSheetName];
+          const rows = XLSX.utils.sheet_to_json(worksheet);
+
+          if (rows.length === 0) {
+            showAlert("Archivo Vacío", "No se encontraron filas con datos de pacientes en el Libro de Excel.", "error");
+            resetDropZone();
+            return;
+          }
+
+          let importCount = 0;
+          rows.forEach(row => {
+            const mapped = mapCSVRow(row);
+            integrateCSVCase(mapped);
+            importCount++;
+          });
+
+          saveDatabaseToLocalStorage();
+          
+          database.forEach(p => {
+            const parts = p.date.split("/");
+            if (parts.length === 3) {
+              const year = parts[2];
+              const monthName = monthNames[parseInt(parts[1], 10) - 1] || "Otros";
+              activeYears[year] = true;
+              activeMonths[`${year}-${monthName}`] = true;
+            }
+          });
+
+          renderPatientList();
+          selectPatient(database[database.length - 1].item);
+          toggleImportPanel();
+          resetDropZone();
+
+          showAlert("Importación de Excel Exitosa", `Se han importado y guardado ${importCount} pacientes desde tu Libro de Excel.`, "success");
+
+        } catch (err) {
+          console.error(err);
+          showAlert("Error de lectura", "No se pudo procesar el Libro de Excel (.xlsx). Asegúrate de que no esté protegido o dañado.", "error");
+          resetDropZone();
+        }
+      };
+      reader.readAsArrayBuffer(file);
     }
 
     function mapCSVRow(row) {
