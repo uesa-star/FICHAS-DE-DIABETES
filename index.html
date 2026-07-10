@@ -238,6 +238,11 @@
           </div>
         </div>
         <input type="text" id="searchBar" onkeyup="filterPatients()" placeholder="Buscar por Nombre, DNI, H.C..." class="w-full text-xs p-2 bg-white text-slate-800 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div class="flex justify-start mt-2">
+          <button onclick="resetToDefaultDatabase()" class="text-[9px] text-slate-400 hover:text-red-600 font-extrabold uppercase tracking-wide flex items-center gap-1 transition-colors" title="Borrar datos locales y restaurar los 15 pacientes iniciales">
+            <i class="fa-solid fa-rotate-left"></i> Restablecer 15 Casos Originales
+          </button>
+        </div>
       </div>
       <!-- Contenedor Maestre del Acordeón por Meses (image_4317a5.png) -->
       <div class="flex-1 overflow-y-auto custom-scrollbar bg-white" id="accordionContainer">
@@ -1451,6 +1456,15 @@
     let selectedFileBase64 = null;
     let selectedFileType = null;
 
+    function saveDatabaseToLocalStorage() {
+      localStorage.setItem('clinical_database', JSON.stringify(database));
+    }
+
+    function resetToDefaultDatabase() {
+      localStorage.removeItem('clinical_database');
+      location.reload();
+    }
+
     const monthNames = [
       "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
       "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"
@@ -1464,6 +1478,19 @@
       const savedKey = localStorage.getItem('gemini_api_key');
       if (savedKey) {
         document.getElementById('inputApiKey').value = savedKey;
+      }
+
+      const savedDb = localStorage.getItem('clinical_database');
+      if (savedDb) {
+        try {
+          const parsed = JSON.parse(savedDb);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            database.length = 0;
+            database.push(...parsed);
+          }
+        } catch(e) {
+          console.error("Error al cargar la persistencia local de pacientes", e);
+        }
       }
 
       database.forEach(p => {
@@ -1890,6 +1917,8 @@
       p.medico = document.getElementById('edit_medico').value;
       p.cmp = document.getElementById('edit_cmp').value;
 
+      saveDatabaseToLocalStorage();
+
       const monthKey = getMonthGroupKey(p.date);
       if (activeAccordions[monthKey] === undefined) {
         activeAccordions[monthKey] = true;
@@ -2134,6 +2163,8 @@
       };
 
       database.push(newItem);
+      
+      saveDatabaseToLocalStorage();
       
       const monthKey = getMonthGroupKey(newItem.date);
       activeAccordions[monthKey] = true;
