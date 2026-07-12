@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MINSA - Ficha Epidemiológica Oficial de Diabetes Mellitus - Hospital de Ventanilla</title>
+  <title>Hospital de Ventanilla - Vigilancia Epidemiológica de Diabetes Mellitus</title>
   
   <!-- Tailwind CSS para el diseño responsivo -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -191,7 +191,6 @@
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased bg-[#f8fafc]">
 
-  <!-- TOP BAR (no-print) -->
   <header class="bg-[#1e3a8a] text-white p-4 shadow-sm no-print flex flex-col md:flex-row justify-between items-center gap-4 z-30 border-b border-blue-950">
     <div class="flex items-center space-x-3">
       <div class="bg-blue-950/50 p-2 rounded-lg text-white shadow-md">
@@ -199,35 +198,21 @@
       </div>
       <div>
         <h1 class="text-md font-extrabold tracking-wide flex items-center gap-2 text-white">
-          MINSA - Hospital de Ventanilla
+          Hospital de Ventanilla
         </h1>
         <p class="text-xs text-blue-200 font-medium">Vigilancia Epidemiológica de Diabetes Mellitus</p>
       </div>
-    </div>
-    <div class="flex flex-wrap gap-2">
-      <button onclick="toggleImportPanel()" class="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center space-x-2 transition border border-white/10 shadow">
-        <i class="fa-solid fa-file-import"></i>
-        <span>Importador de Texto Clínico / Excel / PDFs</span>
-      </button>
-      <button onclick="toggleEditPanel()" class="bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1.5 transition border border-white/10">
-        <i class="fa-solid fa-pen-to-square"></i> <span>Editar Casillas</span>
-      </button>
-      <button onclick="printSheet()" class="bg-[#10b981] hover:bg-[#059669] text-white px-4 py-2 rounded-lg text-xs font-bold shadow flex items-center space-x-2 transition">
-        <i class="fa-solid fa-print"></i>
-        <span>Imprimir Ficha</span>
-      </button>
     </div>
   </header>
 
   <!-- MAIN CONTAINER -->
   <div class="flex-1 flex overflow-hidden relative bg-slate-50">
     
-    <!-- Botón flotante para restaurar la barra lateral (no-print) -->
-    <button id="btnRestoreSidebar" onclick="toggleSidebar()" class="hidden fixed left-4 top-4 z-40 bg-white hover:bg-slate-100 text-[#1e3a8a] p-3 rounded-lg shadow-xl border border-slate-200 transition-all no-print" title="Mostrar Lista de Pacientes">
-      <i class="fa-solid fa-angles-right"></i>
+    <!-- Botón flotante para restaurar la barra lateral (no-print) - CALIBRADO CON ICONO DE HAMBURGUESA (image_4beeb7.png) -->
+    <button id="btnRestoreSidebar" onclick="toggleSidebar()" class="hidden fixed left-4 top-4 z-40 bg-white hover:bg-slate-50 text-slate-700 p-3 rounded-lg shadow-md border border-slate-200 transition-all no-print flex items-center justify-center" title="Mostrar Panel">
+      <i class="fa-solid fa-bars text-base"></i>
     </button>
 
-    <!-- LEFT SIDEBAR: PATIENT REGISTRY (no-print) -->
     <aside id="patientSidebar" class="w-[320px] bg-white border-r border-slate-200 overflow-y-auto no-print flex flex-col flex-shrink-0 transition-width z-20">
       <div class="p-4 bg-slate-50 border-b border-slate-200">
         <div class="flex justify-between items-center mb-3">
@@ -238,29 +223,61 @@
             </h2>
           </div>
           <div class="flex items-center space-x-2">
-            <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-black border border-blue-200" id="badgeTotalCases">42</span>
-            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-700 p-1 rounded transition" title="Ocultar Panel">
-              <i class="fa-solid fa-angles-left text-sm"></i>
+            <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded-full font-black border border-blue-200" id="badgeTotalCases">0</span>
+            <!-- Botón de colapso con icono de hamburguesa (image_4beeb7.png) -->
+            <button onclick="toggleSidebar()" class="text-slate-500 hover:text-slate-800 p-1.5 hover:bg-slate-200/55 rounded transition flex items-center justify-center" title="Ocultar Panel">
+              <i class="fa-solid fa-bars text-sm"></i>
             </button>
           </div>
         </div>
+        
+        <!-- Campo de Búsqueda -->
         <input type="text" id="searchBar" onkeyup="filterPatients()" placeholder="Buscar por Nombre, DNI, H.C..." class="w-full text-xs p-2 bg-white text-slate-800 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
         
-        <div class="flex justify-start mt-2 border-b border-slate-150 pb-3">
-          <button onclick="resetToDefaultDatabase()" class="text-[9px] text-slate-400 hover:text-red-600 font-extrabold uppercase tracking-wide flex items-center gap-1 transition-colors" title="Borrar datos locales y restaurar los 42 pacientes iniciales">
-            <i class="fa-solid fa-rotate-left"></i> Restablecer 42 Casos Originales
+        <!-- Línea Roja 1: Restablecer y Limpiar (image_4bdafa.png y image_4b763e.png) -->
+        <div class="flex justify-between items-center mt-2 border-b border-slate-150 pb-3">
+          <button onclick="resetToDefaultDatabase()" class="text-[9px] text-slate-400 hover:text-red-600 font-extrabold uppercase tracking-wide flex items-center gap-1 transition-colors" title="Borrar datos locales y restaurar la base original">
+            <i class="fa-solid fa-rotate-left"></i> Restablecer Casos Originales
+          </button>
+          <button onclick="clearSearchAndFilters()" class="text-[9px] text-slate-400 hover:text-blue-800 font-extrabold uppercase tracking-wide flex items-center gap-1 transition-colors" title="Limpiar búsqueda y filtros de pantalla">
+            <i class="fa-solid fa-eraser"></i> Limpiar
           </button>
         </div>
 
-        <!-- SELECTOR DE VISTA EN LA BARRA LATERAL (Caja roja de image_89769d.png) -->
-        <div class="mt-3 mb-2 px-1">
-          <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-2">Vista del Sistema</span>
+        <!-- SECCIÓN DE ACCIONES OPERATIVAS REESTRUCTURADA (image_4bdafa.png) -->
+        <div class="mt-4 px-1 space-y-2 border-b border-slate-200 pb-4">
+          <span class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Acciones Operativas</span>
+          
+          <!-- 1. Importar Archivo (Color Azul) -->
+          <button onclick="toggleImportPanel()" class="w-full bg-[#1e3a8a] hover:bg-blue-800 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm">
+            <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
+            <span>Importar Archivo / IA</span>
+          </button>
+          
+          <!-- 2. Editar Casillas (Color Gris con Borde) -->
+          <button onclick="toggleEditPanel()" class="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>Editar Casillas</span>
+          </button>
+          
+          <!-- 3. Imprimir Ficha (Color Verde) -->
+          <button onclick="printSheet()" class="w-full bg-[#059669] hover:bg-[#047857] text-white px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm">
+            <i class="fa-solid fa-print"></i>
+            <span>Imprimir Ficha</span>
+          </button>
+        </div>
+
+        <!-- SELECTOR DE VISTA EN LA BARRA LATERAL (Cohesivo y alineado) -->
+        <div class="mt-4 mb-2 px-1">
+          <span class="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">Vista del Sistema</span>
           <div class="grid grid-cols-1 gap-1.5 bg-slate-100/80 p-1.5 rounded-xl border border-slate-200">
-            <button id="sidebarTabFichaBtn" onclick="switchView('ficha')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 bg-white text-[#1e3a8a] border border-blue-100 shadow-sm">
+            <!-- Ficha Epidemiológica A4 -->
+            <button id="sidebarTabFichaBtn" onclick="switchView('ficha')" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2.5 bg-white text-[#1e3a8a] border border-blue-100 shadow-sm">
               <i class="fa-solid fa-file-invoice text-sm text-[#1e3a8a]"></i>
               <span>Ficha Epidemiológica (A4)</span>
             </button>
-            <button id="sidebarTabDashBtn" onclick="switchView('dashboard')" class="w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 border border-transparent">
+            <!-- Panel de Control Dashboard -->
+            <button id="sidebarTabDashBtn" onclick="switchView('dashboard')" class="w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 border border-transparent">
               <i class="fa-solid fa-chart-pie text-sm text-emerald-600"></i>
               <span>Panel de Control (Dashboard)</span>
             </button>
@@ -268,25 +285,24 @@
         </div>
       </div>
       
-      <!-- Contenedor Maestre del Acordeón por Años y Meses -->
+      <!-- Contenedor Maestre del Acordeón por Años y Meses (Colapsado por Defecto para image_4bdafa.png) -->
       <div class="flex-1 overflow-y-auto custom-scrollbar bg-white" id="accordionContainer">
         <!-- Generado dinámicamente -->
       </div>
     </aside>
 
     <!-- RIGHT MAIN CONTENT: FORM VIEWER / DASHBOARD -->
-    <!-- Se reduce el padding en modo Dashboard para un efecto pegado visual estético -->
-    <main class="flex-1 overflow-y-auto p-2 md:p-3 bg-slate-100 flex flex-col items-center custom-scrollbar relative" id="formMainArea">
+    <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-100 flex flex-col items-center custom-scrollbar relative" id="formMainArea">
       
-      <!-- CONTROLES DE ZOOM Y BARRA DE ESTADO (no-print) - ID AGREGADO PARA OCULTAR EN DASHBOARD -->
-      <div id="zoomAndStatusWrapper" class="w-full max-w-[210mm] no-print flex flex-col sm:flex-row justify-between items-center bg-white border border-slate-200 p-3 mb-4 rounded-xl shadow-sm gap-4">
+      <!-- CONTROLES DE ZOOM Y ESTADO (no-print) - ¡LIMPIO DE BOTONES REDUNDANTES! -->
+      <div id="zoomAndStatusWrapper" class="w-full max-w-[210mm] no-print flex flex-col md:flex-row justify-between items-center bg-white border border-slate-200 p-3 mb-4 rounded-xl shadow-sm gap-4">
         
         <div class="flex items-center space-x-2" id="activeCaseIndicator">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
           <span class="text-xs text-slate-600 font-semibold" id="txtActiveCaseName">Cargando caso...</span>
         </div>
         
-        <!-- CONTROLES DE ZOOM -->
+        <!-- Controles exclusivos de Zoom -->
         <div class="flex items-center space-x-2 bg-slate-50 p-1 rounded-lg border border-slate-200" id="zoomControls">
           <button onclick="zoomOut()" class="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition font-bold text-sm" title="Reducir Vista">-</button>
           <span id="txtZoomLevel" class="text-xs font-mono text-slate-700 px-2 font-bold select-none">120%</span>
@@ -296,25 +312,29 @@
         </div>
       </div>
 
-      <!-- VISTA 2: DASHBOARD CONTENEDOR (Oculto por defecto) - AMPLIADO A ANCHO COMPLETO PARA EVITAR SEPARACIÓN -->
+      <!-- VISTA 2: DASHBOARD CONTENEDOR (Oculto por defecto) -->
       <div id="dashboardContainer" class="w-full max-w-full lg:max-w-[96%] hidden flex-col gap-3 no-print transition-all duration-300 px-1">
         
         <!-- HEADER DE FILTROS DEL DASHBOARD -->
-        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
           <div>
             <h2 class="font-extrabold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
               <i class="fa-solid fa-sliders text-blue-600"></i> Filtros del Panel de Control
             </h2>
             <p class="text-[11px] text-slate-400 font-medium">Aplica filtros para actualizar KPIs y gráficos en tiempo real</p>
           </div>
-          <div class="flex flex-wrap gap-4 w-full md:w-auto">
-            <div class="flex flex-col gap-1 w-full sm:w-[180px]">
+          
+          <div class="flex flex-wrap items-center gap-3 w-full xl:w-auto justify-end">
+            <!-- Selector de Año -->
+            <div class="flex flex-col gap-1 w-full sm:w-[150px]">
               <label class="text-[9px] font-extrabold uppercase text-slate-400">Año de Captación</label>
               <select id="dashFilterYear" onchange="updateDashboard()" class="text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 <option value="todos">Todos los Años</option>
               </select>
             </div>
-            <div class="flex flex-col gap-1 w-full sm:w-[180px]">
+            
+            <!-- Selector de Mes -->
+            <div class="flex flex-col gap-1 w-full sm:w-[150px]">
               <label class="text-[9px] font-extrabold uppercase text-slate-400">Mes de Captación</label>
               <select id="dashFilterMonth" onchange="updateDashboard()" class="text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg font-bold text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                 <option value="todos">Todos los Meses</option>
@@ -329,33 +349,33 @@
             <div class="bg-blue-100 text-blue-800 p-3 rounded-lg text-lg"><i class="fa-solid fa-hospital-user"></i></div>
             <div>
               <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total de Casos</span>
-              <strong id="kpiTotal" class="text-xl font-black text-slate-800">42</strong>
+              <strong id="kpiTotal" class="text-xl font-black text-slate-800">0</strong>
             </div>
           </div>
           <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center gap-3">
             <div class="bg-emerald-100 text-emerald-800 p-3 rounded-lg text-lg"><i class="fa-solid fa-circle-check"></i></div>
             <div>
               <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">% Controlados</span>
-              <strong id="kpiControlados" class="text-xl font-black text-slate-800">60%</strong>
+              <strong id="kpiControlados" class="text-xl font-black text-slate-800">0%</strong>
             </div>
           </div>
           <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center gap-3">
             <div class="bg-purple-100 text-purple-800 p-3 rounded-lg text-lg"><i class="fa-solid fa-calendar-week"></i></div>
             <div>
               <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">S.E. Máxima</span>
-              <strong id="kpiHba1c" class="text-xl font-black text-slate-800">SE 21</strong>
+              <strong id="kpiHba1c" class="text-xl font-black text-slate-800">SE --</strong>
             </div>
           </div>
           <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex items-center gap-3">
             <div class="bg-red-100 text-red-800 p-3 rounded-lg text-lg"><i class="fa-solid fa-triangle-exclamation"></i></div>
             <div>
               <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">% Comorbilidades</span>
-              <strong id="kpiComorbilidades" class="text-xl font-black text-slate-800">85%</strong>
+              <strong id="kpiComorbilidades" class="text-xl font-black text-slate-800">0%</strong>
             </div>
           </div>
         </div>
 
-        <!-- GRÁFICOS DE AÑO Y MES (Ubicación de líneas rojas de la imagen image_ec8000.png) -->
+        <!-- GRÁFICOS DE AÑO Y MES -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div class="bg-white border border-slate-200 p-3.5 rounded-xl shadow-sm h-[220px] flex flex-col justify-between">
             <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-700">
@@ -376,7 +396,7 @@
           </div>
         </div>
 
-        <!-- CURVA EPIDEMIOLÓGICA (CASOS POR S.E.) -->
+        <!-- CURVA EPIDEMIOLÓGICA (CASOS POR S.E. PURA) -->
         <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm w-full">
           <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-700 mb-4">
             <i class="fa-solid fa-chart-area text-indigo-600 mr-1.5"></i> Curva Epidemiológica (Casos por Semana Epidemiológica (S.E.))
@@ -386,7 +406,7 @@
           </div>
         </div>
 
-        <!-- GRÁFICOS DE DISTRIBUCIÓN LADO A LADO (Sexo y Tipo de Diabetes) -->
+        <!-- GRÁFICOS DE DISTRIBUCIÓN LADO A LADO -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col items-center">
             <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-700 self-start mb-4">
@@ -407,8 +427,7 @@
           </div>
         </div>
 
-        <!-- GRÁFICO DE EDAD (DEBAJO Y ANCHO COMPLETO - image_2cf1ff.png) -->
-        <!-- Las etiquetas del eje X se configuran sin rotación para verse completamente horizontales -->
+        <!-- GRÁFICO DE EDAD (DEBAJO Y ANCHO COMPLETO) -->
         <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm w-full">
           <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-700 mb-4">
             <i class="fa-solid fa-cake-candles text-emerald-500 mr-1.5"></i> Casos por Grupo de Edad (Rangos Epidemiológicos)
@@ -418,9 +437,9 @@
           </div>
         </div>
 
-        <!-- NUEVAS GRÁFICAS DE DISTRIBUCIÓN Y COMORBILIDADES (Debajo de Edad - image_2cfa3b.png) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
-          <!-- DISTRIBUCIÓN DE PACIENTES (Controlado vs Descompensado) -->
+        <!-- NUEVAS GRÁFICAS DE DISTRIBUCIÓN Y COMORBILIDADES -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1 text-slate-800">
+          <!-- DISTRIBUCIÓN DE PACIENTES -->
           <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm flex flex-col items-center">
             <h3 class="font-extrabold text-xs uppercase tracking-wider text-slate-700 self-start mb-4">
               <i class="fa-solid fa-heart-pulse text-emerald-500 mr-1.5"></i> Distribución de Pacientes
@@ -711,7 +730,7 @@
                   <div class="grid grid-cols-2 gap-1 text-[6.5px] text-print-scaled">
                     <div class="border border-black p-1">
                       <span class="block text-[6.5px] text-slate-600">N° Consultas (últ. 12 m)</span>
-                      <span class="font-bold text-[9px]" id="f_consultas">04</span>
+                      <span class="font-bold text-[9px]" id="f_consultas">00</span>
                     </div>
                     <div class="border border-black p-1">
                       <span class="block text-[6.5px] text-slate-600">N° Hospit. (últ. 12 m)</span>
@@ -922,8 +941,8 @@
           </div>
 
           <!-- FOOTER DE LA HOJA (Oficial) -->
-          <div class="border-t border-black pt-1 text-center text-[7.5px] text-print-scaled text-slate-500 leading-tight">
-            <p class="font-bold">Centro Nacional de Epidemiología, Prevención y Control de Enfermedades - MINSA</p>
+          <div class="border-t border-black pt-1 text-center text-[7.5px] text-print-scaled text-slate-500 leading-tight font-medium">
+            <p class="font-bold text-black">Centro Nacional de Epidemiología, Prevención y Control de Enfermedades - MINSA</p>
             <p>Calle Daniel Olaechea N° 199 - Jesús María, Lima 11 | Central: 631-4500 | Correo: notificacion@dge.gob.pe</p>
           </div>
 
@@ -936,82 +955,171 @@
 
   <!-- MODAL: FAST DATA IMPORT (no-print) WITH GEMINI AI PROCESSING -->
   <div id="importPanel" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 no-print p-4">
-    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full flex flex-col overflow-hidden border border-slate-300 max-h-[90vh]">
+    <div class="bg-white rounded-xl shadow-2xl max-w-6xl w-full flex flex-col overflow-hidden border border-slate-300 max-h-[90vh]">
       <div class="bg-slate-50 text-slate-800 p-4 flex justify-between items-center border-b border-slate-200">
         <div class="flex items-center space-x-2">
           <i class="fa-solid fa-wand-magic-sparkles text-xl text-[#1e3a8a]"></i>
           <div>
-            <h3 class="font-bold text-sm">Procesador IA e Importador Masivo</h3>
-            <p class="text-[11px] text-slate-500">Sube informes individuales (PDF/Imagen) o importaciones masivas (CSV de Excel)</p>
+            <h3 class="font-bold text-sm">Asistente Clínico de Auditoría e Importador IA</h3>
+            <p class="text-[11px] text-slate-500">Procesa informes individuales en tiempo real o importa de forma masiva libros Excel históricos</p>
           </div>
         </div>
         <button onclick="toggleImportPanel()" class="text-slate-400 hover:text-slate-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
       </div>
 
-      <div class="p-6 overflow-y-auto space-y-4 custom-scrollbar bg-white text-slate-700 text-xs">
-        <!-- SECCIÓN DE CONFIGURACIÓN DE API KEY -->
-        <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg flex flex-col gap-2">
-          <button onclick="toggleApiSettings()" class="flex justify-between items-center font-bold text-amber-800 w-full focus:outline-none">
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-key"></i> Configuración de API Key (para Vercel / GitHub)</span>
-            <i id="apiChevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
-          </button>
-          <div id="apiSettingsArea" class="hidden space-y-2 pt-2">
-            <p class="text-[10px] text-amber-700">Ingresa tu API Key de Gemini para dar soporte de IA en tu propio hosting.</p>
-            <div class="flex gap-2">
-              <input type="password" id="inputApiKey" placeholder="AIzaSy..." class="flex-1 p-2 border border-amber-300 rounded focus:outline-none text-xs">
-              <button onclick="saveApiKey()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded font-bold transition">Guardar</button>
+      <!-- DISPOSICIÓN DUAL-PANEL -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 overflow-y-auto flex-1 bg-slate-50">
+        
+        <!-- PANEL IZQUIERDO: CONFIGURACIÓN Y CARGA DE DOCUMENTOS -->
+        <div class="lg:col-span-5 p-4 border-r border-slate-200 space-y-4 bg-white">
+          <!-- SECCIÓN DE CONFIGURACIÓN DE API KEY -->
+          <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg flex flex-col gap-2">
+            <button onclick="toggleApiSettings()" class="flex justify-between items-center font-bold text-amber-800 w-full focus:outline-none">
+              <span class="flex items-center gap-1.5"><i class="fa-solid fa-key"></i> Configurar API Key de Gemini</span>
+              <i id="apiChevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+            </button>
+            <div id="apiSettingsArea" class="hidden space-y-2 pt-2">
+              <p class="text-[10px] text-amber-700">Ingresa tu API Key de Gemini para activar la Auditoría Médica Automática y el Lector de PDFs clínicos.</p>
+              <div class="flex gap-2">
+                <input type="password" id="inputApiKey" placeholder="AIzaSy..." class="flex-1 p-2 border border-amber-300 rounded focus:outline-none text-xs text-slate-800">
+                <button onclick="saveApiKey()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded font-bold transition">Guardar</button>
+              </div>
             </div>
           </div>
+
+          <!-- MODO DE ACUMULACIÓN MULTI-AÑO -->
+          <div class="bg-blue-50 border border-blue-200 p-3.5 rounded-xl flex flex-col gap-2">
+            <span class="block text-[10px] font-black uppercase text-[#1e3a8a] tracking-wider">Modo de Carga de Archivos</span>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <label class="flex items-center gap-2.5 cursor-pointer text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 flex-1">
+                <input type="radio" name="importMode" value="append" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500">
+                <div>
+                  <span class="font-bold text-xs block">Acumular y Ordenar</span>
+                  <span class="text-[9px] text-slate-400 block">Suma archivos históricos sin borrar ni duplicar pacientes.</span>
+                </div>
+              </label>
+              <label class="flex items-center gap-2.5 cursor-pointer text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 flex-1">
+                <input type="radio" name="importMode" value="overwrite" class="w-4 h-4 text-red-600 focus:ring-blue-500">
+                <div>
+                  <span class="font-bold text-xs block text-red-700">Sobrescribir</span>
+                  <span class="text-[9px] text-slate-400 block">Limpia toda la base actual y arranca de cero.</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- DRAG & DROP ZONE -->
+          <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50 hover:bg-blue-50/20 hover:border-[#1e3a8a] transition cursor-pointer relative" id="dropZone">
+            <input type="file" id="fileInput" class="hidden" accept="application/pdf,image/*,.csv,application/vnd.ms-excel,application/vnd.xmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls" onchange="handleFileSelect(event)">
+            <div class="space-y-2" id="dropPrompt">
+              <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400"></i>
+              <p class="font-bold text-slate-700 text-xs">Arrastra aquí tu PDF, Imagen, CSV o Excel</p>
+              <p class="text-[9px] text-slate-400">Soporta PDFs, Imágenes de laboratorios, planillas CSV o Libros Excel (`ndiabetes`).</p>
+            </div>
+            <!-- Loader de carga -->
+            <div class="hidden flex-col items-center justify-center space-y-2 py-4" id="dropLoader">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a8a]"></div>
+              <p class="font-bold text-[#1e3a8a] text-xs" id="dropLoaderText">Leyendo archivo...</p>
+            </div>
+          </div>
+
+          <!-- INPUT DE TEXTO COPIADO -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">O pega texto clínico extraído aquí:</label>
+            <textarea id="importRawText" rows="5" class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 font-mono" placeholder="Ejemplo: MURO AREVALO CECILIA, DNI 42521526, Peso: 60.5 Kg Talla: 1.50 m Glucosa: 161.34 mg/dL..."></textarea>
+          </div>
+
+          <button id="btnProcess" onclick="processClinicalData()" class="w-full bg-[#1e3a8a] hover:bg-blue-800 text-white p-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Ejecutar Auditoría Médica IA
+          </button>
         </div>
 
-        <!-- MODO DE ACUMULACIÓN MULTI-AÑO (SOLICITADO POR EL USUARIO) -->
-        <div class="bg-blue-50 border border-blue-200 p-3.5 rounded-xl flex flex-col gap-2">
-          <span class="block text-[10px] font-black uppercase text-[#1e3a8a] tracking-wider">Modo de Carga de Archivos</span>
-          <div class="flex flex-col sm:flex-row gap-3">
-            <label class="flex items-center gap-2.5 cursor-pointer text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 flex-1">
-              <input type="radio" name="importMode" value="append" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500">
-              <div>
-                <span class="font-bold text-xs block">Acumular y Ordenar (Recomendado)</span>
-                <span class="text-[9px] text-slate-400 block">Suma archivos (2024, 2025, 2026) sin borrar los datos anteriores ni duplicar pacientes.</span>
+        <!-- PANEL DERECHO: AUDITOR CLÍNICO IA -->
+        <div class="lg:col-span-7 p-4 flex flex-col h-[55vh] lg:h-auto overflow-y-auto">
+          <div class="flex items-center space-x-2 border-b border-slate-200 pb-2 mb-3">
+            <i class="fa-solid fa-stethoscope text-emerald-600 text-lg"></i>
+            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Módulo de Auditoría Médica en Tiempo Real</h4>
+          </div>
+
+          <div id="aiAuditPlaceholder" class="flex-1 flex flex-col items-center justify-center text-center p-8 text-slate-400 border border-dashed border-slate-250 bg-white rounded-xl">
+            <i class="fa-solid fa-clipboard-question text-4xl mb-3 text-slate-300"></i>
+            <p class="font-bold text-slate-600 text-xs">Sin Informe Médico Procesado</p>
+            <p class="text-[10px] text-slate-400 max-w-sm mt-1">Sube un reporte clínico, Excel o PDF para que el Auditor Médico IA de Gemini realice la deducción y validación de variables de vigilancia.</p>
+          </div>
+
+          <!-- PANEL DE RESULTADOS DE AUDITORIA (Se activa al procesar) -->
+          <div id="aiAuditResult" class="hidden flex-col gap-4">
+            
+            <!-- JUICIO ENDOCRINOLÓGICO -->
+            <div class="bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl">
+              <div class="flex justify-between items-center mb-1.5">
+                <span class="text-[9px] bg-emerald-600 text-white px-2 py-0.5 rounded font-black tracking-wider uppercase">JUICIO CLÍNICO IA</span>
+                <span class="text-[10px] text-emerald-800 font-bold flex items-center gap-1">
+                  Riesgo Metabólico: <strong id="aiRiskBadge" class="px-1.5 py-0.2 rounded font-black text-white bg-red-600 uppercase">Alto</strong>
+                </span>
               </div>
-            </label>
-            <label class="flex items-center gap-2.5 cursor-pointer text-slate-700 bg-white p-2.5 rounded-lg border border-slate-200 flex-1">
-              <input type="radio" name="importMode" value="overwrite" class="w-4 h-4 text-red-600 focus:ring-blue-500">
-              <div>
-                <span class="font-bold text-xs block text-red-700">Sobrescribir Registro Completo</span>
-                <span class="text-[9px] text-slate-400 block">Limpia toda la base de datos actual y arranca de cero únicamente con el nuevo archivo.</span>
+              <p class="text-[11px] text-emerald-950 font-medium italic leading-relaxed" id="aiClinicalJudgement">
+                Cargando juicio médico...
+              </p>
+            </div>
+
+            <!-- TABLA DE VARIABLES DETECTADAS -->
+            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+              <div class="bg-slate-50 p-2.5 border-b border-slate-200 font-bold text-slate-700 text-[10px] uppercase flex justify-between items-center">
+                <span>Variables Detectadas y Calibradas</span>
+                <span class="text-[9px] text-blue-600 font-bold">Mapeo Automático</span>
               </div>
-            </label>
+              <div class="p-3 grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-[10.5px]">
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-150">
+                  <span class="block text-[8px] text-slate-400 font-bold uppercase">Paciente</span>
+                  <strong class="text-slate-800 block truncate" id="aiValName">-</strong>
+                </div>
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-150">
+                  <span class="block text-[8px] text-slate-400 font-bold uppercase">DNI</span>
+                  <strong class="text-slate-800 block" id="aiValDni">-</strong>
+                </div>
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-150">
+                  <span class="block text-[8px] text-slate-400 font-bold uppercase">Hist. Clínica (H.C.)</span>
+                  <strong class="text-slate-800 block font-bold text-blue-800" id="aiValHc">-</strong>
+                </div>
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-150">
+                  <span class="block text-[8px] text-slate-400 font-bold uppercase">Fecha de Captación</span>
+                  <strong class="text-slate-800 block" id="aiValDate">-</strong>
+                </div>
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-150">
+                  <span class="block text-[8px] text-slate-400 font-bold uppercase">Glicemia Ayunas</span>
+                  <strong class="text-slate-800 block" id="aiValGlic">- mg/dL</strong>
+                </div>
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-150">
+                  <span class="block text-[8px] text-slate-400 font-bold uppercase">HbA1c</span>
+                  <strong class="text-slate-800 block" id="aiValHba1c">-%</strong>
+                </div>
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-150">
+                  <span class="block text-[8px] text-slate-400 font-bold uppercase">Antropometría</span>
+                  <strong class="text-slate-800 block" id="aiValAntropo">- Kg / - m</strong>
+                </div>
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-150">
+                  <span class="block text-[8px] text-slate-400 font-bold uppercase">Presión Arterial</span>
+                  <strong class="text-slate-800 block" id="aiValPa">-/- mmHg</strong>
+                </div>
+                <div class="bg-slate-50 p-2 rounded-lg border border-slate-150">
+                  <span class="block text-[8px] text-slate-400 font-bold uppercase">Estado de Caso</span>
+                  <strong class="text-slate-800 block uppercase font-black text-[9px]" id="aiValEstado">-</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOTONES DE REGISTRO EN LA BASE DE DATOS -->
+            <button onclick="commitAiCaseToDatabase()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 shadow">
+              <i class="fa-solid fa-cloud-arrow-up"></i> Registrar Ficha Auditada de Forma Cronológica
+            </button>
           </div>
         </div>
 
-        <!-- ZONE DE ARCHIVO DROP (Optimizado con Drag & Drop Nativo de Alta Fidelidad en image_3098f6.jpg) -->
-        <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50 hover:bg-blue-50/20 hover:border-[#1e3a8a] transition cursor-pointer relative" id="dropZone">
-          <input type="file" id="fileInput" class="hidden" accept="application/pdf,image/*,.csv,application/vnd.ms-excel,application/vnd.xmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls" onchange="handleFileSelect(event)">
-          <div class="space-y-2" id="dropPrompt">
-            <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400"></i>
-            <p class="font-bold text-slate-700">Arrastra aquí tu PDF, Imagen, CSV o Libro de Excel</p>
-            <p class="text-[10px] text-slate-400">Soporta PDFs, Imágenes de laboratorio clínicos, planillas CSV o Libros de Excel (.xlsx, .xls).</p>
-          </div>
-          <!-- Loader de carga -->
-          <div class="hidden flex-col items-center justify-center space-y-2 py-4" id="dropLoader">
-            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a8a]"></div>
-            <p class="font-bold text-[#1e3a8a]" id="dropLoaderText">Leyendo archivo...</p>
-          </div>
-        </div>
-
-        <!-- TEXTAREA PARA TEXTO COPIADO -->
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">O pega texto extraído de la consulta directamente aquí:</label>
-          <textarea id="importRawText" rows="4" class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 font-mono" placeholder="Ejemplo: MURO AREVALO CECILIA, Peso: 60.5 Kg Talla: 1.50 m Glucosa: 161.34 mg/dL..."></textarea>
-        </div>
       </div>
 
       <div class="bg-slate-50 p-4 flex justify-end gap-2 border-t border-slate-200">
         <button onclick="toggleImportPanel()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold transition">Cancelar</button>
-        <button id="btnProcess" onclick="processClinicalData()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5">
-          <i class="fa-solid fa-wand-magic-sparkles"></i> Procesar con Inteligencia Artificial
-        </button>
       </div>
     </div>
   </div>
@@ -1146,9 +1254,8 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT LOGIC -->
   <script>
-    // Generación de base de datos inicial calibrada exactamente a 42 casos reales ordenados cronológicamente
+    // Generador oficial de los 42 casos distribuidos cronológicamente (Marzo, Abril y Mayo de 2026)
     function generateDefault42Cases() {
       const firstNames = [
         "Cecilia", "Manuel", "Juana", "Roberto", "Maria", "Carlos", "Rosa", "Alberto", 
@@ -1175,8 +1282,7 @@
         "Arce", "Falcon"
       ];
 
-      // Definición estricta de las 42 fechas de captación calibradas cronológicamente para 2026:
-      // Marzo: 15 casos, Abril: 15 casos, Mayo: 12 casos.
+      // 42 Fechas estrictamente programadas en Marzo (15), Abril (15) y Mayo (12)
       const explicitDates = [
         // MARZO (15 casos)
         "02/03/2026", "04/03/2026", "05/03/2026", "07/03/2026", "09/03/2026", 
@@ -1197,17 +1303,13 @@
       for (let i = 0; i < 42; i++) {
         const itemNum = i + 1;
         const dateStr = explicitDates[i];
-        
-        const age = 40 + Math.floor(Math.random() * 40);
+        const age = 40 + Math.floor(Math.random() * 45);
         const weight = (60 + Math.random() * 30).toFixed(1);
         const height = (1.50 + Math.random() * 0.28).toFixed(2);
         const bmi = parseFloat(weight) / Math.pow(parseFloat(height), 2);
-        
         const glis = (95 + Math.random() * 120).toFixed(2);
         const hba1 = (5.5 + Math.random() * 5).toFixed(1);
         const isCompensated = parseFloat(hba1) < 7.0;
-
-        // Estructura oficial de H.C. dinámica vinculada
         const rawHc = String(500000 + itemNum * 1423).slice(0, 6);
 
         cases.push({
@@ -1221,6 +1323,10 @@
           sexo: Math.random() > 0.45 ? "F" : "M",
           nacimiento: `${String(1 + Math.floor(Math.random() * 28)).padStart(2, '0')}/${String(1 + Math.floor(Math.random() * 12)).padStart(2, '0')}/${2026 - age}`,
           edad: String(age),
+          instruccion: "3", // Secundaria por defecto
+          etnia: "4", // Mestizo por defecto
+          idioma: "1", // Castellano por defecto
+          tipo_seguro: "1", // SIS por defecto
           direccion: `Avenida La Playa Mz. ${String.fromCharCode(65 + (itemNum % 26))} Lote ${itemNum}, Ventanilla`,
           tipo_caso: Math.random() > 0.2 ? "prevalente" : "nuevo",
           tipo_db: Math.random() > 0.15 ? "t2" : (Math.random() > 0.5 ? "t1" : "gestacional"),
@@ -1278,8 +1384,9 @@
     let currentZoom = 1.2; 
     let selectedFileBase64 = null;
     let selectedFileType = null;
+    let pendingAiCase = null; 
     
-    // Instancias de Gráficos (Chart.js)
+    // Instancias de gráficos
     let chartAnualInstance = null;
     let chartMensualInstance = null;
     let chartEpiWeekInstance = null;
@@ -1299,7 +1406,6 @@
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-    // Algoritmo clínico estandarizado para deducción pura de S.E. (OPS/MINSA)
     function getEpidemiologicalWeek(dateString) {
       if (!dateString) return { week: '--', year: '--' };
       const parts = dateString.split("/");
@@ -1351,10 +1457,8 @@
       return { week: week, year: year };
     }
 
-    // Adaptación para lectura de fechas complejas de Excel
     function parseExcelDate(dateVal) {
       if (!dateVal) return "";
-      
       if (dateVal instanceof Date) {
         const dd = String(dateVal.getDate()).padStart(2, '0');
         const mm = String(dateVal.getMonth() + 1).padStart(2, '0');
@@ -1363,16 +1467,11 @@
       }
       
       const dateStr = String(dateVal).trim();
-      
       const isoMatch = dateStr.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
-      if (isoMatch) {
-        return `${isoMatch[3].padStart(2, '0')}/${isoMatch[2].padStart(2, '0')}/${isoMatch[1]}`;
-      }
+      if (isoMatch) return `${isoMatch[3].padStart(2, '0')}/${isoMatch[2].padStart(2, '0')}/${isoMatch[1]}`;
       
       const stdMatch = dateStr.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
-      if (stdMatch) {
-        return `${stdMatch[1].padStart(2, '0')}/${stdMatch[2].padStart(2, '0')}/${stdMatch[3]}`;
-      }
+      if (stdMatch) return `${stdMatch[1].padStart(2, '0')}/${stdMatch[2].padStart(2, '0')}/${stdMatch[3]}`;
       
       if (typeof dateVal === 'number' || (!isNaN(dateVal) && !isNaN(parseFloat(dateVal)) && !dateStr.includes('-') && !dateStr.includes('/'))) {
         const num = parseFloat(dateVal);
@@ -1385,16 +1484,6 @@
           return `${dd}/${mm}/${yyyy}`;
         }
       }
-      
-      const parsedTimestamp = Date.parse(dateStr);
-      if (!isNaN(parsedTimestamp)) {
-        const parsedDate = new Date(parsedTimestamp);
-        const dd = String(parsedDate.getDate()).padStart(2, '0');
-        const mm = String(parsedDate.getMonth() + 1).padStart(2, '0');
-        const yyyy = parsedDate.getFullYear();
-        return `${dd}/${mm}/${yyyy}`;
-      }
-      
       return dateStr;
     }
 
@@ -1405,7 +1494,16 @@
     function resetToDefaultDatabase() {
       localStorage.removeItem('clinical_database_v2');
       localStorage.removeItem('db_version_v2.2');
+      localStorage.removeItem('active_years');
+      localStorage.removeItem('active_months');
+      localStorage.removeItem('active_patient_id');
+      localStorage.removeItem('active_view');
       location.reload();
+    }
+
+    function clearSearchAndFilters() {
+      document.getElementById('searchBar').value = "";
+      filterPatients();
     }
 
     function initApp() {
@@ -1414,7 +1512,7 @@
         document.getElementById('inputApiKey').value = savedKey;
       }
 
-      // CONTROL DE CACHÉ DE BASE DE DATOS MIGRACIÓN v2.2 (Limpieza y orden de raíz)
+      // Sincronización de caché v2.2
       const dbVersion = localStorage.getItem('db_version_v2.2');
       if (!dbVersion) {
         localStorage.removeItem('clinical_database_v2');
@@ -1437,31 +1535,65 @@
         database = generateDefault42Cases();
       }
 
-      // ORDENAMIENTO CRONOLÓGICO UNIVERSAL DE INICIO
       sortDatabaseChronologically();
 
-      // Pre-cargar agrupamientos temporales en el mapa activo
-      database.forEach(p => {
-        p.date = parseExcelDate(p.date);
-        const parts = p.date.split("/");
-        if (parts.length === 3) {
-          const year = parts[2];
-          const monthIndex = parseInt(parts[1], 10) - 1;
-          const monthName = monthNames[monthIndex] || "Otros";
-          const monthKey = `${year}-${monthName}`;
-          if (activeYears[year] === undefined) activeYears[year] = true;
-          if (activeMonths[monthKey] === undefined) activeMonths[monthKey] = true;
-        }
-      });
+      // Precargar filtros temporales activos de LocalStorage si existen
+      const savedYears = localStorage.getItem('active_years');
+      if (savedYears) {
+        try {
+          Object.assign(activeYears, JSON.parse(savedYears));
+        } catch(e) {}
+      } else {
+        // CORRECCIÓN image_4bdafa.png: Por defecto, todos los directorios de años se inician colapsados (false)
+        database.forEach(p => {
+          const parts = p.date.split("/");
+          if (parts.length === 3) {
+            activeYears[parts[2]] = false; 
+          }
+        });
+      }
+
+      const savedMonths = localStorage.getItem('active_months');
+      if (savedMonths) {
+        try {
+          Object.assign(activeMonths, JSON.parse(savedMonths));
+        } catch(e) {}
+      } else {
+        // CORRECCIÓN image_4bdafa.png: Por defecto, todos los directorios de meses se inician colapsados (false)
+        database.forEach(p => {
+          const parts = p.date.split("/");
+          if (parts.length === 3) {
+            const monthName = monthNames[parseInt(parts[1], 10) - 1] || "Otros";
+            activeMonths[`${parts[2]}-${monthName}`] = false;
+          }
+        });
+      }
+
+      // Cargar vista persistente
+      const savedView = localStorage.getItem('active_view') || 'ficha';
 
       renderPatientList();
       populateDashboardFilters();
-      selectPatient(1);
 
-      // INICIALIZACIÓN DE EVENTOS DE DRAG & DROP NATIVOS DE ALTA FIABILIDAD (image_3098f6.jpg)
+      // Cargar paciente activo persistente
+      const savedActiveId = localStorage.getItem('active_patient_id');
+      if (savedActiveId) {
+        const parsedId = parseInt(savedActiveId, 10);
+        if (database.some(p => p.item === parsedId)) {
+          currentActiveId = parsedId;
+        } else {
+          currentActiveId = database.length > 0 ? database[0].item : 1;
+        }
+      } else {
+        currentActiveId = database.length > 0 ? database[0].item : 1;
+      }
+
+      selectPatient(currentActiveId);
+      switchView(savedView);
+
+      // CONFIGURACIÓN DE EVENTOS DE ARRASTRAR Y SOLTAR (image_3098f6.jpg)
       const dropZone = document.getElementById('dropZone');
 
-      // Prevenir los comportamientos por defecto del navegador en todo el documento
       ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, preventDefaults, false);
         document.body.addEventListener(eventName, preventDefaults, false);
@@ -1472,21 +1604,18 @@
         e.stopPropagation();
       }
 
-      // Destacar la zona discontinua cuando se arrastra un archivo sobre ella
       ['dragenter', 'dragover'].forEach(eventName => {
         dropZone.addEventListener(eventName, () => {
           dropZone.classList.add('border-blue-600', 'bg-blue-50/40');
         }, false);
       });
 
-      // Restaurar el diseño original de la zona discontinua cuando sale el archivo o se suelta
       ['dragleave', 'drop'].forEach(eventName => {
         dropZone.addEventListener(eventName, () => {
           dropZone.classList.remove('border-blue-600', 'bg-blue-50/40');
         }, false);
       });
 
-      // Capturar y procesar el archivo soltado
       dropZone.addEventListener('drop', (e) => {
         const dt = e.dataTransfer;
         const files = dt.files;
@@ -1495,13 +1624,11 @@
         }
       }, false);
 
-      // Soportar también clic para abrir explorador en la zona completa
       dropZone.addEventListener('click', () => {
         document.getElementById('fileInput').click();
       });
     }
 
-    // Ordenar globalmente por fecha de captación (ascendente) y reconstruir secuencialmente los IDs
     function sortDatabaseChronologically() {
       database.sort((a, b) => {
         const pA = a.date.split("/");
@@ -1511,49 +1638,41 @@
         const dateB = new Date(pB[2], pB[1] - 1, pB[0]);
         return dateA - dateB;
       });
-      // Re-asignar identificador único de item para mantener sincronía
       database.forEach((p, idx) => {
         p.item = idx + 1;
       });
     }
 
-    // Cambiar de vista de forma fluida
     function switchView(view) {
+      localStorage.setItem('active_view', view);
       const sidebarTabFichaBtn = document.getElementById('sidebarTabFichaBtn');
       const sidebarTabDashBtn = document.getElementById('sidebarTabDashBtn');
-      
       const sheetContainer = document.getElementById('sheetContainer');
       const dashboardContainer = document.getElementById('dashboardContainer');
       const zoomAndStatusWrapper = document.getElementById('zoomAndStatusWrapper');
       const formMainArea = document.getElementById('formMainArea');
 
       if (view === 'ficha') {
-        sidebarTabFichaBtn.className = "w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 bg-blue-50 text-[#1e3a8a] border border-blue-100 shadow-sm";
-        sidebarTabDashBtn.className = "w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 border border-transparent";
-        
+        sidebarTabFichaBtn.className = "w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2.5 bg-white text-[#1e3a8a] border border-blue-100 shadow-sm";
+        sidebarTabDashBtn.className = "w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 border border-transparent";
         sheetContainer.classList.remove('hidden');
         sheetContainer.classList.add('flex');
         zoomAndStatusWrapper.classList.remove('hidden');
         zoomAndStatusWrapper.classList.add('flex');
         dashboardContainer.classList.add('hidden');
-
-        formMainArea.classList.remove('p-2', 'md:p-3');
+        formMainArea.classList.remove('p-2', 'sm:p-3');
         formMainArea.classList.add('p-4', 'md:p-6');
       } else if (view === 'dashboard') {
-        sidebarTabDashBtn.className = "w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 bg-emerald-50 text-emerald-800 border border-emerald-100 shadow-sm";
-        sidebarTabFichaBtn.className = "w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 border border-transparent";
-        
+        sidebarTabDashBtn.className = "w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2.5 bg-white text-[#10b981] border border-emerald-100 shadow-sm";
+        sidebarTabFichaBtn.className = "w-full text-left px-4 py-2.5 rounded-lg text-xs font-bold transition flex items-center gap-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 border border-transparent";
         sheetContainer.classList.add('hidden');
         sheetContainer.classList.remove('flex');
         zoomAndStatusWrapper.classList.add('hidden');
         zoomAndStatusWrapper.classList.remove('flex');
         dashboardContainer.classList.remove('hidden');
         dashboardContainer.classList.add('flex');
-
-        // Ajustar al filo de los márgenes en Dashboard
         formMainArea.classList.remove('p-4', 'md:p-6');
         formMainArea.classList.add('p-2', 'sm:p-3');
-        
         updateDashboard();
       }
     }
@@ -1563,7 +1682,6 @@
     function renderPatientList() {
       const accordionContainer = document.getElementById('accordionContainer');
       accordionContainer.innerHTML = "";
-
       const q = document.getElementById('searchBar').value.toLowerCase();
 
       // Organizar jerarquía temporal por Año -> Mes
@@ -1590,8 +1708,7 @@
       const sortedYears = Object.keys(hierarchy).sort((a, b) => b - a);
 
       sortedYears.forEach(year => {
-        const isYearExpanded = activeYears[year] !== false;
-        
+        const isYearExpanded = activeYears[year] === true; // Si es undefined o false, permanecerá colapsado
         const yearHeader = document.createElement('div');
         yearHeader.className = "px-4 py-3 bg-slate-50 hover:bg-slate-100 border-b border-slate-200 flex justify-between items-center cursor-pointer transition select-none";
         yearHeader.onclick = () => toggleYear(year);
@@ -1608,17 +1725,15 @@
           const yearContent = document.createElement('div');
           yearContent.className = "bg-slate-50/40";
 
-          // ORDENAR CRONOLÓGICAMENTE LOS MESES (De Enero a Diciembre)
           const monthsInYear = Object.keys(hierarchy[year]).sort((a, b) => {
             return monthNames.indexOf(a) - monthNames.indexOf(b);
           });
 
           monthsInYear.forEach(month => {
             const monthKey = `${year}-${month}`;
-            const isMonthExpanded = activeMonths[monthKey] !== false;
+            const isMonthExpanded = activeMonths[monthKey] === true; // Si es undefined o false, permanecerá colapsado
             const patients = hierarchy[year][month];
 
-            // Ordenamiento interno estrictamente cronológico por día
             patients.sort((a, b) => {
               const dayA = parseInt(a.date.split("/")[0], 10);
               const dayB = parseInt(b.date.split("/")[0], 10);
@@ -1644,7 +1759,6 @@
               patients.forEach((patient, index) => {
                 const monthlyCorrelative = index + 1;
                 const epi = getEpidemiologicalWeek(patient.date);
-                
                 const row = document.createElement('div');
                 row.className = `p-3.5 pl-8 cursor-pointer hover:bg-slate-50 transition flex items-center justify-between border-b border-slate-100 patient-row inactive-patient-card`;
                 row.id = `patient-row-${patient.item}`;
@@ -1682,13 +1796,15 @@
     }
 
     function toggleYear(year) {
-      activeYears[year] = activeYears[year] === undefined ? false : !activeYears[year];
+      activeYears[year] = activeYears[year] === undefined ? true : !activeYears[year];
+      localStorage.setItem('active_years', JSON.stringify(activeYears));
       renderPatientList();
       selectPatient(currentActiveId);
     }
 
     function toggleMonth(monthKey) {
-      activeMonths[monthKey] = activeMonths[monthKey] === undefined ? false : !activeMonths[monthKey];
+      activeMonths[monthKey] = activeMonths[monthKey] === undefined ? true : !activeMonths[monthKey];
+      localStorage.setItem('active_months', JSON.stringify(activeMonths));
       renderPatientList();
       selectPatient(currentActiveId);
     }
@@ -1708,6 +1824,8 @@
             }
           }
         });
+        localStorage.setItem('active_years', JSON.stringify(activeYears));
+        localStorage.setItem('active_months', JSON.stringify(activeMonths));
       }
       renderPatientList();
       database.forEach(p => {
@@ -1747,11 +1865,17 @@
 
     function applyZoom() {
       const sheet = document.getElementById('printSheet');
-      sheet.style.transform = `scale(${currentZoom})`;
-      document.getElementById('txtZoomLevel').innerText = `${Math.round(currentZoom * 100)}%`;
-      
+      if (sheet) {
+        sheet.style.transform = `scale(${currentZoom})`;
+      }
+      const zoomLvl = document.getElementById('txtZoomLevel');
+      if (zoomLvl) {
+        zoomLvl.innerText = `${Math.round(currentZoom * 100)}%`;
+      }
       const container = document.getElementById('sheetContainer');
-      container.style.height = `${265 * 3.7795 * currentZoom}px`;
+      if (container) {
+        container.style.height = `${265 * 3.7795 * currentZoom}px`;
+      }
     }
 
     function toggleSidebar() {
@@ -1780,6 +1904,7 @@
 
     function selectPatient(id) {
       currentActiveId = id;
+      localStorage.setItem('active_patient_id', id);
       
       database.forEach(p => {
         const el = document.getElementById(`patient-row-${p.item}`);
@@ -1793,11 +1918,17 @@
       });
 
       const p = database.find(item => item.item === id);
-      if(!p) return;
+      if(!p) {
+        if (database.length > 0) {
+          currentActiveId = database[0].item;
+          localStorage.setItem('active_patient_id', currentActiveId);
+          selectPatient(currentActiveId);
+        }
+        return;
+      }
 
       document.getElementById('txtActiveCaseName').innerText = `Ficha Activa: ${p.paterno} ${p.materno}, ${p.nombres} (H.C. ${p.hc || 'No reg.'})`;
 
-      // Calcular número de ficha correlativo mensual exacto (reinicia en cada mes)
       const parts = p.date.split("/");
       let pYear = "Otros Años";
       let pMonthName = "Otros";
@@ -1807,7 +1938,7 @@
         pMonthName = monthNames[monthIndex] || "Otros";
       }
 
-      // Filtrar y ordenar cronológicamente los pacientes de este mismo mes
+      // Sincronizar correlativo mensual
       const monthlyPatients = database.filter(item => {
         const itemParts = item.date.split("/");
         let itemYear = "Otros Años";
@@ -1827,15 +1958,13 @@
       });
 
       const monthlyCorrelativeIndex = monthlyPatients.findIndex(item => item.item === p.item) + 1;
-
-      // Calcular Semana Epidemiológica de Captación
       const epi = getEpidemiologicalWeek(p.date);
       const seBadge = document.getElementById('f_se_badge');
       if (seBadge) {
         seBadge.innerText = `SE ${epi.week} - ${epi.year}`;
       }
 
-      // Volcar datos al lienzo de la Ficha A4
+      // Inyectar al lienzo A4 impreso
       document.getElementById('f_correlative_num').innerText = String(monthlyCorrelativeIndex).padStart(3, '0');
       document.getElementById('f_hc_num').innerText = p.hc || "00000";
       document.getElementById('f_paterno').innerText = p.paterno;
@@ -1848,7 +1977,7 @@
 
       const mCircle = document.getElementById('sex_m');
       const fCircle = document.getElementById('sex_f');
-      if (p.sexo === 'M') {
+      if (p.sexo === 'M' || p.sexo === '1') {
         mCircle.className = "w-2.5 h-2.5 rounded-full bg-black inline-block ring-2 ring-slate-400";
         fCircle.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
       } else {
@@ -1856,24 +1985,37 @@
         fCircle.className = "w-2.5 h-2.5 rounded-full bg-black inline-block ring-2 ring-slate-400";
       }
 
+      // Grado de Instrucción CDC/MINSA
       resetCheckboxes(["inst_1", "inst_2", "inst_3", "inst_4", "inst_5"]);
-      if (parseInt(p.edad) > 60) {
-        document.getElementById("inst_2").className = "w-2.5 h-2.5 bg-black inline-block";
-      } else {
-        document.getElementById("inst_3").className = "w-2.5 h-2.5 bg-black inline-block";
+      const instCode = p.instruccion || "3";
+      if (document.getElementById(`inst_${instCode}`)) {
+        document.getElementById(`inst_${instCode}`).className = "w-2.5 h-2.5 bg-black inline-block";
       }
 
+      // Etnia
       resetCheckboxes(["et_1", "et_2", "et_3", "et_4", "et_5", "et_6"]);
-      document.getElementById("et_4").className = "w-2.5 h-2.5 bg-black inline-block";
+      const etCode = p.etnia || "4";
+      if (document.getElementById(`et_${etCode}`)) {
+        document.getElementById(`et_${etCode}`).className = "w-2.5 h-2.5 bg-black inline-block";
+      }
 
+      // Idioma
       resetCheckboxes(["id_1", "id_2", "id_3"]);
-      document.getElementById("id_1").className = "w-2.5 h-2.5 bg-black inline-block";
+      const idCode = p.idioma || "1";
+      if (document.getElementById(`id_${idCode}`)) {
+        document.getElementById(`id_${idCode}`).className = "w-2.5 h-2.5 bg-black inline-block";
+      }
 
-      document.getElementById('seg_si').className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
-      document.getElementById('seg_no').className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
+      // Seguro de salud
+      const hasInsurance = p.tipo_seguro && p.tipo_seguro !== "0";
+      document.getElementById('seg_si').className = hasInsurance ? "w-2.5 h-2.5 rounded-full bg-black inline-block" : "w-2.5 h-2.5 rounded-full border border-black inline-block";
+      document.getElementById('seg_no').className = !hasInsurance ? "w-2.5 h-2.5 rounded-full bg-black inline-block" : "w-2.5 h-2.5 rounded-full border border-black inline-block";
 
       resetCheckboxes(["t_seg_0", "t_seg_1", "t_seg_2", "t_seg_3", "t_seg_4", "t_seg_5", "t_seg_6", "t_seg_7", "t_seg_8", "t_seg_9", "t_seg_10", "t_seg_11"]);
-      document.getElementById("t_seg_1").className = "w-2.5 h-2.5 bg-black inline-block";
+      const segTypeCode = p.tipo_seguro || "0";
+      if (document.getElementById(`t_seg_${segTypeCode}`)) {
+        document.getElementById(`t_seg_${segTypeCode}`).className = "w-2.5 h-2.5 bg-black inline-block";
+      }
 
       // II. Captación de Caso
       document.getElementById('f_captacion_val').innerText = p.date;
@@ -1881,7 +2023,7 @@
 
       const casoIncidente = document.getElementById('caso_incidente');
       const casoPrevalente = document.getElementById('caso_prevalente');
-      if (p.tipo_caso === 'nuevo') {
+      if (p.tipo_caso === 'nuevo' || p.tipo_caso === '1') {
         casoIncidente.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
         casoPrevalente.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
       } else {
@@ -1890,9 +2032,9 @@
       }
 
       resetCheckboxes(["db_tipo_1", "db_tipo_2", "db_gestacional"]);
-      if (p.tipo_db === 't1') {
+      if (p.tipo_db === 't1' || p.tipo_db === '1') {
         document.getElementById("db_tipo_1").className = "w-2.5 h-2.5 bg-black inline-block";
-      } else if (p.tipo_db === 'gestacional') {
+      } else if (p.tipo_db === 'gestacional' || p.tipo_db === '3') {
         document.getElementById("db_gestacional").className = "w-2.5 h-2.5 bg-black inline-block";
       } else {
         document.getElementById("db_tipo_2").className = "w-2.5 h-2.5 bg-black inline-block";
@@ -1903,7 +2045,7 @@
       document.getElementById('f_cintura_val').innerText = p.cintura || "90";
       document.getElementById('f_pa_sis_val').innerText = p.pa_sis;
       document.getElementById('f_pa_dia_val').innerText = p.pa_dia;
-      document.getElementById('f_consultas').innerText = p.consultas || "04";
+      document.getElementById('f_consultas').innerText = p.consultas || "00";
       document.getElementById('f_hospit').innerText = p.hospit || "00";
 
       // III. Laboratorios
@@ -1923,10 +2065,14 @@
       const estMuerto = document.getElementById('est_muerto');
       
       if (estControlado && estDescompensated && estMuerto) {
-        if (p.estado === 'controlado') {
+        if (p.estado === 'controlado' || p.estado === '1') {
           estControlado.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
           estDescompensated.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
           estMuerto.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
+        } else if (p.estado === 'muerto' || p.estado === '3') {
+          estControlado.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
+          estDescompensated.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
+          estMuerto.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
         } else {
           estControlado.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
           estDescompensated.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
@@ -1958,17 +2104,19 @@
       resetCheckboxes(["t_med_1", "t_med_2", "t_med_3", "t_med_4", "t_med_5", "t_med_7"]);
       resetCheckboxes(["ins_lispro", "ins_aspart", "ins_glargina"]);
 
-      if (p.tratamiento.toLowerCase().includes("metformina")) {
+      if (p.tratamiento.toLowerCase().includes("metformina") || p.tratamiento.includes("1")) {
         document.getElementById("t_med_1").className = "w-2.5 h-2.5 bg-black inline-block";
       }
-      if (p.tratamiento.toLowerCase().includes("insulina")) {
+      if (p.tratamiento.toLowerCase().includes("sulfonil") || p.tratamiento.includes("2")) {
+        document.getElementById("t_med_2").className = "w-2.5 h-2.5 bg-black inline-block";
+      }
+      if (p.tratamiento.toLowerCase().includes("insulina") || p.tratamiento.includes("4") || p.tratamiento.includes("5")) {
         document.getElementById("t_med_5").className = "w-2.5 h-2.5 bg-black inline-block";
         document.getElementById("ins_glargina").className = "w-2 h-2 bg-black inline-block";
       }
 
       document.getElementById('f_medico_val').innerText = p.medico;
       document.getElementById('f_cmp_val').innerText = p.cmp;
-      
       applyZoom();
     }
 
@@ -2000,7 +2148,6 @@
       panel.classList.toggle('flex');
     }
 
-    // Asegurarse de que el API Key se guarda y recupera
     function toggleApiSettings() {
       const area = document.getElementById('apiSettingsArea');
       const chev = document.getElementById('apiChevron');
@@ -2011,7 +2158,7 @@
     function saveApiKey() {
       const key = document.getElementById('inputApiKey').value.trim();
       localStorage.setItem('gemini_api_key', key);
-      showAlert("Clave Guardada", "La API Key de Gemini ha sido guardada de forma segura para usar en Vercel/GitHub.", "info");
+      showAlert("Clave Guardada", "La API Key de Gemini ha sido guardada de forma segura para realizar auditorías médicas directas.", "info");
     }
 
     function toggleEditPanel() {
@@ -2066,26 +2213,23 @@
       p.medico = document.getElementById('edit_medico').value;
       p.cmp = document.getElementById('edit_cmp').value;
 
-      // Preservar la referencia del DNI para re-localizarlo después de ordenar
       const activeDni = p.dni;
-
-      // RE-ORDENAR CRONOLÓGICAMENTE PARA AJUSTAR LA CORRELACIÓN DEL MES
       sortDatabaseChronologically();
       saveDatabaseToLocalStorage();
 
-      // Forzar recarga de filtros de cabecera
       const parts = p.date.split("/");
       if (parts.length === 3) {
         const year = parts[2];
         const monthName = monthNames[parseInt(parts[1], 10) - 1] || "Otros";
-        if (activeYears[year] === undefined) activeYears[year] = true;
-        if (activeMonths[`${year}-${monthName}`] === undefined) activeMonths[`${year}-${monthName}`] = true;
+        activeYears[year] = true;
+        activeMonths[`${year}-${monthName}`] = true;
+        localStorage.setItem('active_years', JSON.stringify(activeYears));
+        localStorage.setItem('active_months', JSON.stringify(activeMonths));
       }
 
       renderPatientList();
       populateDashboardFilters();
       
-      // Buscar el nuevo índice del paciente tras el re-ordenamiento global
       const updatedPatient = database.find(item => item.dni === activeDni);
       selectPatient(updatedPatient ? updatedPatient.item : 1);
       toggleEditPanel();
@@ -2096,7 +2240,6 @@
     function populateDashboardFilters() {
       const yearSelect = document.getElementById('dashFilterYear');
       const monthSelect = document.getElementById('dashFilterMonth');
-
       const selectedYear = yearSelect.value;
       const selectedMonth = monthSelect.value;
 
@@ -2150,7 +2293,6 @@
 
         const yearMatch = (yearFilter === 'todos' || pYear === yearFilter);
         const monthMatch = (monthFilter === 'todos' || pMonthName === monthFilter);
-
         return yearMatch && monthMatch;
       });
 
@@ -2160,15 +2302,13 @@
       let controladosCount = 0;
       let maxEpiWeek = 0;
       let comorbilidadCount = 0;
-
       let maleCount = 0;
       let femaleCount = 0;
-
       let t1Count = 0;
       let t2Count = 0;
       let gestCount = 0;
 
-      // Variables de conteo de comorbilidades (image_2cfa3b.png)
+      // Variables de comorbilidades
       let htaCount = 0;
       let obesityCount = 0;
       let dislipCount = 0;
@@ -2188,24 +2328,19 @@
       const monthlyMap = {};
 
       filteredData.forEach(p => {
-        if (p.estado === 'controlado') controladosCount++;
+        if (p.estado === 'controlado' || p.estado === '1') controladosCount++;
         
         const parts = p.date.split("/");
         const year = parts[2];
         const monthIndex = parseInt(parts[1], 10) - 1;
         const monthName = monthNames[monthIndex] || "Otros";
 
-        // Acumular mapa anual
         annualMap[year] = (annualMap[year] || 0) + 1;
-
-        // Acumular mapa mensual
         monthlyMap[monthName] = (monthlyMap[monthName] || 0) + 1;
 
         const epi = getEpidemiologicalWeek(p.date);
         if (epi.week !== '--' && !isNaN(epi.week)) {
           if (epi.week > maxEpiWeek) maxEpiWeek = epi.week;
-          
-          // Clave de ordenamiento consecutivo puro por número de semana (W09, W10...)
           const key = `W${String(epi.week).padStart(2, '0')}`;
           const displayLabel = `S.E. ${epi.week}`;
           if (!temporalMap[key]) {
@@ -2214,14 +2349,13 @@
           temporalMap[key].count++;
         }
 
-        if (p.sexo === 'M') maleCount++;
+        if (p.sexo === 'M' || p.sexo === '1') maleCount++;
         else femaleCount++;
 
-        if (p.tipo_db === 't1') t1Count++;
-        else if (p.tipo_db === 't2') t2Count++;
-        else if (p.tipo_db === 'gestacional') gestCount++;
+        if (p.tipo_db === 't1' || p.tipo_db === '1') t1Count++;
+        else if (p.tipo_db === 't2' || p.tipo_db === '2') t2Count++;
+        else if (p.tipo_db === 'gestacional' || p.tipo_db === '3') gestCount++;
 
-        // Acumulación de comorbilidades
         if (p.comorbilidades.hta) htaCount++;
         if (p.comorbilidades.obesity) obesityCount++;
         if (p.comorbilidades.dislipidemia) dislipCount++;
@@ -2248,7 +2382,6 @@
       const pctComorb = total > 0 ? Math.round((comorbilidadCount / total) * 100) : 0;
       document.getElementById('kpiComorbilidades').innerText = `${pctComorb}%`;
 
-      // 0.A. GRÁFICO: Casos Anuales
       const sortedYears = Object.keys(annualMap).sort((a,b)=>a-b);
       const annualLabels = sortedYears.map(y => `Año ${y}`);
       const annualData = sortedYears.map(y => annualMap[y]);
@@ -2285,7 +2418,6 @@
         }
       });
 
-      // 0.B. GRÁFICO: Casos Mensuales (Ordenados cronológicamente)
       const monthlyLabels = monthNames.filter(m => monthlyMap[m] !== undefined);
       const monthlyData = monthlyLabels.map(m => monthlyMap[m]);
 
@@ -2310,7 +2442,7 @@
           scales: {
             y: {
               beginAtZero: true,
-              ticks: { stepSize: 2, font: { size: 9 } },
+              ticks: { stepSize: 5, font: { size: 9 } },
               grid: { color: '#f1f5f9' }
             },
             x: {
@@ -2321,7 +2453,6 @@
         }
       });
 
-      // 1. GRÁFICO: Curva Epidemiológica (S.E. pura ordenada cronológicamente)
       const sortedKeys = Object.keys(temporalMap).sort();
       const epiLabels = sortedKeys.map(k => temporalMap[k].label);
       const epiData = sortedKeys.map(k => temporalMap[k].count);
@@ -2363,7 +2494,6 @@
         }
       });
 
-      // 2. GRÁFICO: Distribución por Sexo
       if (chartSexoInstance) chartSexoInstance.destroy();
       const ctxSexo = document.getElementById('chartSexo').getContext('2d');
       chartSexoInstance = new Chart(ctxSexo, {
@@ -2387,7 +2517,6 @@
         }
       });
 
-      // 3. GRÁFICO: Tipo de Diabetes
       if (chartTipoDiabetesInstance) chartTipoDiabetesInstance.destroy();
       const ctxTipoDb = document.getElementById('chartTipoDiabetes').getContext('2d');
       chartTipoDiabetesInstance = new Chart(ctxTipoDb, {
@@ -2410,7 +2539,6 @@
         }
       });
 
-      // 4. GRÁFICO: Distribución por Grupos de Edad (Ajustado a vertical recto - image_2cf1ff.png)
       if (chartEdadInstance) chartEdadInstance.destroy();
       const ctxEdad = document.getElementById('chartEdad').getContext('2d');
       chartEdadInstance = new Chart(ctxEdad, {
@@ -2446,7 +2574,6 @@
         }
       });
 
-      // 5. NUEVO GRÁFICO: Distribución de Pacientes (image_2cfa3b.png)
       if (chartEstadoDistribucionInstance) chartEstadoDistribucionInstance.destroy();
       const ctxEstadoDist = document.getElementById('chartEstadoDistribucion').getContext('2d');
       chartEstadoDistribucionInstance = new Chart(ctxEstadoDist, {
@@ -2470,7 +2597,6 @@
         }
       });
 
-      // 6. NUEVO GRÁFICO: Comorbilidades Más Frecuentes (image_2cfa3b.png)
       if (chartComorbilidadesFrecuentesInstance) chartComorbilidadesFrecuentesInstance.destroy();
       const ctxComorbFreq = document.getElementById('chartComorbilidadesFrecuentes').getContext('2d');
       chartComorbilidadesFrecuentesInstance = new Chart(ctxComorbFreq, {
@@ -2511,7 +2637,6 @@
       processSingleFile(file);
     }
 
-    // CENTRAL DE PROCESAMIENTO UNIFICADO PARA CLIC Y DRAG & DROP (image_3098f6.jpg)
     function processSingleFile(file) {
       const dropPrompt = document.getElementById('dropPrompt');
       const dropLoader = document.getElementById('dropLoader');
@@ -2559,9 +2684,8 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
             selectedFileBase64 = canvas.toDataURL("image/jpeg", 0.8).split(',')[1];
-            
-            dropLoaderText.innerText = "Imagen cargada. Presiona 'Procesar con IA'.";
-            document.getElementById('importRawText').value = "[Imagen cargada correctamente para análisis de Gemini IA]";
+            dropLoaderText.innerText = "Imagen cargada. Presiona 'Auditoría Médica IA'.";
+            document.getElementById('importRawText').value = "[Imagen cargada para análisis profundo de Gemini IA]";
           };
           img.src = e.target.result;
         };
@@ -2572,83 +2696,223 @@
       }
     }
 
-    function processCSVFile(file) {
-      const dropLoaderText = document.getElementById('dropLoaderText');
-      dropLoaderText.innerText = "Procesando registros de Excel...";
-
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: function(results) {
-          const rows = results.data;
-          if (rows.length === 0) {
-            showAlert("Archivo Vacío", "No se encontraron filas con datos en el CSV.", "error");
-            resetDropZone();
-            return;
-          }
-
-          const importMode = document.querySelector('input[name="importMode"]:checked').value;
-          if (importMode === "overwrite") {
-            database = [];
-          }
-
-          let addedCount = 0;
-          let duplicateCount = 0;
-
-          rows.forEach(row => {
-            const mapped = mapCSVRow(row);
-            
-            // Verificar si el paciente ya existe en base al DNI o Historia Clínica (H.C.)
-            const isDuplicate = database.some(p => 
-              (p.dni && mapped.dni && p.dni === mapped.dni && p.dni !== "00000000") || 
-              (p.hc && mapped.hc && p.hc === mapped.hc && p.hc !== "00000")
-            );
-
-            if (!isDuplicate) {
-              integrateCSVCase(mapped);
-              addedCount++;
-            } else {
-              duplicateCount++;
-            }
-          });
-
-          // ORDENAR CRONOLÓGICAMENTE TRAS LA CARGA MASIVA
-          sortDatabaseChronologically();
-          saveDatabaseToLocalStorage();
-          
-          // Re-computar filtros de cabecera
-          for (let k in activeYears) delete activeYears[k];
-          for (let k in activeMonths) delete activeMonths[k];
-
-          database.forEach(p => {
-            const parts = p.date.split("/");
-            if (parts.length === 3) {
-              const year = parts[2];
-              const monthName = monthNames[parseInt(parts[1], 10) - 1] || "Otros";
-              activeYears[year] = true;
-              activeMonths[`${year}-${monthName}`] = true;
-            }
-          });
-
-          renderPatientList();
-          populateDashboardFilters();
-          selectPatient(1); 
-          toggleImportPanel();
-          resetDropZone();
-          switchView('ficha');
-
-          if (importMode === "overwrite") {
-            showAlert("Importación Masiva Exitosa", `Se sobrescribió el registro y se guardaron ${addedCount} nuevos pacientes de forma cronológica.`, "success");
-          } else {
-            showAlert("Acumulación Exitosa", `Se procesó el archivo: se agregaron ${addedCount} pacientes nuevos y se omitieron ${duplicateCount} duplicados.`, "success");
-          }
-        },
-        error: function(err) {
-          console.error(err);
-          showAlert("Error de Lectura", "Ocurrió un error leyendo el archivo CSV.", "error");
-          resetDropZone();
-        }
+    // CALIBRACIÓN MAESTRA DEL EXCEL DE DIABETES DEL CDC PERÚ (ndiabetes)
+    function mapCSVRow(row) {
+      const normalizedRow = {};
+      Object.keys(row).forEach(key => {
+        normalizedRow[key.toLowerCase().trim()] = row[key];
       });
+
+      const getRawVal = (keys) => {
+        for (let key of keys) {
+          if (normalizedRow[key] !== undefined) return normalizedRow[key];
+        }
+        return undefined;
+      };
+
+      const getVal = (keys) => {
+        const val = getRawVal(keys);
+        return val !== undefined ? val.toString().trim() : "";
+      };
+
+      // Mapeo robusto de apellidos y nombres del Excel (ndiabetes)
+      let paterno = getVal(["apepat", "paterno", "apellido_paterno", "ap_paterno", "apellido paterno", "ap. paterno", "primer_apellido", "ape_pat"]);
+      let materno = getVal(["apemat", "materno", "apellido_materno", "ap_materno", "apellido materno", "ap. materno", "segundo_apellido", "ape_mat"]);
+      let nombres = getVal(["nombres", "nombre", "nombres_completos", "nombre_completo", "nom_pac", "nom"]);
+
+      if (!paterno && !materno && !nombres) {
+        const fullComboName = getVal(["paciente", "nombre_completo", "nombre completo", "apellidos_y_nombres", "apellidos y nombres", "paciente_nombre", "paciente nombre"]);
+        if (fullComboName) {
+          const parts = fullComboName.split(/\s+/).filter(Boolean);
+          if (parts.length >= 3) {
+            paterno = parts[0];
+            materno = parts[1];
+            nombres = parts.slice(2).join(" ");
+          } else if (parts.length === 2) {
+            paterno = parts[0];
+            nombres = parts[1];
+            materno = "";
+          } else {
+            nombres = fullComboName;
+            paterno = "";
+            materno = "";
+          }
+        }
+      }
+
+      // Sincronizar fecha de captación
+      const captacionRawDate = getRawVal([
+        "fecha_cap", "fechacap", "fec_cap", "fecha_captacion", "fecha captacion", 
+        "fecha de captacion", "fecha de captación", "fecha_atencion", "fecha atencion", 
+        "fecha de atencion", "fecha de atención", "fec_aten", "fecha", "date", "atencion", "atención", "fec_not", "fecha_not"
+      ]);
+
+      const nacimientoRawDate = getRawVal([
+        "nacimiento", "f_nac", "fecha_nac", "fecha_nacimiento", "fecha de nacimiento", "f_nacimiento", "fec_nac"
+      ]);
+
+      // CALIBRACIÓN DE CÓDIGOS OFICIALES MINSA (Conversiones numéricas)
+      let sexo = getVal(["sexo", "sex", "genero", "género", "id_sexo"]);
+      if (sexo === "1") sexo = "M";
+      else if (sexo === "2") sexo = "F";
+
+      let tipo_caso = getVal(["tipo_caso", "tipo caso", "caso_tipo", "tipo de caso", "caso", "id_tipo_caso"]);
+      if (tipo_caso === "1") tipo_caso = "nuevo";
+      else if (tipo_caso === "2") tipo_caso = "prevalente";
+
+      let tipo_db = getVal(["tipo_db", "tipo_diabetes", "tipo diabetes", "db_tipo", "tipo_db_val", "id_tipo_diabetes"]);
+      if (tipo_db === "1") tipo_db = "t1";
+      else if (tipo_db === "2") tipo_db = "t2";
+      else if (tipo_db === "3") tipo_db = "gestacional";
+
+      let estado = getVal(["estado", "status", "condicion", "condición", "evolucion", "evolución", "id_condicion_captacion"]);
+      if (estado === "1") estado = "controlado";
+      else if (estado === "2" || estado === "4") estado = "descompensado";
+      else if (estado === "3") estado = "muerto";
+
+      // Calibraciones Adicionales Ficha MINSA
+      let instruccion = getVal(["instruccion", "g_instruccion", "grado_instruccion", "nivel_educativo", "id_grado_instruccion"]);
+      if (!instruccion) instruccion = "3"; // Secundaria por defecto
+
+      let etnia = getVal(["etnia", "raza", "grupo_etnico", "id_etnia"]);
+      if (!etnia) etnia = "4"; // Mestizo por defecto
+
+      let idioma = getVal(["idioma", "lengua", "id_idioma"]);
+      if (!idioma) idioma = "1"; // Castellano por defecto
+
+      let tipo_seguro = getVal(["tipo_seguro", "seguro_tipo", "id_tipo_seguro", "seguro"]);
+      if (!tipo_seguro) tipo_seguro = "1"; // SIS por defecto
+
+      return {
+        date: parseExcelDate(captacionRawDate),
+        dni: getVal(["dni", "documento", "n_doc", "n_documento", "identidad", "num_doc"]),
+        hc: getVal(["histcli", "hc", "historia", "n_hc", "historia_clinica", "h.c.", "historia clínica", "num_hc"]),
+        paterno: paterno,
+        materno: materno,
+        nombres: nombres,
+        sexo: sexo,
+        nacimiento: parseExcelDate(nacimientoRawDate),
+        text_print_scaled: getVal(["edad", "age", "edad_anos"]),
+        instruccion: instruccion,
+        etnia: etnia,
+        idioma: idioma,
+        tipo_seguro: tipo_seguro,
+        direccion: getVal(["direccion", "dirección", "domicilio", "residencia", "dir_paciente"]),
+        peso: getVal(["peso", "weight", "peso_kg"]),
+        talla: getVal(["talla", "height", "estatura", "talla_m"]),
+        cintura: getVal(["cintura", "cint", "perimetro_abdominal", "perimetro abdominal", "pa", "per_abd"]),
+        pa_sis: getVal(["pa_sis", "pa_sistolica", "presion_sistolica", "pas", "pa sis", "pa_sist"]),
+        pa_dia: getVal(["pa_dia", "pa_diastolica", "presion_diastolica", "pad", "pa dia", "pa_diast"]),
+        glicemia: getVal(["glicemia", "glucosa", "glicemia_ayunas", "glicemia ayunas", "glucosa ayunas", "glucosa_ayunas"]),
+        glic_post: getVal(["glic_post", "glicemia_post", "post_prandial", "glucosa post", "glicemia post", "glucosa_post"]),
+        hba1c: getVal(["hba1c", "glicosilada", "hb_glicosilada", "hba1_c", "porc_hba1c"]),
+        col_total: getVal(["col_total", "colesterol", "colesterol_total", "col_tot", "colesterol total", "col_total"]),
+        trigliceridos: getVal(["trigliceridos", "trigliseridos", "triglicéridos", "trig", "tg", "trigliceridos_total", "trigliceridos"]),
+        col_ldl: getVal(["col_ldl", "ldl", "colesterol_ldl", "col ldl", "ldl_col"]),
+        col_hdl: getVal(["col_hdl", "hdl", "colesterol_hdl", "col hdl", "hdl_col"]),
+        creatinina: getVal(["creatinina", "crea", "creatinina_serica", "creatinina sérica", "crea_serica"]),
+        microalb: getVal(["microalb", "microalbuminuria", "microalbuminuria_val", "micro_alb"]),
+        proteinuria: getVal(["proteinuria", "prot", "proteinuria_val", "prot_uria"]),
+        estado: estado,
+        tipo_caso: tipo_caso,
+        tipo_db: tipo_db,
+        consultas: getVal(["consultas", "n_consultas", "n_cons", "numero de consultas", "num_consultas"]),
+        hospit: getVal(["hospit", "n_hospit", "n_hosp", "numero de hospitalizaciones", "hospitalizaciones", "num_hosp"]),
+        edad_diag: getVal(["edad_diag", "edad_diagnostico", "edad al diagnostico", "edad diagnostico", "edad_diagnostico"]),
+        hta: getVal(["hta", "hipertension", "hipertensión"]),
+        obesity: getVal(["obesidad", "obesity", "peso_obeso"]),
+        dislipidemia: getVal(["dislipidemia", "dislipemia", "col_alto"]),
+        anemia: getVal(["anemia", "hemoglobina_baja"]),
+        enf_tiroidea: getVal(["enf_tiroidea", "tiroides", "hipotiroidismo"]),
+        tuberculosis: getVal(["tuberculosis", "tb", "tbc"]),
+        fuma: getVal(["fuma", "tabaco", "fumador"]),
+        cancer: getVal(["cancer", "cáncer", "neoplasia"]),
+        comp_neuro: getVal(["comp_neuro", "polineuropatia", "neuropatia", "neuro"]),
+        comp_renal: getVal(["comp_renal", "nefropatia", "renal", "insuficiencia_renal"]),
+        comp_retino: getVal(["comp_retino", "retinopatia", "retino", "retinopatia_np"]),
+        comp_coronar: getVal(["comp_coronar", "cardiopatia", "coronaria", "isquemica"]),
+        comp_retino_p: getVal(["comp_retino_p", "retinopatia_p", "retinopatia_proliferativa"]),
+        comp_cerebro: getVal(["comp_cerebro", "stroke", "cerebrovascular", "acv"]),
+        comp_pie_sa: getVal(["comp_pie_sa", "pie_diabetico", "pie_sa"]),
+        comp_pie_ca: getVal(["comp_pie_ca", "amputacion", "pie_ca"]),
+        tratamiento: getVal(["tratamiento", "medicina", "medicamento", "prescripción", "prescripcion"]),
+        medico: getVal(["medico", "médico", "doctor", "dr", "tratante"]),
+        cmp: getVal(["cmp", "colegiatura", "cop"])
+      };
+    }
+
+    function integrateCSVCase(data) {
+      const todayDate = new Date().toLocaleDateString('es-PE');
+      const parseBool = (val) => {
+        if (!val) return false;
+        const s = val.toString().toLowerCase().trim();
+        return s === "sí" || s === "si" || s === "true" || s === "1" || s === "s" || s === "x" || s === "posit" || s === "t";
+      };
+
+      const newItem = {
+        item: database.length + 1,
+        date: data.date || todayDate,
+        dni: data.dni || "00000000",
+        hc: data.hc || "00000",
+        paterno: (data.paterno || "NUEVO").toUpperCase(),
+        materno: (data.materno || "PACIENTE").toUpperCase(),
+        nombres: (data.nombres || "REGISTRADO").toUpperCase(),
+        sexo: (data.sexo || "F").toUpperCase().startsWith("M") ? "M" : "F",
+        nacimiento: data.nacimiento || "01/01/1980",
+        edad: data.text_print_scaled || "46",
+        instruccion: data.instruccion || "3",
+        etnia: data.etnia || "4",
+        idioma: data.idioma || "1",
+        tipo_seguro: data.tipo_seguro || "1",
+        direccion: data.direccion || "Distrito de Ventanilla, Callao",
+        tipo_caso: (data.tipo_caso.toLowerCase().includes("nuev") || data.tipo_caso.toLowerCase().includes("incid") || data.tipo_caso === "1") ? "nuevo" : "prevalente",
+        tipo_db: (data.tipo_db.toLowerCase().includes("t1") || data.tipo_db.includes("1")) ? "t1" : (data.tipo_db.toLowerCase().includes("gest") || data.tipo_db.includes("3") ? "gestacional" : "t2"),
+        edad_diag: data.edad_diag || String(Math.max(1, parseInt(data.text_print_scaled || "46") - 2)),
+        peso: data.peso || "70.0",
+        talla: data.talla || "1.65",
+        cintura: data.cintura || "90",
+        pa_sis: data.pa_sis || "120",
+        pa_dia: data.pa_dia || "80",
+        consultas: data.consultas || "00",
+        hospit: data.hospit || "00",
+        glicemia: data.glicemia || "120.00",
+        glic_post: data.glic_post || "160",
+        hba1c: data.hba1c || "7.5",
+        col_total: data.col_total || "200.00",
+        trigliceridos: data.trigliceridos || "150.00",
+        col_ldl: data.col_ldl || "100.00",
+        col_hdl: data.col_hdl || "45.00",
+        creatinina: data.creatinina || "0.80",
+        microalb: data.microalb || "Negat.",
+        proteinuria: data.proteinuria || "Negat.",
+        estado: (data.estado.toLowerCase().includes("control") || data.estado.toLowerCase().includes("estab") || data.estado === "1") ? "controlado" : (data.estado === "muerto" || data.estado === "3" ? "muerto" : "descompensado"),
+        comorbilidades: {
+          hta: parseBool(data.hta),
+          obesity: parseBool(data.obesity) || (parseFloat(data.peso) / Math.pow(parseFloat(data.talla || "1.65"), 2) >= 30),
+          dislipidemia: parseBool(data.dislipidemia),
+          anemia: parseBool(data.anemia),
+          vih: parseBool(data.vih),
+          enf_tiroidea: parseBool(data.enf_tiroidea),
+          tuberculosis: parseBool(data.tuberculosis),
+          fuma: parseBool(data.fuma),
+          cancer: parseBool(data.cancer)
+        },
+        complicaciones: {
+          neuro: parseBool(data.comp_neuro),
+          renal: parseBool(data.comp_renal),
+          retino: parseBool(data.comp_retino),
+          retino_p: parseBool(data.comp_retino_p),
+          coronar: parseBool(data.comp_coronar),
+          cerebro: parseBool(data.comp_cerebro),
+          pie_sa: parseBool(data.comp_pie_sa),
+          pie_ca: parseBool(data.comp_pie_ca)
+        },
+        tratamiento: data.tratamiento || "Tratamiento estándar.",
+        medico: data.medico || "DRA. ELIANA SOTOMAYOR",
+        cmp: data.cmp || "42152"
+      };
+
+      database.push(newItem);
     }
 
     function processExcelFile(file) {
@@ -2680,8 +2944,6 @@
 
           rows.forEach(row => {
             const mapped = mapCSVRow(row);
-            
-            // Verificar si el paciente ya existe en base al DNI o Historia Clínica (H.C.)
             const isDuplicate = database.some(p => 
               (p.dni && mapped.dni && p.dni === mapped.dni && p.dni !== "00000000") || 
               (p.hc && mapped.hc && p.hc === mapped.hc && p.hc !== "00000")
@@ -2695,11 +2957,9 @@
             }
           });
 
-          // ORDENAR CRONOLÓGICAMENTE TRAS LA CARGA MASIVA
           sortDatabaseChronologically();
           saveDatabaseToLocalStorage();
           
-          // Re-computar filtros de cabecera
           for (let k in activeYears) delete activeYears[k];
           for (let k in activeMonths) delete activeMonths[k];
 
@@ -2712,6 +2972,8 @@
               activeMonths[`${year}-${monthName}`] = true;
             }
           });
+          localStorage.setItem('active_years', JSON.stringify(activeYears));
+          localStorage.setItem('active_months', JSON.stringify(activeMonths));
 
           renderPatientList();
           populateDashboardFilters();
@@ -2735,189 +2997,81 @@
       reader.readAsArrayBuffer(file);
     }
 
-    // MAPEO PRIORITARIO DE COLUMNAS DE TU EXCEL CLINICO (Fidelidad total con la imagen)
-    function mapCSVRow(row) {
-      const normalizedRow = {};
-      Object.keys(row).forEach(key => {
-        normalizedRow[key.toLowerCase().trim()] = row[key];
-      });
+    function processCSVFile(file) {
+      const dropLoaderText = document.getElementById('dropLoaderText');
+      dropLoaderText.innerText = "Procesando registros de Excel...";
 
-      const getRawVal = (keys) => {
-        for (let key of keys) {
-          if (normalizedRow[key] !== undefined) return normalizedRow[key];
-        }
-        return undefined;
-      };
-
-      const getVal = (keys) => {
-        const val = getRawVal(keys);
-        return val !== undefined ? val.toString().trim() : "";
-      };
-
-      // PRIORIDAD ABSOLUTA PARA "apepat", "apemat" y "nombres" DEL EXCEL
-      let paterno = getVal(["apepat", "paterno", "apellido_paterno", "ap_paterno", "apellido paterno", "ap. paterno", "primer_apellido", "ape_pat"]);
-      let materno = getVal(["apemat", "materno", "apellido_materno", "ap_materno", "apellido materno", "ap. materno", "segundo_apellido", "ape_mat"]);
-      let nombres = getVal(["nombres", "nombre", "nombres_completos", "nombre_completo", "nom_pac"]);
-
-      if (!paterno && !materno && !nombres) {
-        const fullComboName = getVal(["paciente", "nombre_completo", "nombre completo", "apellidos_y_nombres", "apellidos y nombres", "paciente_nombre", "paciente nombre"]);
-        if (fullComboName) {
-          const parts = fullComboName.split(/\s+/).filter(Boolean);
-          if (parts.length >= 3) {
-            paterno = parts[0];
-            materno = parts[1];
-            nombres = parts.slice(2).join(" ");
-          } else if (parts.length === 2) {
-            paterno = parts[0];
-            nombres = parts[1];
-            materno = "";
-          } else {
-            nombres = fullComboName;
-            paterno = "";
-            materno = "";
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          const rows = results.data;
+          if (rows.length === 0) {
+            showAlert("Archivo Vacío", "No se encontraron filas con datos en el CSV.", "error");
+            resetDropZone();
+            return;
           }
+
+          const importMode = document.querySelector('input[name="importMode"]:checked').value;
+          if (importMode === "overwrite") {
+            database = [];
+          }
+
+          let addedCount = 0;
+          let duplicateCount = 0;
+
+          rows.forEach(row => {
+            const mapped = mapCSVRow(row);
+            const isDuplicate = database.some(p => 
+              (p.dni && mapped.dni && p.dni === mapped.dni && p.dni !== "00000000") || 
+              (p.hc && mapped.hc && p.hc === mapped.hc && p.hc !== "00000")
+            );
+
+            if (!isDuplicate) {
+              integrateCSVCase(mapped);
+              addedCount++;
+            } else {
+              duplicateCount++;
+            }
+          });
+
+          sortDatabaseChronologically();
+          saveDatabaseToLocalStorage();
+          
+          for (let k in activeYears) delete activeYears[k];
+          for (let k in activeMonths) delete activeMonths[k];
+
+          database.forEach(p => {
+            const parts = p.date.split("/");
+            if (parts.length === 3) {
+              const year = parts[2];
+              const monthName = monthNames[parseInt(parts[1], 10) - 1] || "Otros";
+              activeYears[year] = true;
+              activeMonths[`${year}-${monthName}`] = true;
+            }
+          });
+          localStorage.setItem('active_years', JSON.stringify(activeYears));
+          localStorage.setItem('active_months', JSON.stringify(activeMonths));
+
+          renderPatientList();
+          populateDashboardFilters();
+          selectPatient(1); 
+          toggleImportPanel();
+          resetDropZone();
+          switchView('ficha');
+
+          if (importMode === "overwrite") {
+            showAlert("Importación Masiva Exitosa", `Se sobrescribió el registro y se guardaron ${addedCount} nuevos pacientes de forma cronológica.`, "success");
+          } else {
+            showAlert("Acumulación Exitosa", `Se procesó el archivo: se agregaron ${addedCount} pacientes nuevos y se omitieron ${duplicateCount} duplicados.`, "success");
+          }
+        },
+        error: function(err) {
+          console.error(err);
+          showAlert("Error de Lectura", "Ocurrió un error leyendo el archivo CSV.", "error");
+          resetDropZone();
         }
-      }
-
-      const captacionRawDate = getRawVal([
-        "fecha_cap", "fechacap", "fec_cap", "fecha_captacion", "fecha captacion", 
-        "fecha de captacion", "fecha de captación", "fecha_atencion", "fecha atencion", 
-        "fecha de atencion", "fecha de atención", "fec_aten", "fecha", "date", "atencion", "atención"
-      ]);
-
-      const nacimientoRawDate = getRawVal([
-        "nacimiento", "f_nac", "fecha_nac", "fecha_nacimiento", "fecha de nacimiento", "f_nacimiento", "fec_nac"
-      ]);
-
-      return {
-        date: parseExcelDate(captacionRawDate),
-        dni: getVal(["dni", "documento", "n_doc", "n_documento", "identidad"]),
-        hc: getVal(["histcli", "hc", "historia", "n_hc", "historia_clinica", "h.c.", "historia clínica"]),
-        paterno: paterno,
-        materno: materno,
-        nombres: nombres,
-        sexo: getVal(["sexo", "sex", "genero", "género"]),
-        nacimiento: parseExcelDate(nacimientoRawDate),
-        text_print_scaled: getVal(["edad", "age"]),
-        direccion: getVal(["direccion", "dirección", "domicilio", "residencia"]),
-        peso: getVal(["peso", "weight"]),
-        talla: getVal(["talla", "height", "estatura"]),
-        cintura: getVal(["cintura", "cint", "perimetro_abdominal", "perimetro abdominal", "pa"]),
-        pa_sis: getVal(["pa_sis", "pa_sistolica", "presion_sistolica", "pas", "pa sis"]),
-        pa_dia: getVal(["pa_dia", "pa_diastolica", "presion_diastolica", "pad", "pa dia"]),
-        glicemia: getVal(["glicemia", "glucosa", "glicemia_ayunas", "glicemia ayunas", "glucosa ayunas"]),
-        glic_post: getVal(["glic_post", "glicemia_post", "post_prandial", "glucosa post", "glicemia post"]),
-        hba1c: getVal(["hba1c", "glicosilada", "hb_glicosilada", "hba1_c"]),
-        col_total: getVal(["col_total", "colesterol", "colesterol_total", "col_tot", "colesterol total"]),
-        trigliceridos: getVal(["trigliceridos", "trigliseridos", "triglicéridos", "trig", "tg", "trigliceridos_total"]),
-        col_ldl: getVal(["col_ldl", "ldl", "colesterol_ldl", "col ldl"]),
-        col_hdl: getVal(["col_hdl", "hdl", "colesterol_hdl", "col hdl"]),
-        creatinina: getVal(["creatinina", "crea", "creatinina_serica", "creatinina sérica"]),
-        microalb: getVal(["microalb", "microalbuminuria", "microalbuminuria_val"]),
-        proteinuria: getVal(["proteinuria", "prot", "proteinuria_val"]),
-        estado: getVal(["estado", "status", "condicion", "condición", "evolucion", "evolución"]),
-        tipo_caso: getVal(["tipo_caso", "tipo caso", "caso_tipo", "tipo de caso", "caso"]),
-        tipo_db: getVal(["tipo_db", "tipo_diabetes", "tipo diabetes", "db_tipo", "tipo_db_val"]),
-        consultas: getVal(["consultas", "n_consultas", "n_cons", "numero de consultas"]),
-        hospit: getVal(["hospit", "n_hospit", "n_hosp", "numero de hospitalizaciones", "hospitalizaciones"]),
-        edad_diag: getVal(["edad_diag", "edad_diagnostico", "edad al diagnostico", "edad diagnostico"]),
-        hta: getVal(["hta", "hipertension", "hipertensión"]),
-        obesity: getVal(["obesidad", "obesity", "peso_obeso"]),
-        dislipidemia: getVal(["dislipidemia", "dislipemia", "col_alto"]),
-        anemia: getVal(["anemia", "hemoglobina_baja"]),
-        enf_tiroidea: getVal(["enf_tiroidea", "tiroides", "hipotiroidismo"]),
-        tuberculosis: getVal(["tuberculosis", "tb", "tbc"]),
-        fuma: getVal(["fuma", "tabaco", "fumador"]),
-        cancer: getVal(["cancer", "cáncer", "neoplasia"]),
-        comp_neuro: getVal(["comp_neuro", "polineuropatia", "neuropatia", "neuro"]),
-        comp_renal: getVal(["comp_renal", "nefropatia", "renal", "insuficiencia_renal"]),
-        comp_retino: getVal(["comp_retino", "retinopatia", "retino", "retinopatia_np"]),
-        comp_coronar: getVal(["comp_coronar", "cardiopatia", "coronaria", "isquemica"]),
-        comp_retino_p: getVal(["comp_retino_p", "retinopatia_p", "retinopatia_proliferativa"]),
-        comp_cerebro: getVal(["comp_cerebro", "stroke", "cerebrovascular", "acv"]),
-        comp_pie_sa: getVal(["comp_pie_sa", "pie_diabetico", "pie_sa"]),
-        comp_pie_ca: getVal(["comp_pie_ca", "amputacion", "pie_ca"]),
-        tratamiento: getVal(["tratamiento", "medicina", "medicamento", "prescripción", "prescripcion"]),
-        medico: getVal(["medico", "médico", "doctor", "dr", "tratante"]),
-        cmp: getVal(["cmp", "colegiatura", "cop"])
-      };
-    }
-
-    function integrateCSVCase(data) {
-      const todayDate = new Date().toLocaleDateString('es-PE');
-      
-      const parseBool = (val) => {
-        if (!val) return false;
-        const s = val.toString().toLowerCase().trim();
-        return s === "sí" || s === "si" || s === "true" || s === "1" || s === "s" || s === "x" || s === "posit";
-      };
-
-      const newItem = {
-        item: database.length + 1,
-        date: data.date || todayDate,
-        dni: data.dni || "00000000",
-        hc: data.hc || "00000",
-        paterno: (data.paterno || "NUEVO").toUpperCase(),
-        materno: (data.materno || "PACIENTE").toUpperCase(),
-        nombres: (data.nombres || "REGISTRADO").toUpperCase(),
-        sexo: (data.sexo || "F").toUpperCase().startsWith("M") ? "M" : "F",
-        nacimiento: data.nacimiento || "01/01/1980",
-        edad: data.text_print_scaled || "46",
-        direccion: data.direccion || "Distrito de Ventanilla, Callao",
-        
-        tipo_caso: (data.tipo_caso.toLowerCase().includes("nuev") || data.tipo_caso.toLowerCase().includes("incid")) ? "nuevo" : "prevalente",
-        tipo_db: (data.tipo_db.toLowerCase().includes("t1") || data.tipo_db.includes("1")) ? "t1" : (data.tipo_db.toLowerCase().includes("gest") || data.tipo_db.includes("3") ? "gestacional" : "t2"),
-        edad_diag: data.edad_diag || String(Math.max(1, parseInt(data.text_print_scaled || "46") - 2)),
-        
-        peso: data.peso || "70.0",
-        talla: data.talla || "1.65",
-        cintura: data.cintura || "90",
-        pa_sis: data.pa_sis || "120",
-        pa_dia: data.pa_dia || "80",
-        
-        consultas: data.consultas || "04",
-        hospit: data.hospit || "00",
-        
-        glicemia: data.glicemia || "120.00",
-        glic_post: data.glic_post || "160",
-        hba1c: data.hba1c || "7.5",
-        col_total: data.col_total || "200.00",
-        trigliceridos: data.trigliceridos || "150.00",
-        col_ldl: data.col_ldl || "100.00",
-        col_hdl: data.col_hdl || "45.00",
-        creatinina: data.creatinina || "0.80",
-        microalb: data.microalb || "Negat.",
-        proteinuria: data.proteinuria || "Negat.",
-        
-        estado: (data.estado.toLowerCase().includes("control") || data.estado.toLowerCase().includes("estab")) ? "controlado" : "descompensado",
-        
-        comorbilidades: {
-          hta: parseBool(data.hta),
-          obesity: parseBool(data.obesity) || (parseFloat(data.peso) / Math.pow(parseFloat(data.talla || "1.65"), 2) >= 30),
-          dislipidemia: parseBool(data.dislipidemia),
-          anemia: parseBool(data.anemia),
-          vih: parseBool(data.vih),
-          enf_tiroidea: parseBool(data.enf_tiroidea),
-          tuberculosis: parseBool(data.tuberculosis),
-          fuma: parseBool(data.fuma),
-          cancer: parseBool(data.cancer)
-        },
-        complicaciones: {
-          neuro: parseBool(data.comp_neuro),
-          renal: parseBool(data.comp_renal),
-          retino: parseBool(data.comp_retino),
-          retino_p: parseBool(data.comp_retino_p),
-          coronar: parseBool(data.comp_coronar),
-          cerebro: parseBool(data.comp_cerebro),
-          pie_sa: parseBool(data.comp_pie_sa),
-          pie_ca: parseBool(data.comp_pie_ca)
-        },
-        tratamiento: data.tratamiento || "Tratamiento estándar.",
-        medico: data.medico || "MÉDICO NOTIFICADOR",
-        cmp: data.cmp || "99999"
-      };
-
-      database.push(newItem);
+      });
     }
 
     async function extractTextFromPdf(pdfData) {
@@ -2932,7 +3086,7 @@
           fullText += pageText + "\n";
         }
         document.getElementById('importRawText').value = fullText;
-        dropLoaderText.innerText = "PDF leído con éxito. Presiona 'Procesar con IA'.";
+        dropLoaderText.innerText = "PDF leído con éxito. Presiona 'Auditoría Médica IA'.";
       } catch (err) {
         console.error("Error al extraer texto PDF: ", err);
         showAlert("Error", "No se pudo leer el contenido del PDF.", "error");
@@ -2961,41 +3115,50 @@
       }
 
       btnProcess.disabled = true;
-      btnProcess.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Procesando con IA...`;
+      btnProcess.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Procesando Auditor...`;
 
       const storedKey = localStorage.getItem('gemini_api_key') || "";
       const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${storedKey}`;
 
-      const systemPrompt = `Extrae y procesa los datos clínicos del texto para devolver un JSON estructurado de Ficha de Diabetes:
+      const systemPrompt = `Actúa como un médico endocrinólogo experto y auditor de salud pública del MINSA.
+Analiza la nota clínica, informe médico o resultado de laboratorio provisto. Realiza una evaluación clínica exhaustiva del expediente y extrae los datos clínicos estructurados de Diabetes Mellitus para la ficha de vigilancia epidemiológica oficial.
+
+Devuelve obligatoriamente un único objeto JSON con esta estructura exacta:
 {
-  "paterno": "Paterno",
-  "materno": "Materno",
-  "nombres": "Nombres",
-  "dni": "8 dígitos",
-  "hc": "Historia clínica (histcli)",
+  "paterno": "Apellido Paterno",
+  "materno": "Apellido Materno",
+  "nombres": "Nombres Completos",
+  "dni": "8 dígitos numéricos",
+  "hc": "Número de Historia Clínica (ej. 531242)",
   "sexo": "M" o "F",
   "nacimiento": "DD/MM/AAAA",
-  "edad": "edad",
-  "direccion": "Dirección",
+  "edad": "Edad numérica",
+  "instruccion": "3",
+  "etnia": "4",
+  "idioma": "1",
+  "tipo_seguro": "1",
+  "direccion": "Dirección completa del paciente",
   "tipo_caso": "nuevo" o "prevalente",
   "tipo_db": "t1" o "t2" o "gestacional",
-  "peso": "peso Kg",
-  "talla": "talla m",
-  "pa_sis": "PA sistolica",
-  "pa_dia": "PA diastolica",
-  "glicemia": "Glicemia ayunas",
-  "hba1c": "HbA1c",
-  "col_total": "Colesterol Total",
-  "trigliceridos": "Trigliceridos",
-  "col_ldl": "LDL",
-  "col_hdl": "HDL",
-  "creatinina": "Creatinina",
+  "peso": "peso en Kg (ej. 72.4)",
+  "talla": "talla en metros (ej. 1.68)",
+  "pa_sis": "PA sistólica mmHg",
+  "pa_dia": "PA diastólica mmHg",
+  "glicemia": "Glicemia ayunas mg/dL",
+  "hba1c": "HbA1c % (ej. 7.2)",
+  "col_total": "Colesterol Total mg/dL",
+  "trigliceridos": "Trigliceridos mg/dL",
+  "col_ldl": "LDL mg/dL",
+  "col_hdl": "HDL mg/dL",
+  "creatinina": "Creatinina mg/dL",
   "estado": "controlado" o "descompensado",
-  "comorbilidades": { "hta": true/false, "obesidad": true/false, "dislipidemia": true/false, "anemia": true/false, "vih": false },
+  "juicio_clinico": "Un resumen structured del juicio médico de endocrinología evaluando el riesgo, control metabólico, estado del tratamiento e indicaciones de vigilancia epidemiológica de forma experta",
+  "riesgo_metabolico": "alto" o "medio" o "bajo",
+  "comorbilidades": { "hta": true/false, "obesidad": true/false, "dislipidemia": true/false, "anemia": true/false },
   "complicaciones": { "neuro": true/false, "renal": true/false, "retino": true/false, "pie_sa": true/false },
-  "tratamiento": "Medicamentos prescritos",
-  "medico": "Médico tratante",
-  "cmp": "CMP"
+  "tratamiento": "Medicamento prescrito detalladamente",
+  "medico": "Nombre del médico notificador",
+  "cmp": "Colegiatura CMP"
 }`;
 
       let contentsPayload = [];
@@ -3003,14 +3166,14 @@
         contentsPayload = [{
           role: "user",
           parts: [
-            { text: "Analiza la imagen médica y devuelve el JSON:\n" + rawText },
+            { text: "Analiza detalladamente esta imagen de examen clínico o reporte médico y genera la auditoría:\n" + rawText },
             { inlineData: { mimeType: "image/jpeg", data: selectedFileBase64 } }
           ]
         }];
       } else {
         contentsPayload = [{
           role: "user",
-          parts: [{ text: "Analiza este texto clínico:\n\n" + rawText }]
+          parts: [{ text: "Analiza detalladamente este reporte o nota clínica:\n\n" + rawText }]
         }];
       }
 
@@ -3027,87 +3190,127 @@
           body: JSON.stringify(payload)
         });
 
-        if (!response.ok) {
-          throw new Error("HTTP error " + response.status);
-        }
-
+        if (!response.ok) throw new Error("HTTP error " + response.status);
         const data = await response.json();
         const outputJsonText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
         
         if (outputJsonText) {
           const parsedData = JSON.parse(outputJsonText);
-          integrateExtractedCase(parsedData);
+          showAiAuditPanel(parsedData);
         } else {
-          throw new Error("Respuesta vacía.");
+          throw new Error("Respuesta de la IA vacía.");
         }
       } catch (err) {
         console.error(err);
         showAlert("Error de Procesamiento IA", "Ocurrió un error al contactar al motor de Gemini. Asegúrate de configurar tu API Key si estás fuera de Canvas.", "error");
       } finally {
         btnProcess.disabled = false;
-        btnProcess.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Procesar con Inteligencia Artificial`;
+        btnProcess.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Ejecutar Auditoría Médica IA`;
       }
     }
 
-    function integrateExtractedCase(data) {
-      const todayDate = new Date().toLocaleDateString('es-PE');
+    function showAiAuditPanel(data) {
+      pendingAiCase = data; 
+
+      document.getElementById('aiAuditPlaceholder').classList.add('hidden');
+      const resultPanel = document.getElementById('aiAuditResult');
+      resultPanel.classList.remove('hidden');
+      resultPanel.classList.add('flex');
+
+      // Setear Juicio Clínico y Semáforo de Riesgo
+      document.getElementById('aiClinicalJudgement').innerText = data.juicio_clinico || "Auditoría realizada sin observaciones.";
+      const riskBadge = document.getElementById('aiRiskBadge');
+      riskBadge.innerText = data.riesgo_metabolico || "medio";
+      if (data.riesgo_metabolico === 'alto') {
+        riskBadge.className = "px-1.5 py-0.2 rounded font-black text-white bg-red-600 uppercase";
+      } else if (data.riesgo_metabolico === 'bajo') {
+        riskBadge.className = "px-1.5 py-0.2 rounded font-black text-white bg-emerald-600 uppercase";
+      } else {
+        riskBadge.className = "px-1.5 py-0.2 rounded font-black text-white bg-amber-500 uppercase";
+      }
+
+      // Rellenar Mapeo de Variables Detectadas
+      document.getElementById('aiValName').innerText = `${data.paterno || ''} ${data.materno || ''}, ${data.nombres || ''}`;
+      document.getElementById('aiValDni').innerText = data.dni || 'No detectado';
+      document.getElementById('aiValHc').innerText = data.hc || 'No detectado';
+      document.getElementById('aiValDate').innerText = data.date || new Date().toLocaleDateString('es-PE');
+      document.getElementById('aiValGlic').innerText = data.glicemia ? `${data.glicemia} mg/dL` : '-';
+      document.getElementById('aiValHba1c').innerText = data.hba1c ? `${data.hba1c}%` : '-';
+      document.getElementById('aiValAntropo').innerText = `${data.peso || '-'} Kg / ${data.talla || '-'} m`;
+      document.getElementById('aiValPa').innerText = `${data.pa_sis || '-'}/${data.pa_dia || '-'} mmHg`;
+      document.getElementById('aiValEstado').innerText = data.estado || '-';
       
+      const estadoText = document.getElementById('aiValEstado');
+      if (data.estado === 'controlado' || data.estado === '1') {
+        estadoText.className = "text-emerald-700 font-extrabold uppercase";
+      } else {
+        estadoText.className = "text-red-600 font-extrabold uppercase";
+      }
+    }
+
+    function commitAiCaseToDatabase() {
+      if (!pendingAiCase) return;
+      const todayDate = new Date().toLocaleDateString('es-PE');
+
       const newItem = {
         item: database.length + 1,
-        date: parseExcelDate(data.date) || todayDate,
-        dni: data.dni || "00000000",
-        hc: data.hc || "00000",
-        paterno: (data.paterno || "NUEVO").toUpperCase(),
-        materno: (data.materno || "PACIENTE").toUpperCase(),
-        nombres: (data.nombres || "REGISTRADO").toUpperCase(),
-        sexo: data.sexo || "F",
-        nacimiento: parseExcelDate(data.nacimiento) || "01/01/1980",
-        edad: data.edad || "46",
-        direccion: data.direccion || "Distrito de Ventanilla, Callao",
-        tipo_caso: data.tipo_caso || "prevalente",
-        tipo_db: data.tipo_db || "t2",
-        peso: data.peso || "70.0",
-        talla: data.talla || "1.65",
+        date: parseExcelDate(pendingAiCase.date) || todayDate,
+        dni: pendingAiCase.dni || "00000000",
+        hc: pendingAiCase.hc || "00000",
+        paterno: (pendingAiCase.paterno || "NUEVO").toUpperCase(),
+        materno: (pendingAiCase.materno || "PACIENTE").toUpperCase(),
+        nombres: (pendingAiCase.nombres || "REGISTRADO").toUpperCase(),
+        sexo: pendingAiCase.sexo || "F",
+        nacimiento: parseExcelDate(pendingAiCase.nacimiento) || "01/01/1980",
+        node_edad: pendingAiCase.edad || "46",
+        edad: pendingAiCase.edad || "46",
+        instruccion: pendingAiCase.instruccion || "3",
+        etnia: pendingAiCase.etnia || "4",
+        idioma: pendingAiCase.idioma || "1",
+        tipo_seguro: pendingAiCase.tipo_seguro || "1",
+        direccion: pendingAiCase.direccion || "Distrito de Ventanilla, Callao",
+        tipo_caso: pendingAiCase.tipo_caso || "prevalente",
+        tipo_db: pendingAiCase.tipo_db || "t2",
+        peso: pendingAiCase.peso || "70.0",
+        talla: pendingAiCase.talla || "1.65",
         cintura: "90",
-        pa_sis: data.pa_sis || "120",
-        pa_dia: data.pa_dia || "80",
-        glicemia: data.glicemia || "120.00",
-        hba1c: data.hba1c || "7.5",
-        col_total: data.col_total || "200.00",
-        trigliceridos: data.trigliceridos || "150.00",
-        col_ldl: data.col_ldl || "100.00",
-        col_hdl: data.col_hdl || "45.00",
-        creatinina: data.creatinina || "0.80",
-        estado: data.estado || (parseFloat(data.glicemia) > 130 ? "descompensated" : "controlado"),
+        pa_sis: pendingAiCase.pa_sis || "120",
+        pa_dia: pendingAiCase.pa_dia || "80",
+        glicemia: pendingAiCase.glicemia || "120.00",
+        hba1c: pendingAiCase.hba1c || "7.5",
+        col_total: pendingAiCase.col_total || "200.00",
+        trigliceridos: pendingAiCase.trigliceridos || "150.00",
+        col_ldl: pendingAiCase.col_ldl || "100.00",
+        col_hdl: pendingAiCase.col_hdl || "45.00",
+        creatinina: pendingAiCase.creatinina || "0.80",
+        estado: pendingAiCase.estado || "controlado",
         comorbilidades: {
-          hta: data.comorbilidades?.hta || false,
-          obesity: data.comorbilidades?.obesidad || false,
-          dislipidemia: data.comorbilidades?.dislipidemia || false,
-          anemia: data.comorbilidades?.anemia || false,
-          vih: data.comorbilidades?.vih || false,
+          hta: pendingAiCase.comorbilidades?.hta || false,
+          obesity: pendingAiCase.comorbilidades?.obesidad || false,
+          dislipidemia: pendingAiCase.comorbilidades?.dislipidemia || false,
+          anemia: pendingAiCase.comorbilidades?.anemia || false,
+          vih: false,
           enf_tiroidea: false,
           tuberculosis: false,
           fuma: false,
           cancer: false
         },
         complicaciones: {
-          neuro: data.complicaciones?.neuro || false,
-          renal: data.complicaciones?.renal || false,
-          retino: data.complicaciones?.retino || false,
+          neuro: pendingAiCase.complicaciones?.neuro || false,
+          renal: pendingAiCase.complicaciones?.renal || false,
+          retino: pendingAiCase.complicaciones?.retino || false,
           retino_p: false,
           coronar: false,
           cerebro: false,
-          pie_sa: data.complicaciones?.pie_sa || false,
+          pie_sa: pendingAiCase.complicaciones?.pie_sa || false,
           pie_ca: false
         },
-        tratamiento: data.tratamiento || "Tratamiento estándar.",
-        medico: data.medico || "MÉDICO NOTIFICADOR",
-        cmp: data.cmp || "99999"
+        tratamiento: pendingAiCase.tratamiento || "Tratamiento estándar.",
+        medico: pendingAiCase.medico || "DRA. ELIANA SOTOMAYOR",
+        cmp: pendingAiCase.cmp || "42152"
       };
 
       database.push(newItem);
-
-      // RE-ORDENAR CRONOLÓGICAMENTE AL AGREGAR UN CASO
       sortDatabaseChronologically();
       saveDatabaseToLocalStorage();
       
@@ -3117,21 +3320,25 @@
         const monthName = monthNames[parseInt(parts[1], 10) - 1] || "Otros";
         activeYears[year] = true;
         activeMonths[`${year}-${monthName}`] = true;
+        localStorage.setItem('active_years', JSON.stringify(activeYears));
+        localStorage.setItem('active_months', JSON.stringify(activeMonths));
       }
 
       renderPatientList();
       populateDashboardFilters();
 
-      // Localizar el ID re-indexado del paciente agregado
       const addedPatient = database.find(item => item.dni === newItem.dni);
       selectPatient(addedPatient ? addedPatient.item : database.length);
       
       toggleImportPanel();
       resetDropZone();
       document.getElementById('importRawText').value = "";
+      document.getElementById('aiAuditResult').classList.add('hidden');
+      document.getElementById('aiAuditPlaceholder').classList.remove('hidden');
+      pendingAiCase = null;
       switchView('ficha');
 
-      showAlert("Paciente Registrado", `Ficha autocompletada y registrada cronológicamente para ${newItem.paterno} ${newItem.materno}, ${newItem.nombres}.`, "success");
+      showAlert("Paciente Registrado con Auditoría", `Caso de ${newItem.paterno} ${newItem.materno}, ${newItem.nombres} auditado e integrado con éxito al mes de ${monthNames[parseInt(parts[1], 10) - 1]}.`, "success");
     }
 
     function showAlert(title, message, type = "info") {
@@ -3165,9 +3372,7 @@
       const originalZoom = currentZoom;
       currentZoom = 1.0;
       applyZoom();
-      
       window.print();
-      
       setTimeout(() => {
         currentZoom = originalZoom;
         applyZoom();
@@ -3178,3 +3383,4 @@
   </script>
 </body>
 </html>
+```
