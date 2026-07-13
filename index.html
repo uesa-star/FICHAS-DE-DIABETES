@@ -972,11 +972,11 @@
             <div class="text-xs text-slate-600 space-y-2.5 flex-1 overflow-y-auto">
               <p>Los datos clínicos se sincronizan de forma directa y automática desde tu <strong>Google Sheet oficial</strong>. Asegúrate de estructurar el libro de cálculo con las siguientes columnas en la primera pestaña:</p>
               <ul class="list-disc pl-5 space-y-1.5 text-[11px]">
-                <li><code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">paterno</code>, <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">nom_paciente</code>, <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">nombres</code></li>
-                <li><code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">dni</code> o <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">nro_documento</code></li>
-                <li><code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">hc</code> o <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">historia_clinica</code></li>
-                <li><code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">glicemia</code> y <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">hba1c</code></li>
-                <li><code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">edad</code>, <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">sexo</code>, <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">fecha</code> (Fecha de atención)</li>
+                <li><code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">ano</code> (Años válidos de gestión: 2026, 2025, 2024)</li>
+                <li><code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">apepat</code>, <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">apemat</code>, <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">nombres</code></li>
+                <li><code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">dni</code> y <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">histcli</code></li>
+                <li><code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">glicemia</code> y <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">hemoglic</code> (HbA1c)</li>
+                <li><code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">edad</code>, <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">sexo</code>, <code class="bg-slate-100 px-1 py-0.5 rounded font-mono text-blue-800 font-bold">fecha_cap</code> (Fecha de captación)</li>
               </ul>
               <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-[11px] text-blue-800">
                 <i class="fa-solid fa-cloud-arrow-down mr-1 text-blue-650"></i>
@@ -1189,9 +1189,10 @@
 
   <!-- JAVASCRIPT LOGIC BLOCK -->
   <script>
+    // Enlace oficial de Google Sheets
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSJU7qE8tavkabu6CtsQxxWFxfq1WyjUPicVt_Fm9BIeTkkE9a32hGsq9UREkfHug/pub?gid=1946913509&single=true&output=csv";
 
-    // Base de datos local de respaldo
+    // Base de datos local de respaldo / contingencia
     const defaultDatabase = [
       {
         item: 1,
@@ -1361,7 +1362,7 @@
       location.reload();
     }
 
-    function parseDateStringRobustly(dateStr) {
+    function parseDateStringRobustly(dateStr, anoField) {
       if (!dateStr) return { year: "2025", monthName: "Junio", standardDate: "15/06/2025" };
       
       let s = dateStr.toString().trim().replace(/\s+/g, ' ');
@@ -1370,7 +1371,12 @@
       let monthName = "Junio";
       let standardDate = "15/06/2025";
 
-      // 1. Detectar si la fecha es un número de serie de Excel (serial de 5 dígitos, ej: 46115)
+      // 1. Si existe anoField explícito como cabecera (ano/anio), lo usamos prioritariamente para el año de gestión fiscal
+      if (anoField && /^(2024|2025|2026)$/.test(anoField.toString().trim())) {
+        year = anoField.toString().trim();
+      }
+
+      // 2. Detectar si la fecha es un número de serie de Excel (serial de 5 dígitos, ej: 46115)
       if (/^\d{5}(\.\d+)?$/.test(s)) {
         const serial = parseFloat(s);
         const utc_days = Math.floor(serial - (serial > 60 ? 25569 : 25568));
@@ -1379,20 +1385,14 @@
         const tzOffset = date_info.getTimezoneOffset() * 60000;
         const localDate = new Date(date_info.getTime() + tzOffset);
         
-        year = String(localDate.getFullYear());
+        if (!anoField) {
+          year = String(localDate.getFullYear());
+        }
         let m = localDate.getMonth();
         monthName = monthNames[m];
         standardDate = `${String(localDate.getDate()).padStart(2, '0')}/${String(m + 1).padStart(2, '0')}/${year}`;
         
         return restrictToFiscalYears(year, monthName, standardDate);
-      }
-
-      // 2. Detectar si el campo contiene únicamente el año de reporte (ej: "2026", "2025", "2024")
-      if (/^(2024|2025|2026)$/.test(s)) {
-        year = s;
-        monthName = "Abril";
-        standardDate = `15/04/${year}`;
-        return { year, monthName, standardDate };
       }
 
       // 3. Detectar formatos con abreviaciones textuales en español (ej. "15-Abr-2026", "12/Dic/25")
@@ -1411,8 +1411,10 @@
         const monthIndex = mIdx !== -1 ? mIdx : 3; 
         
         monthName = monthNames[monthIndex];
-        year = y;
-        standardDate = `${String(d).padStart(2, '0')}/${String(monthIndex + 1).padStart(2, '0')}/${y}`;
+        if (!anoField) {
+          year = y;
+        }
+        standardDate = `${String(d).padStart(2, '0')}/${String(monthIndex + 1).padStart(2, '0')}/${year}`;
         return restrictToFiscalYears(year, monthName, standardDate);
       }
 
@@ -1425,8 +1427,10 @@
         
         const monthIndex = Math.max(0, Math.min(11, m - 1));
         monthName = monthNames[monthIndex];
-        year = y;
-        standardDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+        if (!anoField) {
+          year = y;
+        }
+        standardDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${year}`;
       } else {
         // 5. Caso estándar: DD/MM/YYYY o DD/MM/YY
         let matchDMY = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/);
@@ -1446,15 +1450,19 @@
           
           const monthIndex = Math.max(0, Math.min(11, m - 1));
           monthName = monthNames[monthIndex];
-          year = y;
-          standardDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+          if (!anoField) {
+            year = y;
+          }
+          standardDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${year}`;
         } else {
           // 6. Fallback final con corrección de zona horaria
           let dObj = new Date(s);
           if (!isNaN(dObj.getTime())) {
             const localTime = dObj.getTime() + dObj.getTimezoneOffset() * 60000;
             const utcDate = new Date(localTime);
-            year = String(utcDate.getFullYear());
+            if (!anoField) {
+              year = String(utcDate.getFullYear());
+            }
             let m = utcDate.getMonth();
             monthName = monthNames[m];
             standardDate = `${String(utcDate.getDate()).padStart(2, '0')}/${String(m + 1).padStart(2, '0')}/${year}`;
@@ -1466,6 +1474,8 @@
     }
 
     // CORTAFUEGOS DE SEGURIDAD FISCAL (STRICT GUARDRAIL)
+    // Para evitar que los años de nacimiento (ej. 1979) generen carpetas indeseadas, 
+    // forzamos a que el año fiscal se agrupe estrictamente en 2024, 2025 o 2026.
     function restrictToFiscalYears(year, monthName, standardDate) {
       if (year !== "2024" && year !== "2025" && year !== "2026") {
         let sum = 0;
@@ -1512,13 +1522,12 @@
       await loadDataFromGoogleSheet();
     }
 
-    // ALGORITMO DE DETECCIÓN DINÁMICA DE CABECERAS PARA EVITAR BUG DE BANNERS EN HOJAS DE EXCEL
     function arraysToObjects(arrayOfArrays) {
       if (!arrayOfArrays || arrayOfArrays.length === 0) return [];
 
       let headerRowIndex = 0;
       let maxMatchCount = 0;
-      const headerKeywords = ["dni", "hc", "historia", "paterno", "materno", "nombres", "fecha", "edad", "sexo", "paciente", "glucosa", "glicemia", "hba1c"];
+      const headerKeywords = ["dni", "hc", "histcli", "paterno", "apepat", "nombres", "fecha_cap", "edad", "sexo", "tdiabetes", "hemoglic", "glicemia"];
 
       // Buscar en los primeros 15 renglones cuál tiene el mayor número de coincidencias de columnas oficiales
       for (let i = 0; i < Math.min(arrayOfArrays.length, 15); i++) {
@@ -1527,7 +1536,7 @@
         let matchCount = 0;
         row.forEach(cell => {
           if (cell !== undefined && cell !== null) {
-            let cleaned = cell.toString().toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+            let cleaned = cell.toString().toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9_]/g, "");
             if (cleaned && headerKeywords.some(kw => cleaned.includes(kw) || kw.includes(cleaned))) {
               matchCount++;
             }
@@ -1539,13 +1548,11 @@
         }
       }
 
-      // Si no hay coincidencias consistentes, asumimos fila 0
       if (maxMatchCount < 2) {
         headerRowIndex = 0;
       }
 
       const rawHeaders = arrayOfArrays[headerRowIndex] || [];
-      // Normalizar nombres de cabecera removiendo tildes y caracteres especiales
       const headers = rawHeaders.map(h => {
         if (h === undefined || h === null) return "";
         return h.toString().trim()
@@ -1562,7 +1569,6 @@
         const row = arrayOfArrays[i];
         if (!row || !Array.isArray(row)) continue;
         
-        // Descartar si el renglón es completamente nulo
         const isRowEmpty = row.every(cell => cell === undefined || cell === null || cell.toString().trim() === "");
         if (isRowEmpty) continue;
 
@@ -1598,10 +1604,9 @@
           await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
         }
 
-        if (!response || !response.ok) throw new Error("Fallo al descargar CSV desde Google");
+        if (!response || !response.ok) throw new Error("Fallo al descargar CSV");
         const csvText = await response.text();
 
-        // Parsear como matriz de arreglos de texto para aplicar detección dinámica de cabeceras
         Papa.parse(csvText, {
           header: false,
           skipEmptyLines: true,
@@ -1625,12 +1630,12 @@
             rows.forEach((row) => {
               const mapped = mapCSVRow(row);
               
-              // CORTAFUEGOS DE INTEGRIDAD: Descartar filas vacías o sin identificadores básicos
+              // Validación clínica mínima para descartar filas de ruido o vacías
               if (!mapped.nombres && !mapped.paterno && !mapped.dni && !mapped.hc) {
                 return; 
               }
 
-              // Distribuidor de nombres combinados con soporte para comas
+              // Mapeador de nombres estructurado
               let paterno = mapped.paterno;
               let materno = mapped.materno;
               let nombres = mapped.nombres;
@@ -1660,19 +1665,17 @@
               }
 
               let finalDate = mapped.date;
-              if (!finalDate && row.anio) {
-                finalDate = `15/06/${row.anio}`;
-              }
-              if (!finalDate && row.ano) {
-                finalDate = `15/06/${row.ano}`;
+              if (!finalDate && mapped.ano) {
+                finalDate = `15/06/${mapped.ano}`;
               }
               if (!finalDate) {
                 const fallbackYears = ["2024", "2025", "2026"];
                 finalDate = `12/04/${fallbackYears[validIndex % fallbackYears.length]}`;
               }
 
-              const dateObj = parseDateStringRobustly(finalDate);
+              const dateObj = parseDateStringRobustly(finalDate, mapped.ano);
 
+              // Integración de todos los campos biunívocos del BASE DB NOTI
               const patientItem = {
                 item: validIndex++,
                 date: dateObj.standardDate,
@@ -1685,8 +1688,8 @@
                 nacimiento: mapped.nacimiento || "01/01/1980",
                 edad: mapped.edad || "45",
                 direccion: mapped.direccion || "Ventanilla, Callao",
-                tipo_caso: mapped.tipo_caso || "prevalente",
-                tipo_db: mapped.tipo_db || "t2",
+                tipo_caso: (mapped.notcaso || "prevalente").toLowerCase().includes("nuev") || (mapped.notcaso || "").toLowerCase().includes("incid") ? "nuevo" : "prevalente",
+                tipo_db: (mapped.tdiabetes || "t2").toString().toLowerCase().includes("1") ? "t1" : "t2",
                 peso: mapped.peso || "70.0",
                 talla: mapped.talla || "1.65",
                 cintura: mapped.cintura || "90",
@@ -1699,19 +1702,19 @@
                 col_ldl: mapped.col_ldl || "100.0",
                 col_hdl: mapped.col_hdl || "45.0",
                 creatinina: mapped.creatinina || "0.8",
-                estado: mapped.estado || (parseFloat(mapped.glicemia) > 130 ? "descompensated" : "controlado"),
+                estado: (mapped.estado || "").toLowerCase().includes("control") ? "controlado" : "descompensated",
                 comorbilidades: {
-                  hta: parseBoolean(mapped.hta || mapped.hipertension),
-                  obesity: parseBoolean(mapped.obesity || mapped.obesidad),
+                  hta: parseBoolean(mapped.hta),
+                  obesity: parseBoolean(mapped.obesity),
                   dislipidemia: parseBoolean(mapped.dislipidemia),
                   anemia: parseBoolean(mapped.anemia),
-                  vih: parseBoolean(mapped.vih)
+                  vih: false
                 },
                 complicaciones: {
-                  neuro: parseBoolean(mapped.neuro || mapped.polineuropatia),
-                  renal: parseBoolean(mapped.renal || mapped.nefropatia),
-                  retino: parseBoolean(mapped.retino || mapped.retinopatia),
-                  pie_sa: parseBoolean(mapped.pie_sa || mapped.pie_diabetico)
+                  neuro: parseBoolean(mapped.neuro),
+                  renal: parseBoolean(mapped.renal),
+                  retino: parseBoolean(mapped.retino_np) || parseBoolean(mapped.retino_p),
+                  pie_sa: parseBoolean(mapped.pie_sa)
                 },
                 tratamiento: mapped.tratamiento || "Tratamiento estándar.",
                 medico: mapped.medico || "MÉDICO TRATANTE",
@@ -1727,7 +1730,7 @@
             activeYears = {};
             activeMonths = {};
             database.forEach(p => {
-              const dateObj = parseDateStringRobustly(p.date);
+              const dateObj = parseDateStringRobustly(p.date, p.ano);
               const year = dateObj.year;
               const monthName = dateObj.monthName;
               const monthKey = `${year}-${monthName}`;
@@ -2506,7 +2509,6 @@
       rows.forEach(row => {
         const mapped = mapCSVRow(row);
         
-        // CORTAFUEGOS DE INTEGRIDAD: Ignorar filas vacías
         if (!mapped.nombres && !mapped.paterno && !mapped.dni && !mapped.hc) {
           return;
         }
@@ -2517,7 +2519,7 @@
       saveDatabaseToLocalStorage();
       
       database.forEach(p => {
-        const dateObj = parseDateStringRobustly(p.date);
+        const dateObj = parseDateStringRobustly(p.date, p.ano);
         const year = dateObj.year;
         const monthName = dateObj.monthName;
         if (activeYears[year] === undefined) activeYears[year] = false;
@@ -2543,60 +2545,93 @@
         return "";
       };
 
+      // Exact Mapping matching the audited headers of BASE DB NOTI.xlsx
       return {
-        date: getVal([
-          "fecha", "date", "fecha_captacion", "fecha_de_captacion", "fecha_atencion", "fecha_de_atencion", 
-          "atencion", "fecha_noti", "fecha_notificacion", "fecha_reg", "fecha_registro", "fecha_noti_diab", 
-          "f_noti", "f_atencion", "f_captacion", "fecha_consulta", "f_consulta", "periodo", "anio", "ano", 
-          "year", "fecha_de_captacion_atencion", "fecha_captacion_atencion"
-        ]),
-        dni: getVal([
-          "dni", "documento", "n_doc", "n_documento", "identidad", "num_doc", "nro_doc", "nro_documento", 
-          "numero_documento", "nro_documento_identidad", "documento_identidad", "n_documento_identidad", 
-          "nro_doc_identidad", "num_doc_identidad"
-        ]),
-        hc: getVal([
-          "hc", "historia", "n_hc", "historia_clinica", "h_c", "nro_hc", "nro_historia_clinica", "num_hc", 
-          "hist_clin", "historia_clin", "nro_historia", "historiaclinica", "h_c_"
-        ]),
-        paterno: getVal(["paterno", "apellido_paterno", "ap_paterno", "ape_paterno", "apellido_pat", "ape_pat", "ap_pat"]),
-        materno: getVal(["materno", "apellido_materno", "ap_materno", "ape_materno", "apellido_mat", "ape_mat", "ap_mat"]),
-        nombres: getVal([
-          "nombres", "nombre", "nombre_completo", "nombre_completos", "nombres_completos", "paciente", 
-          "nombres_y_apellidos", "apellidos_y_nombres", "apellidos_nombres", "paciente_nombre", 
-          "paciente_nombres", "nombres_del_paciente", "nom_pac", "nom_paciente", "datos_paciente", "nombres_paciente"
-        ]),
-        sexo: getVal(["sexo", "sex", "genero"]),
-        nacimiento: getVal(["nacimiento", "fecha_nac", "fecha_nacimiento", "fecha_de_nacimiento", "f_nac", "f_nacimiento"]),
+        date: getVal(["fecha_cap", "fecha_reg", "fecha", "date"]),
+        ano: getVal(["ano", "anio", "year"]),
+        dni: getVal(["dni", "nro_documento", "documento"]),
+        hc: getVal(["histcli", "hc", "historia_clinica", "historia"]),
+        paterno: getVal(["apepat", "paterno", "apellido_paterno"]),
+        materno: getVal(["apemat", "materno", "apellido_materno"]),
+        nombres: getVal(["nombres", "nombre"]),
+        sexo: getVal(["sexo", "sex"]),
+        nacimiento: getVal(["fecha_nac", "nacimiento", "fecha_nacimiento"]),
         edad: getVal(["edad", "age"]),
-        direccion: getVal(["direccion", "domicilio", "residencia", "dir", "direccion_completa", "direccion_actual"]),
-        peso: getVal(["peso", "weight", "peso_kg", "peso_val"]),
-        talla: getVal(["talla", "height", "estatura", "talla_m", "talla_val"]),
-        cintura: getVal(["cintura", "cint", "abd", "cintura_cm", "perimetro_abdominal", "perimetro_cintura"]),
-        pa_sis: getVal(["pa_sis", "sistolica", "presion_sistolica", "pa_s", "pas", "p_a_s"]),
-        pa_dia: getVal(["pa_dia", "diastolica", "presion_diastolica", "pa_d", "pad", "p_a_d"]),
-        glicemia: getVal(["glicemia", "glucosa", "glicemia_ayunas", "glicemia_val", "glucosa_ayunas", "gluc_ayunas"]),
-        hba1c: getVal(["hba1c", "glicosilada", "hb_glicosilada", "hba1c_val", "hba1c_porcentaje", "hemoglobina_glicosilada"]),
-        col_total: getVal(["col_total", "colesterol", "col_total_val", "col_tot", "colesterol_total"]),
-        trigliceridos: getVal(["trigliceridos", "triglycerides", "triglic", "trigliceridos_val", "tri"]),
-        col_ldl: getVal(["col_ldl", "ldl", "colesterol_ldl", "col_ldl_val"]),
-        col_hdl: getVal(["col_hdl", "hdl", "colesterol_hdl", "col_hdl_val"]),
-        creatinina: getVal(["creatinina", "crea", "creat", "creatinina_val"]),
-        estado: getVal(["estado", "status", "condicion", "est", "estado_caso", "estado_del_caso", "evolucion"]),
-        tratamiento: getVal(["tratamiento", "medicina", "medicamento", "prescripcion", "tto", "tratamiento_medicamentoso"]),
-        medico: getVal(["medico", "doctor", "dr", "tratante", "personal_de_salud", "medico_tratante"]),
-        cmp: getVal(["cmp", "colegiatura", "cop", "cmp_medico"])
+        direccion: getVal(["direccion", "dirección", "domicilio"]),
+        telefono: getVal(["telefono", "teléfono"]),
+        celular: getVal(["celular"]),
+        asegurado: getVal(["asegurado"]),
+        tseguro: getVal(["tseguro", "tipo_seguro"]),
+        
+        notcaso: getVal(["notcaso", "tipo_caso"]),
+        tdiabetes: getVal(["tdiabetes", "tipo_db", "tipo_diabetes"]),
+        edad_diag: getVal(["edad_diag", "edad_diagnostico"]),
+        
+        peso: getVal(["peso"]),
+        talla: getVal(["talla"]),
+        cintura: getVal(["pcint", "cintura"]),
+        pa_sis: getVal(["sistolica", "pa_sis"]),
+        pa_dia: getVal(["diastolica", "pa_dia"]),
+        
+        glicemia: getVal(["glicemia"]),
+        glic_post: getVal(["postpandrial", "glic_post"]),
+        hba1c: getVal(["hemoglic", "hba1c"]),
+        microalb: getVal(["microalbu", "microalb"]),
+        proteinuria: getVal(["proteinuria"]),
+        col_total: getVal(["col_total"]),
+        trigliceridos: getVal(["trigliceridos"]),
+        col_ldl: getVal(["ldl", "col_ldl"]),
+        col_hdl: getVal(["hdl", "col_hdl"]),
+        creatinina: getVal(["creatinina"]),
+        estado: getVal(["status", "estado"]),
+        
+        // Comorbilidades
+        hta: getVal(["hta"]),
+        obesity: getVal(["obesidad"]),
+        dislipidemia: getVal(["displidemia", "dislipidemia"]),
+        anemia: getVal(["anemia"]),
+        etiroidea: getVal(["etiroidea"]),
+        tbc: getVal(["tbc"]),
+        tabaquismo: getVal(["tabaquismo"]),
+        cancer: getVal(["cancer", "cáncer"]),
+        
+        // Complicaciones
+        neuro: getVal(["neuropatia", "neuropatía"]),
+        renal: getVal(["nefropatia", "nefropatía"]),
+        retino_np: getVal(["noproliferativa"]),
+        retino_p: getVal(["proliferativa"]),
+        pie_sa: getVal(["sinamputacion"]),
+        pie_ca: getVal(["conamputacion"]),
+        evaluado: getVal(["evaluado"]),
+        
+        // Tratamiento
+        tratamiento: getVal(["tratamiento"]),
+        metformina: getVal(["metformina"]),
+        sulfolinurea: getVal(["sulfolinurea"]),
+        inhibidores: getVal(["inhibidores"]),
+        insulinanph: getVal(["insulinanph"]),
+        lispro: getVal(["insulinaalyspro"]),
+        aspart: getVal(["aspart"]),
+        glargina100: getVal(["glargina100"]),
+        glargina300: getVal(["glargina300"]),
+        glifozinas: getVal(["glifozinas"]),
+        
+        medico: getVal(["medico"]),
+        cmp: getVal(["cmp"]),
+        etnia: getVal(["etnia"]),
+        idioma: getVal(["idioma"]),
+        fichanum: getVal(["fichanum", "correlative"])
       };
     }
 
     function integrateCSVCase(data) {
       const todayDate = new Date().toLocaleDateString('es-PE');
       let finalDate = data.date || todayDate;
-      if (!data.date && data.anio) {
-        finalDate = `15/06/${data.anio}`;
+      if (!data.date && data.ano) {
+        finalDate = `15/06/${data.ano}`;
       }
       
-      const dateObj = parseDateStringRobustly(finalDate);
+      const dateObj = parseDateStringRobustly(finalDate, data.ano);
       
       const newItem = {
         item: database.length + 1,
@@ -2610,8 +2645,8 @@
         nacimiento: data.nacimiento || "01/01/1980",
         edad: data.edad || "46",
         direccion: data.direccion || "Distrito de Ventanilla, Callao",
-        tipo_caso: "prevalente",
-        tipo_db: "t2",
+        tipo_caso: (data.notcaso || "prevalente").toLowerCase().includes("nuev") || (data.notcaso || "").toLowerCase().includes("incid") ? "nuevo" : "prevalente",
+        tipo_db: (data.tdiabetes || "t2").toString().toLowerCase().includes("1") ? "t1" : "t2",
         peso: data.peso || "70.0",
         talla: data.talla || "1.65",
         cintura: "90",
@@ -2624,9 +2659,20 @@
         col_ldl: data.col_ldl || "100.00",
         col_hdl: data.col_hdl || "45.00",
         creatinina: data.creatinina || "0.80",
-        estado: data.estado || (parseFloat(data.glicemia) > 130 ? "descompensated" : "controlado"),
-        comorbilidades: { hta: false, obesity: false, dislipidemia: false, anemia: false, vih: false },
-        complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
+        estado: (data.estado || "").toLowerCase().includes("control") ? "controlado" : "descompensated",
+        comorbilidades: {
+          hta: parseBoolean(data.hta),
+          obesity: parseBoolean(data.obesity),
+          dislipidemia: parseBoolean(data.dislipidemia),
+          anemia: parseBoolean(data.anemia),
+          vih: false
+        },
+        complicaciones: {
+          neuro: parseBoolean(data.neuro),
+          renal: parseBoolean(data.renal),
+          retino: parseBoolean(data.retino_np) || parseBoolean(data.retino_p),
+          pie_sa: parseBoolean(data.pie_sa)
+        },
         tratamiento: data.tratamiento || "Tratamiento estándar.",
         medico: data.medico || "MÉDICO NOTIFICADOR",
         cmp: data.cmp || "99999"
@@ -2811,7 +2857,7 @@
       database.push(newItem);
       saveDatabaseToLocalStorage();
       
-      const dateObj = parseDateStringRobustly(newItem.date);
+      const dateObj = parseDateStringRobustly(newItem.date, newItem.ano);
       const year = dateObj.year;
       const monthName = dateObj.monthName;
       if (activeYears[year] === undefined) activeYears[year] = false;
