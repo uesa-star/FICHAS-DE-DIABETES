@@ -72,6 +72,7 @@
     #printSheet {
       transform-origin: top center;
       transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
     }
 
     .active-patient-card {
@@ -92,50 +93,53 @@
       color: #1e3a8a !important;
     }
     
+    /* AUDITORÍA DE IMPRESIÓN RIGUROSA: Estilos de diseño A4 físicos */
     @media print {
       @page {
         size: A4 portrait;
-        margin: 6mm !important;
+        margin: 8mm !important; /* Margen físico perfecto para no generar segunda página */
       }
       * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
+        color-adjust: exact !important;
         color: #000000 !important;
       }
-      body * {
-        visibility: hidden !important;
-      }
-      html, body, main, div {
-        background: transparent !important;
-        background-color: transparent !important;
-        box-shadow: none !important;
-        border: none !important;
-        height: auto !important;
-      }
-      .print-container, .print-container * {
-        visibility: visible !important;
-      }
-      .print-container {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        height: auto !important;
+      /* Ocultar elementos de interfaz en papel */
+      header, aside, #zoomControls, #editPanel, #importPanel, #alertModal, .no-print, #btnRestoreSidebar {
+        display: none !important;
+        height: 0 !important;
         margin: 0 !important;
         padding: 0 !important;
-        display: block !important;
       }
+      main {
+        background: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
+        width: 100% !important;
+      }
+      #tabContentDashboard {
+        display: none !important;
+      }
+      #tabContentFicha {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      /* Forzar dimensiones físicas estrictas en la previsualización del navegador */
       #printSheet {
         transform: scale(1) !important; 
         position: relative !important;
         margin: 0 auto !important;
         width: 190mm !important;
-        height: 262mm !important; 
-        max-height: 262mm !important;
+        height: 270mm !important; 
+        max-height: 270mm !important;
         page-break-inside: avoid !important;
         page-break-after: avoid !important;
         overflow: hidden !important;
-        padding: 0 !important;
+        padding: 4mm !important;
         box-sizing: border-box !important;
         border: 1px solid #000000 !important;
         border-radius: 0px !important;
@@ -143,22 +147,26 @@
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
+        box-shadow: none !important;
       }
       .sheet-cell {
-        padding: 1px 3px !important;
+        padding: 1.5px 3px !important;
       }
       .sheet-label {
-        font-size: 6px !important;
+        font-size: 7px !important;
       }
       .sheet-value {
-        font-size: 7.5px !important;
+        font-size: 9px !important;
       }
       .sheet-header-title {
-        font-size: 7.5px !important;
-        padding: 1.5px 4px !important;
+        font-size: 9px !important;
+        padding: 2.5px 4px !important;
       }
       .text-print-scaled {
-        font-size: 5px !important;
+        font-size: 6px !important;
+      }
+      .bg-black {
+        background-color: #000000 !important;
       }
     }
     
@@ -450,7 +458,7 @@
               </div>
               <div class="border border-black p-1 bg-slate-50/50 flex flex-col">
                 <span class="text-[7px] font-bold text-slate-700 uppercase">N° de Ficha</span>
-                <span class="font-black" id="f_correlative_num">-</span>
+                <span class="font-black text-[#1e3a8a]" id="f_correlative_num">-</span>
               </div>
             </div>
 
@@ -1319,6 +1327,7 @@
         col_ldl: "76.00",
         col_hdl: "48.00",
         creatinina: "0.79",
+        text: "controlado",
         estado: "controlado",
         comorbilidades: { hta: false, obesity: false, dislipidemia: false, anemia: true, vih: false },
         complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
@@ -1371,12 +1380,10 @@
       let monthName = "Junio";
       let standardDate = "15/06/2025";
 
-      // 1. Si existe anoField explícito como cabecera (ano/anio), lo usamos prioritariamente para el año de gestión fiscal
       if (anoField && /^(2024|2025|2026)$/.test(anoField.toString().trim())) {
         year = anoField.toString().trim();
       }
 
-      // 2. Detectar si la fecha es un número de serie de Excel (serial de 5 dígitos, ej: 46115)
       if (/^\d{5}(\.\d+)?$/.test(s)) {
         const serial = parseFloat(s);
         const utc_days = Math.floor(serial - (serial > 60 ? 25569 : 25568));
@@ -1395,7 +1402,6 @@
         return restrictToFiscalYears(year, monthName, standardDate);
       }
 
-      // 3. Detectar formatos con abreviaciones textuales en español (ej. "15-Abr-2026", "12/Dic/25")
       let matchTextual = s.match(/^(\d{1,2})[-/.]\s*([a-zA-Z]{3,10})[-/.]\s*(\d{2,4})/);
       if (matchTextual) {
         let d = parseInt(matchTextual[1], 10);
@@ -1407,7 +1413,7 @@
         
         const shortMonths = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "set", "sep", "oct", "nov", "dic"];
         let mIdx = shortMonths.indexOf(mStr);
-        if (mIdx === 9) mIdx = 8; // Normalizar "sep" y "set" al mismo índice
+        if (mIdx === 9) mIdx = 8; 
         const monthIndex = mIdx !== -1 ? mIdx : 3; 
         
         monthName = monthNames[monthIndex];
@@ -1418,7 +1424,6 @@
         return restrictToFiscalYears(year, monthName, standardDate);
       }
 
-      // 4. Caso estándar: YYYY-MM-DD o YYYY/MM/DD
       let matchYMD = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
       if (matchYMD) {
         let y = matchYMD[1];
@@ -1432,7 +1437,6 @@
         }
         standardDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${year}`;
       } else {
-        // 5. Caso estándar: DD/MM/YYYY o DD/MM/YY
         let matchDMY = s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{2,4})/);
         if (matchDMY) {
           let d = parseInt(matchDMY[1], 10);
@@ -1455,7 +1459,6 @@
           }
           standardDate = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${year}`;
         } else {
-          // 6. Fallback final con corrección de zona horaria
           let dObj = new Date(s);
           if (!isNaN(dObj.getTime())) {
             const localTime = dObj.getTime() + dObj.getTimezoneOffset() * 60000;
@@ -1473,9 +1476,6 @@
       return restrictToFiscalYears(year, monthName, standardDate);
     }
 
-    // CORTAFUEGOS DE SEGURIDAD FISCAL (STRICT GUARDRAIL)
-    // Para evitar que los años de nacimiento (ej. 1979) generen carpetas indeseadas, 
-    // forzamos a que el año fiscal se agrupe estrictamente en 2024, 2025 o 2026.
     function restrictToFiscalYears(year, monthName, standardDate) {
       if (year !== "2024" && year !== "2025" && year !== "2026") {
         let sum = 0;
@@ -1529,7 +1529,6 @@
       let maxMatchCount = 0;
       const headerKeywords = ["dni", "hc", "histcli", "paterno", "apepat", "nombres", "fecha_cap", "edad", "sexo", "tdiabetes", "hemoglic", "glicemia"];
 
-      // Buscar en los primeros 15 renglones cuál tiene el mayor número de coincidencias de columnas oficiales
       for (let i = 0; i < Math.min(arrayOfArrays.length, 15); i++) {
         const row = arrayOfArrays[i];
         if (!row || !Array.isArray(row)) continue;
@@ -1630,12 +1629,10 @@
             rows.forEach((row) => {
               const mapped = mapCSVRow(row);
               
-              // Validación clínica mínima para descartar filas de ruido o vacías
               if (!mapped.nombres && !mapped.paterno && !mapped.dni && !mapped.hc) {
                 return; 
               }
 
-              // Mapeador de nombres estructurado
               let paterno = mapped.paterno;
               let materno = mapped.materno;
               let nombres = mapped.nombres;
@@ -1675,7 +1672,6 @@
 
               const dateObj = parseDateStringRobustly(finalDate, mapped.ano);
 
-              // Integración de todos los campos biunívocos del BASE DB NOTI
               const patientItem = {
                 item: validIndex++,
                 date: dateObj.standardDate,
@@ -1688,7 +1684,7 @@
                 nacimiento: mapped.nacimiento || "01/01/1980",
                 edad: mapped.edad || "45",
                 direccion: mapped.direccion || "Ventanilla, Callao",
-                tipo_caso: (mapped.notcaso || "prevalente").toLowerCase().includes("nuev") || (mapped.notcaso || "").toLowerCase().includes("incid") ? "nuevo" : "prevalente",
+                tipo_caso: (mapped.notcaso || "prevalente").toLowerCase().includes("notcaso") || (mapped.notcaso || "").toLowerCase().includes("incid") ? "nuevo" : "prevalente",
                 tipo_db: (mapped.tdiabetes || "t2").toString().toLowerCase().includes("1") ? "t1" : "t2",
                 peso: mapped.peso || "70.0",
                 talla: mapped.talla || "1.65",
@@ -1726,7 +1722,6 @@
             database = tempDatabase;
             saveDatabaseToLocalStorage();
 
-            // Configurar jerarquías de acordeón: POR DEFECTO TODAS INICIAN CERRADAS (false)
             activeYears = {};
             activeMonths = {};
             database.forEach(p => {
@@ -1834,7 +1829,9 @@
               const patientListContainer = document.createElement('div');
               patientListContainer.className = "divide-y divide-slate-100 bg-white";
 
-              patients.forEach(patient => {
+              // Usar el loop index de patients para calcular la numeración de ficha del 001 hasta el total del mes
+              patients.forEach((patient, index) => {
+                const relativeIdx = index + 1;
                 const row = document.createElement('div');
                 row.className = `p-3 cursor-pointer hover:bg-slate-50 transition flex items-center justify-between border-b border-slate-100 patient-row inactive-patient-card`;
                 row.id = `patient-row-${patient.item}`;
@@ -1846,7 +1843,7 @@
                 row.innerHTML = `
                   <div class="flex-1 min-w-0 pr-2">
                     <div class="flex justify-between items-center mb-1">
-                      <span class="text-[9px] patient-item-badge px-1.5 py-0.5 rounded font-black transition-colors duration-150">ÍTEM ${patient.item}</span>
+                      <span class="text-[9px] patient-item-badge px-1.5 py-0.5 rounded font-black transition-colors duration-150">FICHA ${String(relativeIdx).padStart(3, '0')}</span>
                       <span class="text-[9px] text-slate-400 font-bold">${patient.date}</span>
                     </div>
                     <h3 class="font-bold text-[11px] text-slate-800 truncate uppercase">${patient.paterno} ${patient.materno}, ${patient.nombres}</h3>
@@ -2060,7 +2057,19 @@
 
       document.getElementById('txtActiveCaseName').innerText = `Ficha Activa: ${p.paterno} ${p.materno}, ${p.nombres} (H.C. ${p.hc})`;
 
-      document.getElementById('f_correlative_num').innerText = String(p.item).padStart(3, '0');
+      // CORRELATIVO RELATIVO POR MES (Tal como se solicita y muestra en image_46b91d.png)
+      const dateObj = parseDateStringRobustly(p.date);
+      const pYear = dateObj.year;
+      const pMonth = dateObj.monthName;
+
+      const monthlyPatients = database.filter(item => {
+        const dObj = parseDateStringRobustly(item.date);
+        return dObj.year === pYear && dObj.monthName === pMonth;
+      });
+
+      const relativeIndex = monthlyPatients.findIndex(item => item.item === p.item) + 1;
+
+      document.getElementById('f_correlative_num').innerText = String(relativeIndex).padStart(3, '0');
       document.getElementById('f_hc_num').innerText = p.hc;
       document.getElementById('f_paterno').innerText = p.paterno;
       document.getElementById('f_materno').innerText = p.materno;
@@ -2545,7 +2554,6 @@
         return "";
       };
 
-      // Exact Mapping matching the audited headers of BASE DB NOTI.xlsx
       return {
         date: getVal(["fecha_cap", "fecha_reg", "fecha", "date"]),
         ano: getVal(["ano", "anio", "year"]),
@@ -2556,6 +2564,7 @@
         nombres: getVal(["nombres", "nombre"]),
         sexo: getVal(["sexo", "sex"]),
         nacimiento: getVal(["fecha_nac", "nacimiento", "fecha_nacimiento"]),
+        text: getVal(["status", "estado"]),
         edad: getVal(["edad", "age"]),
         direccion: getVal(["direccion", "dirección", "domicilio"]),
         telefono: getVal(["telefono", "teléfono"]),
@@ -2585,7 +2594,6 @@
         creatinina: getVal(["creatinina"]),
         estado: getVal(["status", "estado"]),
         
-        // Comorbilidades
         hta: getVal(["hta"]),
         obesity: getVal(["obesidad"]),
         dislipidemia: getVal(["displidemia", "dislipidemia"]),
@@ -2595,7 +2603,6 @@
         tabaquismo: getVal(["tabaquismo"]),
         cancer: getVal(["cancer", "cáncer"]),
         
-        // Complicaciones
         neuro: getVal(["neuropatia", "neuropatía"]),
         renal: getVal(["nefropatia", "nefropatía"]),
         retino_np: getVal(["noproliferativa"]),
@@ -2604,7 +2611,6 @@
         pie_ca: getVal(["conamputacion"]),
         evaluado: getVal(["evaluado"]),
         
-        // Tratamiento
         tratamiento: getVal(["tratamiento"]),
         metformina: getVal(["metformina"]),
         sulfolinurea: getVal(["sulfolinurea"]),
@@ -2645,7 +2651,7 @@
         nacimiento: data.nacimiento || "01/01/1980",
         edad: data.edad || "46",
         direccion: data.direccion || "Distrito de Ventanilla, Callao",
-        tipo_caso: (data.notcaso || "prevalente").toLowerCase().includes("nuev") || (data.notcaso || "").toLowerCase().includes("incid") ? "nuevo" : "prevalente",
+        tipo_caso: (data.notcaso || "prevalente").toLowerCase().includes("notcaso") || (data.notcaso || "").toLowerCase().includes("incid") ? "nuevo" : "prevalente",
         tipo_db: (data.tdiabetes || "t2").toString().toLowerCase().includes("1") ? "t1" : "t2",
         peso: data.peso || "70.0",
         talla: data.talla || "1.65",
@@ -2819,6 +2825,7 @@
         nombres: (data.nombres || "REGISTRADO").toUpperCase(),
         sexo: data.sexo || "F",
         nacimiento: data.nacimiento || "01/01/1980",
+        text: "controlado",
         edad: data.edad || "46",
         direccion: data.direccion || "Distrito de Ventanilla, Callao",
         tipo_caso: data.tipo_caso || "prevalente",
@@ -2937,7 +2944,7 @@ Instrucciones:
       if (type === 'reporte') {
         text = "Genera un reporte de salud pública detallado de la base de datos del Hospital de Ventanilla, enfocándose en los índices de descompensación.";
       } else if (type === 'python_analisis') {
-        text = "Escribe un código completo de Python usando pandas para cargar 'BASE DB NOTI.xlsx' y generar un gráfico de barras de las complicaciones registradas.";
+        text = "Escribe un código completo de Python usando pandas para cargar 'BASE DB NOTI.xlsx' and generar un gráfico de barras de las complicaciones registradas.";
       } else {
         text = "Sugiere un plan estratégico de intervención para reducir las complicaciones por pie diabético en la comunidad de Ventanilla basado en los registros actuales.";
       }
