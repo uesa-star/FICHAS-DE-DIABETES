@@ -105,7 +105,7 @@
         color-adjust: exact !important;
         color: #000000 !important;
       }
-      header, aside, #zoomControls, #editPanel, #importPanel, #alertModal, .no-print, #btnRestoreSidebar, #reportControlsConfig {
+      header, aside, #editPanel, #importPanel, #alertModal, .no-print, #btnRestoreSidebar {
         display: none !important;
         height: 0 !important;
         margin: 0 !important;
@@ -198,28 +198,39 @@
       transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out;
     }
 
-    .view-card-active-blue {
-      background-color: #ffffff !important;
+    /* Estilos de botones de navegación lateral */
+    .btn-sync-custom {
+      background-color: #0bb87c !important;
+      color: #ffffff !important;
+    }
+    .btn-sync-custom:hover {
+      background-color: #0aa36e !important;
+    }
+    .btn-print-custom {
+      background-color: #315df2 !important;
+      color: #ffffff !important;
+    }
+    .btn-print-custom:hover {
+      background-color: #254cd1 !important;
+    }
+    .btn-nav-inactive {
+      background-color: #f1f5f9 !important;
+      color: #475569 !important;
       border: 1px solid #e2e8f0 !important;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+    }
+    .btn-nav-active {
+      background-color: #ffffff !important;
       color: #1e3a8a !important;
+      border: 1px solid #cbd5e1 !important;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
-    .view-card-active-green {
-      background-color: #ffffff !important;
-      border: 1px solid #e2e8f0 !important;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
-      color: #059669 !important;
+    .btn-report-custom {
+      background-color: #f3f0ff !important;
+      border: 1px solid #d8cdfd !important;
+      color: #6d28d9 !important;
     }
-    .view-card-active-purple {
-      background-color: #ffffff !important;
-      border: 1px solid #e2e8f0 !important;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
-      color: #7c3aed !important;
-    }
-    .view-card-inactive {
-      background-color: transparent !important;
-      color: #64748b !important;
-      border: 1px solid transparent !important;
+    .btn-report-custom:hover {
+      background-color: #e8e2fe !important;
     }
   </style>
 </head>
@@ -302,25 +313,129 @@
             </button>
           </div>
 
-          <!-- Sincronización en la Nube (Google Sheets) -->
-          <div class="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg flex items-center justify-between mb-3 shadow-inner">
-            <div class="flex items-center space-x-2">
-              <span class="relative flex h-2 w-2">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-              </span>
-              <div class="flex flex-col">
-                <span class="text-[10px] text-emerald-800 font-extrabold leading-tight">Google Sheets Activo</span>
-                <span class="text-[8px] text-emerald-600 font-medium" id="txtCloudStatus">Sincronizando...</span>
-              </div>
-            </div>
-            <button onclick="loadDataFromGoogleSheet()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-2 py-1 rounded text-[9px] font-bold transition flex items-center gap-1 shadow-sm">
-              <i class="fa-solid fa-rotate"></i> Actualizar
+          <!-- MÓDULO DE BOTONES REDISEÑADO CON SUBMENÚ BAJO CREAR REPORTE -->
+          <div class="space-y-2 mb-3">
+            <!-- Sincronizar Google Sheets (Verde Esmeralda) -->
+            <button onclick="loadDataFromGoogleSheet()" class="w-full btn-sync-custom text-white py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all">
+              <i class="fa-solid fa-arrows-rotate"></i>
+              <span>Sincronizar Google Sheets</span>
             </button>
+
+            <!-- Indicador de Estado Cloud debajo de Sincronización -->
+            <div id="txtCloudStatus" class="text-[9px] text-emerald-600 font-extrabold text-center leading-tight mt-1">Sincronizado correctamente</div>
+
+            <!-- Imprimir Ficha (A4) (Azul) -->
+            <button onclick="printCurrentFicha()" class="w-full btn-print-custom text-white py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all">
+              <i class="fa-solid fa-print"></i>
+              <span>Imprimir Ficha (A4)</span>
+            </button>
+
+            <!-- Grid de Navegación: Ficha (A4) y Dashboard -->
+            <div class="grid grid-cols-2 gap-2">
+              <button id="btn_view_ficha" onclick="switchMainTab('ficha')" class="py-2 px-3 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all btn-nav-active">
+                <i class="fa-solid fa-file-medical"></i>
+                <span>Ficha (A4)</span>
+              </button>
+              <button id="btn_view_dashboard" onclick="switchMainTab('dashboard')" class="py-2 px-3 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all btn-nav-inactive">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Dashboard</span>
+              </button>
+            </div>
+
+            <!-- Crear Reporte Gráfico (A4) (Lila / Púrpura) -->
+            <button id="btn_view_reporte" onclick="switchMainTab('reporte')" class="w-full btn-report-custom py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all">
+              <i class="fa-solid fa-file-chart-pie"></i>
+              <span>Crear Reporte Gráfico (A4)</span>
+            </button>
+
+            <!-- SUB-MENÚ DE CONFIGURADOR DE REPORTE A4 COMPACTO (Ubicado dinámicamente en el Sidebar) -->
+            <div id="sub_menu_reporte" class="hidden flex-col p-3 bg-purple-50/80 rounded-xl border border-purple-200/80 shadow-inner space-y-3 transition-all">
+              
+              <!-- Cabecera del Configurador -->
+              <div class="flex items-center justify-between border-b border-purple-200/60 pb-1.5">
+                <span class="font-extrabold text-[#1e3a8a] text-[10px] uppercase tracking-wider flex items-center gap-1">
+                  <i class="fa-solid fa-sliders text-xs"></i>
+                  Configurar Reporte A4
+                </span>
+                <span class="text-[9px] text-purple-600 font-medium">Panorámico</span>
+              </div>
+
+              <!-- Fila Horizontal de Botones de Acción Rápidas -->
+              <div class="grid grid-cols-2 gap-1.5">
+                <button onclick="selectAllReportCharts()" class="bg-white hover:bg-[#e1e9ff] text-[#315df2] border border-[#bfdbfe] py-1.5 px-2 rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 transition shadow-xs">
+                  <i class="fa-solid fa-check"></i>
+                  <span>Todos</span>
+                </button>
+                <button onclick="clearReportSelection()" class="bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 py-1.5 px-2 rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 transition shadow-xs">
+                  <i class="fa-solid fa-eraser"></i>
+                  <span>Limpiar</span>
+                </button>
+              </div>
+
+              <!-- Imprimir Reporte de Gráficos A4 -->
+              <button onclick="printCurrentReport()" class="w-full bg-[#0bb87c] hover:bg-[#0aa36e] text-white py-2 px-3 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1.5 transition shadow-sm">
+                <i class="fa-solid fa-print"></i>
+                <span>Imprimir Reporte A4</span>
+              </button>
+
+              <!-- ITEM 1: SELECCIONAR GRÁFICOS A INCLUIR (En Formato Vertical Compacto) -->
+              <div class="space-y-1.5 pt-1">
+                <span class="font-extrabold text-slate-700 block uppercase tracking-wider text-[9px]">1. Seleccionar Gráficos:</span>
+                <div class="flex flex-col gap-1 text-[10px] max-h-[180px] overflow-y-auto custom-scrollbar pr-1">
+                  <label class="flex items-center space-x-2 cursor-pointer bg-white p-1.5 rounded-lg border border-purple-200/40 hover:bg-purple-100/40 transition">
+                    <input type="checkbox" id="chk_g_ano" checked onchange="updateReportLayout()" class="rounded text-blue-600 focus:ring-blue-500 w-3 h-3">
+                    <span class="font-medium text-slate-700">1. Año Notificación</span>
+                  </label>
+                  <label class="flex items-center space-x-2 cursor-pointer bg-white p-1.5 rounded-lg border border-purple-200/40 hover:bg-purple-100/40 transition">
+                    <input type="checkbox" id="chk_g_mes" checked onchange="updateReportLayout()" class="rounded text-blue-600 focus:ring-blue-500 w-3 h-3">
+                    <span class="font-medium text-slate-700">2. Dist. Mensual</span>
+                  </label>
+                  <label class="flex items-center space-x-2 cursor-pointer bg-white p-1.5 rounded-lg border border-purple-200/40 hover:bg-purple-100/40 transition">
+                    <input type="checkbox" id="chk_g_semana" checked onchange="updateReportLayout()" class="rounded text-blue-600 focus:ring-blue-500 w-3 h-3">
+                    <span class="font-medium text-slate-700">3. Semana Epidem.</span>
+                  </label>
+                  <label class="flex items-center space-x-2 cursor-pointer bg-white p-1.5 rounded-lg border border-purple-200/40 hover:bg-purple-100/40 transition">
+                    <input type="checkbox" id="chk_g_sexo" checked onchange="updateReportLayout()" class="rounded text-blue-600 focus:ring-blue-500 w-3 h-3">
+                    <span class="font-medium text-slate-700">4. Dist. por Sexo</span>
+                  </label>
+                  <label class="flex items-center space-x-2 cursor-pointer bg-white p-1.5 rounded-lg border border-purple-200/40 hover:bg-purple-100/40 transition">
+                    <input type="checkbox" id="chk_g_glicemico" onchange="updateReportLayout()" class="rounded text-rose-600 focus:ring-rose-500 w-3 h-3">
+                    <span class="font-medium text-slate-700">5. Control Glicémico</span>
+                  </label>
+                  <label class="flex items-center space-x-2 cursor-pointer bg-white p-1.5 rounded-lg border border-purple-200/40 hover:bg-purple-100/40 transition">
+                    <input type="checkbox" id="chk_g_comorbilidades" onchange="updateReportLayout()" class="rounded text-rose-600 focus:ring-rose-500 w-3 h-3">
+                    <span class="font-medium text-slate-700">6. Prev. Comorb.</span>
+                  </label>
+                  <label class="flex items-center space-x-2 cursor-pointer bg-white p-1.5 rounded-lg border border-purple-200/40 hover:bg-purple-100/40 transition">
+                    <input type="checkbox" id="chk_g_tipodb" onchange="updateReportLayout()" class="rounded text-rose-600 focus:ring-rose-500 w-3 h-3">
+                    <span class="font-medium text-slate-700">7. Tipos Diabetes</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- ITEM 2: DISTRIBUCIÓN EN LA HOJA A4 -->
+              <div class="border-t border-purple-200/50 pt-2 space-y-1.5">
+                <span class="font-extrabold text-slate-700 block uppercase tracking-wider text-[9px]">2. Distribución en Hoja:</span>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button id="btn_layout_grilla" onclick="setReportLayout('grilla')" class="bg-blue-50 text-[#1e3a8a] border border-blue-200 py-1 px-1.5 rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 shadow-xs">
+                    <i class="fa-solid fa-border-all"></i>
+                    <span>Grilla</span>
+                  </button>
+                  <button id="btn_layout_pila" onclick="setReportLayout('pila')" class="bg-white text-slate-600 border border-slate-200 py-1 px-1.5 rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 hover:bg-slate-50 shadow-xs">
+                    <i class="fa-solid fa-list"></i>
+                    <span>Pila</span>
+                  </button>
+                </div>
+                <p class="text-[8.5px] text-slate-500 leading-tight">
+                  <i class="fa-solid fa-circle-info text-purple-600"></i> Para 1 hoja, selecciona un máximo de 4 gráficos.
+                </p>
+              </div>
+
+            </div>
           </div>
 
           <!-- SECCIÓN: ACCIONES OPERATIVAS -->
-          <div class="mt-3">
+          <div class="mt-3 border-t border-slate-200 pt-3">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Acciones Operativas</span>
             <div class="flex flex-col gap-2">
               <button onclick="toggleImportPanel()" class="w-full bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center space-x-2 transition shadow-md border border-blue-800">
@@ -330,35 +445,6 @@
               <button onclick="toggleEditPanel()" class="w-full bg-white hover:bg-slate-50 text-slate-700 text-xs px-3 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition border border-slate-200 shadow-sm">
                 <i class="fa-solid fa-pen-to-square text-slate-500"></i>
                 <span>Editar Casillas</span>
-              </button>
-              <button onclick="printCurrentMode()" class="w-full bg-[#059669] hover:bg-[#047857] text-white px-3 py-2.5 rounded-lg text-xs font-bold shadow-md flex items-center justify-center space-x-2 transition border border-emerald-700">
-                <i class="fa-solid fa-print text-sm"></i>
-                <span>Imprimir Documento</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- SECCIÓN: VISTA DEL SISTEMA -->
-          <div class="mt-4">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Vista del Sistema</span>
-            <div class="bg-slate-100/80 p-1.5 rounded-xl border border-slate-200/60 flex flex-col gap-1.5 shadow-inner">
-              
-              <!-- Botón: Ficha Epidemiológica (A4) -->
-              <button id="btn_view_ficha" onclick="switchMainTab('ficha')" class="w-full p-2.5 rounded-lg text-xs font-bold flex items-center gap-2.5 transition view-card-active-blue">
-                <i id="icon_view_ficha" class="fa-solid fa-file-lines text-sm"></i>
-                <span>Ficha Epidemiológica (A4)</span>
-              </button>
-              
-              <!-- Botón: Panel de Control (Dashboard) -->
-              <button id="btn_view_dashboard" onclick="switchMainTab('dashboard')" class="w-full p-2.5 rounded-lg text-xs font-bold flex items-center gap-2.5 transition view-card-inactive">
-                <i id="icon_view_dashboard" class="fa-solid fa-chart-pie text-sm"></i>
-                <span>Panel de Control (Dashboard)</span>
-              </button>
-
-              <!-- Botón: Reporte de Gráficos (A4) -->
-              <button id="btn_view_reporte" onclick="switchMainTab('reporte')" class="w-full p-2.5 rounded-lg text-xs font-bold flex items-center gap-2.5 transition view-card-inactive">
-                <i id="icon_view_reporte" class="fa-solid fa-file-chart-pie text-sm"></i>
-                <span>Reporte Gráfico (A4)</span>
               </button>
             </div>
           </div>
@@ -370,7 +456,7 @@
         </div>
       </div>
 
-      <!-- PANEL: AI EPIDEMIOLOGIST & CODE ADVISOR (image_9965f7.png) -->
+      <!-- PANEL: AI EPIDEMIOLOGIST & CODE ADVISOR -->
       <div id="sidebar_ia_advisor" class="hidden flex-col flex-1 overflow-hidden bg-slate-900 text-slate-100">
         <div class="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
           <div class="flex items-center space-x-2">
@@ -378,8 +464,8 @@
               <i class="fa-solid fa-robot text-lg"></i>
             </div>
             <div>
-              <h3 class="font-black text-xs uppercase tracking-wider text-slate-100">Consultor Técnico y de Casos</h3>
-              <p class="text-[9px] text-slate-400">Consultas de criterios clínicos, direcciones y auditoría</p>
+              <h3 class="font-black text-xs uppercase tracking-wider text-slate-100">Asesor de Epidemiología e IA</h3>
+              <p class="text-[9px] text-slate-400">Analiza tus datos y genera código con Gemini</p>
             </div>
           </div>
           <button onclick="switchSidebarTab('pacientes')" class="text-slate-400 hover:text-white" title="Volver a Pacientes">
@@ -390,36 +476,31 @@
         <!-- Chat Container -->
         <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar text-xs" id="chatContainer">
           <div class="bg-slate-800/80 p-3.5 rounded-lg border border-slate-700 leading-relaxed text-slate-300 space-y-2">
-            <p><strong>¡Hola!</strong> Bienvenido al Consultor Técnico de Datos.</p>
-            <p>He adaptado este módulo para responder consultas técnicas de la norma del MINSA, auditorías de glucosa para el registro de fichas, y distribución geográfica de casos.</p>
-            <p class="text-[10px] text-emerald-400 font-bold">Selecciona una consulta técnica preestablecida:</p>
+            <p><strong>¡Hola!</strong> Soy tu asesor de inteligencia artificial y código clínico.</p>
+            <p>Puedo ayudarte a examinar la base de datos de tu Google Sheets, identificar patrones epidemiológicos o generarte scripts especializados en Python/R.</p>
+            <p class="text-[10px] text-emerald-400 font-bold">Prueba seleccionando una de estas opciones:</p>
           </div>
           
           <div class="grid grid-cols-1 gap-2 pt-1">
-            <!-- CONSULTA POR DIRECCIÓN (SOLICITADO) -->
-            <button onclick="triggerQuickPrompt('casos_direccion')" class="w-full text-left bg-slate-800 hover:bg-slate-700 p-2.5 rounded border border-slate-700 transition flex items-start gap-2.5">
-              <i class="fa-solid fa-map-location-dot mt-0.5 text-emerald-400 text-sm"></i>
-              <div>
-                <span class="font-bold text-[11px] block text-slate-100 uppercase">Consulta de casos por Dirección</span>
-                <span class="text-[9px] text-slate-400 block mt-0.5 leading-tight">Agrupa, cuenta y localiza pacientes por sector o asentamiento humano en Ventanilla</span>
-              </div>
+            <button onclick="triggerQuickPrompt('reporte')" class="w-full text-left bg-slate-800 hover:bg-slate-700 p-2.5 rounded border border-slate-700 transition flex items-start gap-2">
+              <i class="fa-solid fa-notes-medical mt-0.5 text-emerald-400"></i>
+              <span>Generar reporte epidemiológico del MINSA</span>
+            </button>
+            <button onclick="triggerQuickPrompt('python_analisis')" class="w-full text-left bg-slate-800 hover:bg-slate-700 p-2.5 rounded border border-slate-700 transition flex items-start gap-2">
+              <i class="fa-brands fa-python mt-0.5 text-blue-400"></i>
+              <span>Generar script de Python para análisis estadístico</span>
+            </button>
+            <button onclick="triggerQuickPrompt('intervencion')" class="w-full text-left bg-slate-800 hover:bg-slate-700 p-2.5 rounded border border-slate-700 transition flex items-start gap-2">
+              <i class="fa-solid fa-shield-heart mt-0.5 text-red-400"></i>
+              <span>Proponer intervención en salud pública para Ventanilla</span>
             </button>
 
-            <!-- CONSULTA VALORES GLUCOSA PARA REGISTRO (SOLICITADO) -->
-            <button onclick="triggerQuickPrompt('criterios_glucosa')" class="w-full text-left bg-slate-800 hover:bg-slate-700 p-2.5 rounded border border-slate-700 transition flex items-start gap-2.5">
-              <i class="fa-solid fa-vial-circle-check mt-0.5 text-amber-400 text-sm"></i>
+            <!-- BOTÓN INTELIGENTE POR IA -->
+            <button onclick="triggerSmartA4Report()" class="w-full text-left bg-gradient-to-r from-emerald-950/80 to-blue-950/80 hover:from-emerald-900 hover:to-blue-900 p-3 rounded-lg border border-emerald-500/30 transition flex items-start gap-2.5 shadow-md">
+              <i class="fa-solid fa-wand-magic-sparkles text-emerald-400 text-sm mt-0.5 animate-pulse"></i>
               <div>
-                <span class="font-bold text-[11px] block text-slate-100 uppercase">¿Con cuánta glucosa se registra la ficha?</span>
-                <span class="text-[9px] text-slate-400 block mt-0.5 leading-tight">Criterios técnicos oficiales mínimos de Glicemia / HbA1c para registrar un caso clínico</span>
-              </div>
-            </button>
-
-            <!-- CONSULTA TÉCNICA GENERAL DE VIGILANCIA -->
-            <button onclick="triggerQuickPrompt('consultas_tecnicas')" class="w-full text-left bg-slate-800 hover:bg-slate-700 p-2.5 rounded border border-slate-700 transition flex items-start gap-2.5">
-              <i class="fa-solid fa-file-shield mt-0.5 text-blue-400 text-sm"></i>
-              <div>
-                <span class="font-bold text-[11px] block text-slate-100 uppercase">Consultas Técnicas de Vigilancia</span>
-                <span class="text-[9px] text-slate-400 block mt-0.5 leading-tight">Auditoría rápida de fichas epidemiológicas incompletas en la base local</span>
+                <span class="font-bold block text-emerald-300 text-[11px] uppercase tracking-wide">IA: Diseñar Reporte Gráfico A4</span>
+                <span class="text-[9px] text-slate-300 block mt-0.5 leading-tight">La IA selecciona las prioridades de los casos clínicos y genera un reporte adaptado a una hoja física A4</span>
               </div>
             </button>
           </div>
@@ -439,29 +520,12 @@
 
     <!-- RIGHT MAIN CONTENT: FORM VIEWER & ANALYTICS DASHBOARD -->
     <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 flex flex-col items-center custom-scrollbar relative" id="formMainArea">
-      
-      <!-- CONTROLES DE ZOOM Y BARRA DE ESTADO (no-print) - ID para control de ancho dinámico -->
-      <div id="topBarControls" class="w-full max-w-[210mm] no-print flex justify-between items-center bg-white border border-slate-200 p-3.5 mb-4 rounded-xl shadow-sm gap-4 transition-all duration-300">
-        <div class="flex items-center space-x-2.5">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span class="text-xs text-slate-600 font-semibold" id="txtActiveCaseName">Cargando caso...</span>
-        </div>
-        
-        <!-- CONTROLES DE ZOOM -->
-        <div id="zoomControls" class="flex items-center space-x-2 bg-slate-50 p-1 rounded-lg border border-slate-200">
-          <button onclick="zoomOut()" class="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition font-bold text-sm" title="Reducir Vista">-</button>
-          <span id="txtZoomLevel" class="text-xs font-mono text-slate-700 px-2 font-bold select-none">120%</span>
-          <button onclick="zoomIn()" class="w-8 h-8 flex items-center justify-center text-slate-600 hover:text-slate-900 hover:bg-slate-200 rounded transition font-bold text-sm" title="Aumentar Vista">+</button>
-          <div class="w-[1px] h-4 bg-slate-300 mx-1"></div>
-          <button onclick="resetZoom()" class="text-[10px] text-blue-600 hover:text-blue-700 px-2 font-bold uppercase tracking-wider">Reset</button>
-        </div>
-      </div>
 
       <!-- VISTA A: PANEL DE FICHA OFICIAL MINSA (A4) -->
-      <div class="print-container w-full max-w-[210mm] flex justify-center" id="tabContentFicha">
+      <div class="print-container w-full max-w-[1350px] flex flex-col items-center gap-4" id="tabContentFicha">
         
         <!-- HOJA DE FICHA OFICIAL A4 COMPACTA -->
-        <div id="printSheet" class="w-full bg-white p-4 text-black border border-black flex flex-col justify-between overflow-hidden relative" style="box-sizing: border-box; width: 210mm; height: 265mm;">
+        <div id="printSheet" class="w-full bg-white p-4 text-black border border-black flex flex-col justify-between overflow-hidden relative" style="box-sizing: border-box; width: 210mm; height: 265mm; margin: 0 auto;">
           
           <div>
             <!-- CABECERA INSTITUCIONAL MINSA -->
@@ -1055,7 +1119,7 @@
         <div class="border-b border-slate-200 pb-3 mt-6">
           <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
             <i class="fa-solid fa-heart-pulse text-rose-600"></i>
-            Perfil Clínico y Patológico (Módulo image_a4ce82.png)
+            Perfil Clínico y Patológico
           </h3>
           <p class="text-xs text-slate-400">Estado de control fisiológico, prevalencia de riesgos y tipos de patología</p>
         </div>
@@ -1109,100 +1173,11 @@
 
       </div>
 
-      <!-- VISTA C: REPORTE GRÁFICO A4 COMPACTO (image_a69084.png) -->
-      <div class="print-container w-full max-w-[210mm] hidden flex-col items-center gap-4" id="tabContentReporte">
+      <!-- VISTA C: REPORTE GRÁFICO A4 COMPACTO (100% Despejada de la barra duplicada) -->
+      <div class="print-container w-full max-w-[1350px] hidden flex-col items-center gap-4" id="tabContentReporte">
         
-        <!-- Panel de control rápido no imprimible -->
-        <div id="reportControlsConfig" class="w-full bg-white border border-slate-200 rounded-xl p-5 shadow-sm no-print text-xs space-y-4">
-          <div class="flex items-center justify-between border-b pb-2">
-            <span class="font-bold text-[#1e3a8a] flex items-center gap-1.5">
-              <i class="fa-solid fa-sliders text-sm"></i>
-              Configurador del Reporte de Gráficos A4
-            </span>
-            <span class="text-[10px] text-slate-400">Personaliza la impresión de gráficos en hoja única</span>
-          </div>
-
-          <!-- ITEM 1: Selección de Gráficos -->
-          <div class="space-y-2">
-            <!-- Header de Item 1 con sus botones inteligentes de control arriba -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2">
-              <span class="font-bold text-slate-700 text-xs">1. Seleccionar Gráficos a Incluir:</span>
-              <div class="flex items-center gap-1.5">
-                <button onclick="clearReportSelection()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-sm" title="Desmarcar todos los gráficos">
-                  <i class="fa-solid fa-eraser text-slate-500"></i>
-                  <span>Limpiar Selección</span>
-                </button>
-                <button onclick="selectAllReport()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition flex items-center gap-1.5 border border-slate-200 shadow-sm" title="Marcar todos los gráficos">
-                  <i class="fa-solid fa-square-check text-slate-500"></i>
-                  <span>Seleccionar Todos</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Rejilla de Checkboxes de Gráficos (Ancho Completo y Dinámico) -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 text-[10px] pt-1">
-              <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 p-2.5 rounded-lg hover:bg-slate-100 border border-slate-200 transition-colors">
-                <input type="checkbox" id="chk_g_ano" checked onchange="updateReportLayout()" class="rounded text-blue-600 focus:ring-blue-500">
-                <span>1. Año Notificación</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 p-2.5 rounded-lg hover:bg-slate-100 border border-slate-200 transition-colors">
-                <input type="checkbox" id="chk_g_mes" checked onchange="updateReportLayout()" class="rounded text-blue-600 focus:ring-blue-500">
-                <span>2. Distribución Mensual</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 p-2.5 rounded-lg hover:bg-slate-100 border border-slate-200 transition-colors">
-                <input type="checkbox" id="chk_g_semana" checked onchange="updateReportLayout()" class="rounded text-blue-600 focus:ring-blue-500">
-                <span>3. Semana Epidemiológica</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 p-2.5 rounded-lg hover:bg-slate-100 border border-slate-200 transition-colors">
-                <input type="checkbox" id="chk_g_sexo" checked onchange="updateReportLayout()" class="rounded text-blue-600 focus:ring-blue-500">
-                <span>4. Distribución por Sexo</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 p-2.5 rounded-lg hover:bg-slate-100 border border-slate-200 transition-colors">
-                <input type="checkbox" id="chk_g_glicemico" onchange="updateReportLayout()" class="rounded text-rose-600 focus:ring-rose-500">
-                <span>5. Control Glicémico</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 p-2.5 rounded-lg hover:bg-slate-100 border border-slate-200 transition-colors">
-                <input type="checkbox" id="chk_g_comorbilidades" onchange="updateReportLayout()" class="rounded text-rose-600 focus:ring-rose-500">
-                <span>6. Prevalencia Comorb.</span>
-              </label>
-              <label class="flex items-center space-x-2 cursor-pointer bg-slate-50 p-2.5 rounded-lg hover:bg-slate-100 border border-slate-200 transition-colors">
-                <input type="checkbox" id="chk_g_tipodb" onchange="updateReportLayout()" class="rounded text-rose-600 focus:ring-rose-500">
-                <span>7. Tipos de Diabetes</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- ITEM 2: Distribución de la Hoja (Posicionado DEBAJO de Item 1) -->
-          <div class="space-y-2 border-t border-slate-100 pt-3">
-            <span class="font-bold text-slate-700 block mb-1">2. Distribución en la hoja A4:</span>
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div class="flex gap-2 max-w-md w-full">
-                <button id="btn_layout_grilla" onclick="setReportLayout('grilla')" class="flex-1 bg-blue-50 text-[#1e3a8a] border border-blue-200 py-2.5 px-3 rounded-lg font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
-                  <i class="fa-solid fa-border-all"></i>
-                  Grilla (2 columnas)
-                </button>
-                <button id="btn_layout_pila" onclick="setReportLayout('pila')" class="flex-1 bg-white text-slate-600 border border-slate-200 py-2.5 px-3 rounded-lg font-bold transition flex items-center justify-center gap-1.5 hover:bg-slate-50 shadow-sm">
-                  <i class="fa-solid fa-list"></i>
-                  Pila (1 columna)
-                </button>
-              </div>
-              <span class="text-[10px] text-slate-500 font-medium sm:text-right max-w-sm">
-                <i class="fa-solid fa-circle-info text-blue-500"></i> Nota: Para impresión física óptima en 1 sola hoja A4, recomendamos seleccionar un máximo de 4 gráficos.
-              </span>
-            </div>
-          </div>
-
-          <!-- SECCIÓN DE ACCIONES DE IMPRESIÓN (PIE DEL PANEL) -->
-          <div class="flex justify-end pt-3 border-t border-slate-100">
-            <button onclick="printCurrentMode()" class="bg-[#059669] hover:bg-[#047857] text-white px-5 py-2.5 rounded-lg font-bold transition flex items-center gap-2 shadow border border-emerald-700 text-xs" title="Enviar reporte actual directo a la impresora">
-              <i class="fa-solid fa-print text-sm"></i>
-              <span>Imprimir Reporte Gráfico A4</span>
-            </button>
-          </div>
-        </div>
-
         <!-- HOJA DE REPORTE FISICO A4 COMPACTA -->
-        <div id="printReportSheet" class="w-full bg-white p-4 text-black border border-black flex flex-col justify-between overflow-hidden relative" style="box-sizing: border-box; width: 210mm; height: 265mm;">
+        <div id="printReportSheet" class="w-full bg-white p-4 text-black border border-black flex flex-col justify-between overflow-hidden relative" style="box-sizing: border-box; width: 210mm; height: 265mm; margin: 0 auto;">
           <div>
             <!-- CABECERA INSTITUCIONAL MINSA -->
             <div class="grid grid-cols-12 items-center border-b border-black pb-1 mb-2">
@@ -1604,7 +1579,6 @@
     let database = [];
     let currentActiveId = 1;
     let sidebarOpen = true;
-    let currentZoom = 1.2; 
     let selectedFileBase64 = null;
     let selectedFileType = null;
     let mainTab = 'ficha';
@@ -1866,8 +1840,10 @@
 
     async function loadDataFromGoogleSheet() {
       const statusText = document.getElementById('txtCloudStatus');
-      statusText.innerText = "Conectando con Google Sheets...";
-      statusText.className = "text-[8px] text-amber-600 animate-pulse font-medium";
+      if (statusText) {
+        statusText.innerText = "Sincronizando con Google Sheets...";
+        statusText.className = "text-[9px] text-amber-600 animate-pulse font-extrabold text-center";
+      }
 
       try {
         let response;
@@ -1893,15 +1869,19 @@
           complete: function(results) {
             const rawRows = results.data;
             if (!rawRows || rawRows.length === 0) {
-              statusText.innerText = "Error: Hoja vacía";
-              statusText.className = "text-[8px] text-red-600";
+              if (statusText) {
+                statusText.innerText = "Error: Hoja vacía";
+                statusText.className = "text-[9px] text-red-600 font-extrabold text-center";
+              }
               return;
             }
 
             const rows = arraysToObjects(rawRows);
             if (rows.length === 0) {
-              statusText.innerText = "Error: Cabeceras inválidas";
-              statusText.className = "text-[8px] text-red-600";
+              if (statusText) {
+                statusText.innerText = "Error: Cabeceras inválidas";
+                statusText.className = "text-[9px] text-red-600 font-extrabold text-center";
+              }
               return;
             }
 
@@ -1964,6 +1944,9 @@
                 nombres: (nombres || "REGISTRADO").toUpperCase().trim(),
                 sexo: (mapped.sexo || "F").toUpperCase().startsWith("M") ? "M" : "F",
                 nacimiento: mapped.nacimiento || "01/01/1980",
+                sub_nac: mapped.sub_nac || "",
+                box_nac: mapped.box_nac || "",
+                grid_nac: mapped.box_nac || "",
                 edad: mapped.edad || "45",
                 semana: mapped.semana || "1",
                 direccion: mapped.direccion || "Ventanilla, Callao",
@@ -2013,8 +1996,8 @@
               const monthName = dateObj.monthName;
               const monthKey = `${year}-${monthName}`;
               
-              if (activeYears[year] === undefined) activeYears[year] = false; 
-              if (activeMonths[monthKey] === undefined) activeMonths[monthKey] = false; 
+              activeYears[year] = true; 
+              activeMonths[monthKey] = true; 
             });
 
             renderPatientList();
@@ -2025,14 +2008,18 @@
             recalculateAnalyticsData();
             updateDashboardData();
 
-            statusText.innerText = "Sincronizado: " + database.length + " casos";
-            statusText.className = "text-[8px] text-emerald-600 font-bold";
+            if (statusText) {
+              statusText.innerText = "Sincronizado: " + database.length + " casos";
+              statusText.className = "text-[9px] text-emerald-600 font-extrabold text-center";
+            }
           }
         });
       } catch (err) {
         console.error("Fallo al conectar con Google Sheets: ", err);
-        statusText.innerText = "Modo Local (Offline)";
-        statusText.className = "text-[8px] text-slate-500 font-bold";
+        if (statusText) {
+          statusText.innerText = "Modo Local (Offline)";
+          statusText.className = "text-[9px] text-slate-500 font-extrabold text-center";
+        }
         
         activeYears = {};
         activeMonths = {};
@@ -2041,8 +2028,8 @@
           const year = dateObj.year;
           const monthName = dateObj.monthName;
           const monthKey = `${year}-${monthName}`;
-          if (activeYears[year] === undefined) activeYears[year] = false; 
-          if (activeMonths[monthKey] === undefined) activeMonths[monthKey] = false; 
+          activeYears[year] = true; 
+          activeMonths[monthKey] = true; 
         });
 
         renderPatientList();
@@ -2056,6 +2043,7 @@
 
     function renderPatientList() {
       const accordionContainer = document.getElementById('accordionContainer');
+      if (!accordionContainer) return;
       accordionContainer.innerHTML = '';
 
       const hierarchy = {}; 
@@ -2074,7 +2062,6 @@
       sortedYears.forEach(year => {
         const isYearExpanded = activeYears[year] === true;
 
-        // Calcular el total de casos acumulados específicamente para este año
         let yearTotalCases = 0;
         Object.keys(hierarchy[year]).forEach(m => {
           yearTotalCases += hierarchy[year][m].length;
@@ -2083,7 +2070,6 @@
         const yearHeader = document.createElement('div');
         yearHeader.className = "bg-white hover:bg-slate-50 border-b border-slate-200 p-3.5 flex justify-between items-center cursor-pointer transition select-none";
         yearHeader.onclick = () => toggleYear(year);
-        // Se inyecta la medalla del total acumulado anual justo al lado del nombre del año, respondiendo a la imagen image_a5b2cd.png
         yearHeader.innerHTML = `
           <div class="flex items-center space-x-2.5">
             <i class="fa-solid fa-folder text-amber-500 text-sm"></i>
@@ -2123,7 +2109,6 @@
               const patientListContainer = document.createElement('div');
               patientListContainer.className = "divide-y divide-slate-100 bg-white";
 
-              // Los correlativos dentro de cada mes inician estrictamente desde 001
               patients.forEach((patient, index) => {
                 const relativeIdx = index + 1;
                 const row = document.createElement('div');
@@ -2159,7 +2144,8 @@
         }
       });
 
-      document.getElementById('badgeTotalCases').innerText = database.length;
+      const badge = document.getElementById('badgeTotalCases');
+      if (badge) badge.innerText = database.length;
     }
 
     function toggleYear(year) {
@@ -2214,48 +2200,46 @@
       const contentFicha = document.getElementById('tabContentFicha');
       const contentDashboard = document.getElementById('tabContentDashboard');
       const contentReporte = document.getElementById('tabContentReporte');
-      const zoomControls = document.getElementById('zoomControls');
-      const topBarControls = document.getElementById('topBarControls');
+      const subMenuReporte = document.getElementById('sub_menu_reporte');
 
       document.body.setAttribute('data-print-mode', tab);
 
       if (tab === 'ficha') {
-        contentFicha.classList.remove('hidden');
-        contentFicha.classList.add('flex');
-        contentDashboard.classList.add('hidden');
-        contentReporte.classList.add('hidden');
-        zoomControls.classList.remove('hidden');
-        
-        topBarControls.classList.add('max-w-[210mm]');
-        topBarControls.classList.remove('max-w-full');
-        applyZoom();
+        if (contentFicha) {
+          contentFicha.classList.remove('hidden');
+          contentFicha.classList.add('flex');
+        }
+        if (contentDashboard) contentDashboard.classList.add('hidden');
+        if (contentReporte) contentReporte.classList.add('hidden');
+        if (subMenuReporte) subMenuReporte.classList.add('hidden');
       } else if (tab === 'dashboard') {
-        contentFicha.classList.add('hidden');
-        contentFicha.classList.remove('flex');
-        contentDashboard.classList.remove('hidden');
-        contentDashboard.classList.add('flex');
-        contentReporte.classList.add('hidden');
-        zoomControls.classList.add('hidden');
-        
-        topBarControls.classList.remove('max-w-[210mm]');
-        topBarControls.classList.add('max-w-full');
-
-        const container = document.getElementById('tabContentFicha');
-        container.style.height = 'auto';
+        if (contentFicha) {
+          contentFicha.classList.add('hidden');
+          contentFicha.classList.remove('flex');
+        }
+        if (contentDashboard) {
+          contentDashboard.classList.remove('hidden');
+          contentDashboard.classList.add('flex');
+        }
+        if (contentReporte) contentReporte.classList.add('hidden');
+        if (subMenuReporte) subMenuReporte.classList.add('hidden');
         
         updateDashboardData();
       } else if (tab === 'reporte') {
-        contentFicha.classList.add('hidden');
-        contentFicha.classList.remove('flex');
-        contentDashboard.classList.add('hidden');
-        contentReporte.classList.remove('hidden');
-        contentReporte.classList.add('flex');
-        zoomControls.classList.remove('hidden');
-
-        topBarControls.classList.add('max-w-[210mm]');
-        topBarControls.classList.remove('max-w-full');
-
-        applyZoom();
+        if (contentFicha) {
+          contentFicha.classList.add('hidden');
+          contentFicha.classList.remove('flex');
+        }
+        if (contentDashboard) contentDashboard.classList.add('hidden');
+        if (contentReporte) {
+          contentReporte.classList.remove('hidden');
+          contentReporte.classList.add('flex');
+        }
+        // Despliega el configurador exclusivo bajo del botón de reporte en la barra lateral
+        if (subMenuReporte) {
+          subMenuReporte.classList.remove('hidden');
+          subMenuReporte.classList.add('flex');
+        }
         updateReportLayout();
       }
 
@@ -2267,27 +2251,16 @@
       const btnDash = document.getElementById('btn_view_dashboard');
       const btnRep = document.getElementById('btn_view_reporte');
 
-      const iconFicha = document.getElementById('icon_view_ficha');
-      const iconDash = document.getElementById('icon_view_dashboard');
-      const iconRep = document.getElementById('icon_view_reporte');
+      if (btnFicha) btnFicha.className = "py-2 px-3 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all btn-nav-inactive";
+      if (btnDash) btnDash.className = "py-2 px-3 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all btn-nav-inactive";
+      if (btnRep) btnRep.className = "w-full py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all btn-nav-inactive";
 
-      btnFicha.className = "w-full p-2.5 rounded-lg text-xs font-bold flex items-center gap-2.5 transition view-card-inactive";
-      btnDash.className = "w-full p-2.5 rounded-lg text-xs font-bold flex items-center gap-2.5 transition view-card-inactive";
-      btnRep.className = "w-full p-2.5 rounded-lg text-xs font-bold flex items-center gap-2.5 transition view-card-inactive";
-
-      iconFicha.className = "fa-solid fa-file-lines text-sm text-slate-400";
-      iconDash.className = "fa-solid fa-chart-pie text-sm text-slate-400";
-      iconRep.className = "fa-solid fa-file-chart-pie text-sm text-slate-400";
-
-      if (mainTab === 'ficha') {
-        btnFicha.className = "w-full p-2.5 rounded-lg text-xs font-bold flex items-center gap-2.5 transition view-card-active-blue";
-        iconFicha.className = "fa-solid fa-file-lines text-sm text-[#1e3a8a]";
-      } else if (mainTab === 'dashboard') {
-        btnDash.className = "w-full p-2.5 rounded-lg text-xs font-bold flex items-center gap-2.5 transition view-card-active-green";
-        iconDash.className = "fa-solid fa-chart-pie text-sm text-emerald-600";
-      } else if (mainTab === 'reporte') {
-        btnRep.className = "w-full p-2.5 rounded-lg text-xs font-bold flex items-center gap-2.5 transition view-card-active-purple";
-        iconRep.className = "fa-solid fa-file-chart-pie text-sm text-purple-600";
+      if (mainTab === 'ficha' && btnFicha) {
+        btnFicha.className = "py-2 px-3 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all btn-nav-active";
+      } else if (mainTab === 'dashboard' && btnDash) {
+        btnDash.className = "py-2 px-3 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all btn-nav-active";
+      } else if (mainTab === 'reporte' && btnRep) {
+        btnRep.className = "w-full text-white py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all btn-report-custom bg-purple-100 border border-purple-300 text-purple-800";
       }
     }
 
@@ -2299,50 +2272,22 @@
       const viewIA = document.getElementById('sidebar_ia_advisor');
 
       if (tab === 'pacientes') {
-        tabP.className = "py-3 border-b-2 border-blue-600 text-blue-800 bg-slate-50/50";
-        tabIA.className = "py-3 text-slate-500 hover:bg-slate-50";
-        viewP.classList.remove('hidden');
-        viewP.classList.add('flex');
-        viewIA.classList.add('hidden');
+        if (tabP) tabP.className = "py-3 border-b-2 border-blue-600 text-blue-800 bg-slate-50/50";
+        if (tabIA) tabIA.className = "py-3 text-slate-500 hover:bg-slate-50";
+        if (viewP) {
+          viewP.classList.remove('hidden');
+          viewP.classList.add('flex');
+        }
+        if (viewIA) viewIA.classList.add('hidden');
       } else {
-        tabIA.className = "py-3 border-b-2 border-emerald-500 text-emerald-400 bg-slate-900";
-        tabP.className = "py-3 text-slate-400 hover:bg-slate-850 hover:text-white";
-        viewP.classList.add('hidden');
-        viewIA.classList.remove('hidden');
-        viewIA.classList.add('flex');
+        if (tabIA) tabIA.className = "py-3 border-b-2 border-emerald-500 text-emerald-400 bg-slate-900";
+        if (tabP) tabP.className = "py-3 text-slate-400 hover:bg-slate-850 hover:text-white";
+        if (viewP) viewP.classList.add('hidden');
+        if (viewIA) {
+          viewIA.classList.remove('hidden');
+          viewIA.classList.add('flex');
+        }
       }
-    }
-
-    function zoomIn() {
-      if (currentZoom < 1.6) {
-        currentZoom += 0.1;
-        applyZoom();
-      }
-    }
-
-    function zoomOut() {
-      if (currentZoom > 0.6) {
-        currentZoom -= 0.1;
-        applyZoom();
-      }
-    }
-
-    function resetZoom() {
-      currentZoom = 1.2;
-      applyZoom();
-    }
-
-    function applyZoom() {
-      if (mainTab === 'dashboard') return;
-      
-      const sheet = (mainTab === 'ficha') ? document.getElementById('printSheet') : document.getElementById('printReportSheet');
-      if (!sheet) return;
-
-      sheet.style.transform = `scale(${currentZoom})`;
-      document.getElementById('txtZoomLevel').innerText = `${Math.round(currentZoom * 100)}%`;
-      
-      const container = (mainTab === 'ficha') ? document.getElementById('tabContentFicha') : document.getElementById('tabContentReporte');
-      container.style.height = `${265 * 3.7795 * currentZoom}px`;
     }
 
     function toggleSidebar() {
@@ -2350,20 +2295,24 @@
       const restoreBtn = document.getElementById('btnRestoreSidebar');
       
       if (sidebarOpen) {
-        sidebar.style.width = '0px';
-        sidebar.style.minWidth = '0px';
-        sidebar.style.opacity = '0';
+        if (sidebar) {
+          sidebar.style.width = '0px';
+          sidebar.style.minWidth = '0px';
+          sidebar.style.opacity = '0';
+        }
         setTimeout(() => {
-          sidebar.classList.add('hidden');
-          restoreBtn.classList.remove('hidden');
+          if (sidebar) sidebar.classList.add('hidden');
+          if (restoreBtn) restoreBtn.classList.remove('hidden');
         }, 200);
       } else {
-        sidebar.classList.remove('hidden');
-        restoreBtn.classList.add('hidden');
+        if (sidebar) sidebar.classList.remove('hidden');
+        if (restoreBtn) restoreBtn.classList.add('hidden');
         setTimeout(() => {
-          sidebar.style.width = '320px';
-          sidebar.style.minWidth = '320px';
-          sidebar.style.opacity = '1';
+          if (sidebar) {
+            sidebar.style.width = '320px';
+            sidebar.style.minWidth = '320px';
+            sidebar.style.opacity = '1';
+          }
         }, 10);
       }
       sidebarOpen = !sidebarOpen;
@@ -2385,8 +2334,6 @@
         }
       });
 
-      document.getElementById('txtActiveCaseName').innerText = `Ficha Activa: ${p.paterno} ${p.materno}, ${p.nombres} (H.C. ${p.hc})`;
-
       const dateObj = parseDateStringRobustly(p.date, p.ano);
       const pYear = dateObj.year;
       const pMonth = dateObj.monthName;
@@ -2398,82 +2345,101 @@
 
       const relativeIndex = monthlyPatients.findIndex(item => item.item === p.item) + 1;
 
-      // Código de correlativo de ficha mensual (image_46b91d.png)
-      document.getElementById('f_correlative_num').innerText = String(relativeIndex).padStart(3, '0');
-      document.getElementById('f_hc_num').innerText = p.hc;
-      document.getElementById('f_paterno').innerText = p.paterno;
-      document.getElementById('f_materno').innerText = p.materno;
-      document.getElementById('f_nombres').innerText = p.nombres;
-      document.getElementById('f_nacimiento').innerText = p.nacimiento;
-      document.getElementById('f_edad').innerText = `${p.edad} años`;
-      document.getElementById('f_dni').innerText = p.dni;
-      document.getElementById('f_direccion').innerText = p.direccion;
+      const f_correlative = document.getElementById('f_correlative_num');
+      if (f_correlative) f_correlative.innerText = String(relativeIndex).padStart(3, '0');
+      
+      const f_hc = document.getElementById('f_hc_num');
+      if (f_hc) f_hc.innerText = p.hc;
+      
+      const f_pat = document.getElementById('f_paterno');
+      if (f_pat) f_pat.innerText = p.paterno;
+      
+      const f_mat = document.getElementById('f_materno');
+      if (f_mat) f_mat.innerText = p.materno;
+      
+      const f_nom = document.getElementById('f_nombres');
+      if (f_nom) f_nom.innerText = p.nombres;
+      
+      const f_nac = document.getElementById('f_nacimiento');
+      if (f_nac) f_nac.innerText = p.nacimiento;
+      
+      const f_ed = document.getElementById('f_edad');
+      if (f_ed) f_ed.innerText = `${p.edad} años`;
+      
+      const f_dni_val = document.getElementById('f_dni');
+      if (f_dni_val) f_dni_val.innerText = p.dni;
+      
+      const f_dir = document.getElementById('f_direccion');
+      if (f_dir) f_dir.innerText = p.direccion;
 
       const mCircle = document.getElementById('sex_m');
       const fCircle = document.getElementById('sex_f');
       if (p.sexo === 'M') {
-        mCircle.className = "w-2.5 h-2.5 rounded-full bg-black inline-block ring-2 ring-slate-400";
-        fCircle.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
+        if (mCircle) mCircle.className = "w-2.5 h-2.5 rounded-full bg-black inline-block ring-2 ring-slate-400";
+        if (fCircle) fCircle.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
       } else {
-        mCircle.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
-        fCircle.className = "w-2.5 h-2.5 rounded-full bg-black inline-block ring-2 ring-slate-400";
+        if (mCircle) mCircle.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
+        if (fCircle) fCircle.className = "w-2.5 h-2.5 rounded-full bg-black inline-block ring-2 ring-slate-400";
       }
 
       resetCheckboxes(["inst_1", "inst_2", "inst_3", "inst_4", "inst_5"]);
-      if (parseInt(p.edad) > 60) {
-        document.getElementById("inst_2").className = "w-2.5 h-2.5 bg-black inline-block";
-      } else {
-        document.getElementById("inst_3").className = "w-2.5 h-2.5 bg-black inline-block";
-      }
+      const inst_node = parseInt(p.edad) > 60 ? document.getElementById("inst_2") : document.getElementById("inst_3");
+      if (inst_node) inst_node.className = "w-2.5 h-2.5 bg-black inline-block";
 
       resetCheckboxes(["et_1", "et_2", "et_3", "et_4", "et_5", "et_6"]);
-      document.getElementById("et_4").className = "w-2.5 h-2.5 bg-black inline-block";
+      const et_node = document.getElementById("et_4");
+      if (et_node) et_node.className = "w-2.5 h-2.5 bg-black inline-block";
 
       resetCheckboxes(["id_1", "id_2"]);
-      document.getElementById("id_1").className = "w-2.5 h-2.5 bg-black inline-block";
+      const id_node = document.getElementById("id_1");
+      if (id_node) id_node.className = "w-2.5 h-2.5 bg-black inline-block";
 
-      document.getElementById('seg_si').className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
-      document.getElementById('seg_no').className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
+      const seg_si_el = document.getElementById('seg_si');
+      if (seg_si_el) seg_si_el.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
+      
+      const seg_no_el = document.getElementById('seg_no');
+      if (seg_no_el) seg_no_el.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
 
       resetCheckboxes(["t_seg_0", "t_seg_1", "t_seg_2", "t_seg_3", "t_seg_4", "t_seg_5", "t_seg_6", "t_seg_7", "t_seg_8", "t_seg_9", "t_seg_10", "t_seg_11"]);
-      document.getElementById("t_seg_1").className = "w-2.5 h-2.5 bg-black inline-block";
+      const t_seg_el = document.getElementById("t_seg_1");
+      if (t_seg_el) t_seg_el.className = "w-2.5 h-2.5 bg-black inline-block";
 
-      document.getElementById('f_captacion_val').innerText = p.date;
-      document.getElementById('f_edad_diag').innerText = `${Math.max(0, parseInt(p.edad) - 2)} años`;
+      const f_capt_el = document.getElementById('f_captacion_val');
+      if (f_capt_el) f_capt_el.innerText = p.date;
+      
+      const f_diag_el = document.getElementById('f_edad_diag');
+      if (f_diag_el) f_diag_el.innerText = `${Math.max(0, parseInt(p.edad) - 2)} años`;
 
       const casoIncidente = document.getElementById('caso_incidente');
       const casoPrevalente = document.getElementById('caso_prevalente');
       if (p.tipo_caso === 'nuevo') {
-        casoIncidente.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
-        casoPrevalente.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
+        if (casoIncidente) casoIncidente.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
+        if (casoPrevalente) casoPrevalente.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
       } else {
-        casoIncidente.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
-        casoPrevalente.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
+        if (casoIncidente) casoIncidente.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
+        if (casoPrevalente) casoPrevalente.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
       }
 
       resetCheckboxes(["db_tipo_1", "db_tipo_2", "db_gestacional"]);
-      if (p.tipo_db === 't1') {
-        document.getElementById("db_tipo_1").className = "w-2.5 h-2.5 bg-black inline-block";
-      } else {
-        document.getElementById("db_tipo_2").className = "w-2.5 h-2.5 bg-black inline-block";
-      }
+      const db_tipo_el = p.tipo_db === 't1' ? document.getElementById("db_tipo_1") : document.getElementById("db_tipo_2");
+      if (db_tipo_el) db_tipo_el.className = "w-2.5 h-2.5 bg-black inline-block";
 
-      document.getElementById('f_peso_val').innerText = p.peso;
-      document.getElementById('f_talla_val').innerText = p.talla;
-      document.getElementById('f_cintura_val').innerText = p.cintura || "90";
-      document.getElementById('f_pa_sis_val').innerText = p.pa_sis;
-      document.getElementById('f_pa_dia_val').innerText = p.pa_dia;
+      const f_p_val = document.getElementById('f_peso_val'); if (f_p_val) f_p_val.innerText = p.peso;
+      const f_t_val = document.getElementById('f_talla_val'); if (f_t_val) f_t_val.innerText = p.talla;
+      const f_c_val = document.getElementById('f_cintura_val'); if (f_c_val) f_c_val.innerText = p.cintura || "90";
+      const f_ps_val = document.getElementById('f_pa_sis_val'); if (f_ps_val) f_ps_val.innerText = p.pa_sis;
+      const f_pd_val = document.getElementById('f_pa_dia_val'); if (f_pd_val) f_pd_val.innerText = p.pa_dia;
 
-      document.getElementById('f_glicemia_val').innerText = p.glicemia;
-      document.getElementById('f_glic_post').innerText = p.glic_post || "160";
-      document.getElementById('f_hba1c_val').innerText = p.hba1c || 'No reg.';
-      document.getElementById('f_col_ldl_val').innerText = p.col_ldl || 'No reg.';
-      document.getElementById('f_col_total_val').innerText = p.col_total || 'No reg.';
-      document.getElementById('f_triglyceridos_val').innerText = p.trigliceridos || 'No reg.';
-      document.getElementById('f_col_hdl_val').innerText = p.col_hdl || 'No reg.';
-      document.getElementById('f_creatinina_val').innerText = p.creatinina || 'No reg.';
-      document.getElementById('f_microalb').innerText = p.microalb || "Negat.";
-      document.getElementById('f_proteinuria').innerText = p.proteinuria || "Negat.";
+      const f_g_val = document.getElementById('f_glicemia_val'); if (f_g_val) f_g_val.innerText = p.glicemia;
+      const f_gp_val = document.getElementById('f_glic_post'); if (f_gp_val) f_gp_val.innerText = p.glic_post || "160";
+      const f_hb_val = document.getElementById('f_hba1c_val'); if (f_hb_val) f_hb_val.innerText = p.hba1c || 'No reg.';
+      const f_ldl_val = document.getElementById('f_col_ldl_val'); if (f_ldl_val) f_ldl_val.innerText = p.col_ldl || 'No reg.';
+      const f_ct_val = document.getElementById('f_col_total_val'); if (f_ct_val) f_ct_val.innerText = p.col_total || 'No reg.';
+      const f_tg_val = document.getElementById('f_triglyceridos_val'); if (f_tg_val) f_tg_val.innerText = p.trigliceridos || 'No reg.';
+      const f_hdl_val = document.getElementById('f_col_hdl_val'); if (f_hdl_val) f_hdl_val.innerText = p.col_hdl || 'No reg.';
+      const f_cr_val = document.getElementById('f_creatinina_val'); if (f_cr_val) f_cr_val.innerText = p.creatinina || 'No reg.';
+      const f_ma_val = document.getElementById('f_microalb'); if (f_ma_val) f_ma_val.innerText = p.microalb || "Negat.";
+      const f_pr_val = document.getElementById('f_proteinuria'); if (f_pr_val) f_pr_val.innerText = p.proteinuria || "Negat.";
 
       const estControlado = document.getElementById('est_controlado');
       const estDescompensated = document.getElementById('est_descompensado');
@@ -2510,17 +2476,18 @@
       resetCheckboxes(["ins_lispro", "ins_aspart", "ins_glargina"]);
 
       if (p.tratamiento.toLowerCase().includes("metformina")) {
-        document.getElementById("t_med_1").className = "w-2.5 h-2.5 bg-black inline-block";
+        const med_1_el = document.getElementById("t_med_1");
+        if (med_1_el) med_1_el.className = "w-2.5 h-2.5 bg-black inline-block";
       }
       if (p.tratamiento.toLowerCase().includes("insulina")) {
-        document.getElementById("t_med_5").className = "w-2.5 h-2.5 bg-black inline-block";
-        document.getElementById("ins_glargina").className = "w-2 h-2 bg-black inline-block";
+        const med_5_el = document.getElementById("t_med_5");
+        const glar_el = document.getElementById("ins_glargina");
+        if (med_5_el) med_5_el.className = "w-2.5 h-2.5 bg-black inline-block";
+        if (glar_el) glar_el.className = "w-2 h-2 bg-black inline-block";
       }
 
-      document.getElementById('f_medico_val').innerText = p.medico;
-      document.getElementById('f_cmp_val').innerText = p.cmp;
-      
-      applyZoom();
+      const f_med = document.getElementById('f_medico_val'); if (f_med) f_med.innerText = p.medico;
+      const f_cmp = document.getElementById('f_cmp_val'); if (f_cmp) f_cmp.innerText = p.cmp;
     }
 
     function resetCheckboxes(ids) {
@@ -2641,10 +2608,10 @@
       const { total, controlados, descompensados, avgHba1c, casesByYear, casesByMonth, casesByWeek, casesBySexo, casesByGlicemico, casesByComorbilidad, casesByTipoDiabetes } = precalculatedMetrics;
       const controlRate = total > 0 ? Math.round((controlados / total) * 100) : 0;
 
-      document.getElementById('kpi_total').innerText = total;
-      document.getElementById('kpi_control_rate').innerText = `${controlRate}%`;
-      document.getElementById('kpi_hba1c').innerText = `${avgHba1c}%`;
-      document.getElementById('kpi_descompensados').innerText = descompensados;
+      const kpi_t = document.getElementById('kpi_total'); if (kpi_t) kpi_t.innerText = total;
+      const kpi_c = document.getElementById('kpi_control_rate'); if (kpi_c) kpi_c.innerText = `${controlRate}%`;
+      const kpi_hb = document.getElementById('kpi_hba1c'); if (kpi_hb) kpi_hb.innerText = `${avgHba1c}%`;
+      const kpi_d = document.getElementById('kpi_descompensados'); if (kpi_d) kpi_d.innerText = descompensados;
 
       if (chartAnos) chartAnos.destroy();
       if (chartMeses) chartMeses.destroy();
@@ -2654,80 +2621,93 @@
       if (chartComorbilidades) chartComorbilidades.destroy();
       if (chartTipoDiabetes) chartTipoDiabetes.destroy();
 
-      const ctxAnos = document.getElementById('chartAnos').getContext('2d');
-      chartAnos = new Chart(ctxAnos, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(casesByYear),
-          datasets: [{ label: 'Casos Registrados', data: Object.values(casesByYear), backgroundColor: '#1e3a8a', borderRadius: 6 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-      });
+      const elAnos = document.getElementById('chartAnos');
+      if (elAnos) {
+        chartAnos = new Chart(elAnos.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(casesByYear),
+            datasets: [{ label: 'Casos Registrados', data: Object.values(casesByYear), backgroundColor: '#1e3a8a', borderRadius: 6 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+      }
 
-      const ctxMeses = document.getElementById('chartMeses').getContext('2d');
-      chartMeses = new Chart(ctxMeses, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(casesByMonth),
-          datasets: [{ label: 'Volumen Mensual', data: Object.values(casesByMonth), backgroundColor: '#0d9488', borderRadius: 4 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-      });
+      const elMeses = document.getElementById('chartMeses');
+      if (elMeses) {
+        chartMeses = new Chart(elMeses.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(casesByMonth),
+            datasets: [{ label: 'Volumen Mensual', data: Object.values(casesByMonth), backgroundColor: '#0d9488', borderRadius: 4 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+      }
 
       const sortedWeeks = Object.keys(casesByWeek).sort((a,b) => a-b);
       const weekLabels = sortedWeeks.map(w => `S${w}`);
       const weekData = sortedWeeks.map(w => casesByWeek[w]);
 
-      const ctxSemanas = document.getElementById('chartSemanas').getContext('2d');
-      chartSemanas = new Chart(ctxSemanas, {
-        type: 'line',
-        data: {
-          labels: weekLabels.length > 0 ? weekLabels : ['S1'],
-          datasets: [{ label: 'Curva Epidémica', data: weekData.length > 0 ? weekData : [0], borderColor: '#7c3aed', backgroundColor: 'rgba(124, 58, 237, 0.1)', fill: true, tension: 0.3 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-      });
+      const elSemanas = document.getElementById('chartSemanas');
+      if (elSemanas) {
+        chartSemanas = new Chart(elSemanas.getContext('2d'), {
+          type: 'line',
+          data: {
+            labels: weekLabels.length > 0 ? weekLabels : ['S1'],
+            datasets: [{ label: 'Curva Epidémica', data: weekData.length > 0 ? weekData : [0], borderColor: '#7c3aed', backgroundColor: 'rgba(124, 58, 237, 0.1)', fill: true, tension: 0.3 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+      }
 
-      const ctxSexo = document.getElementById('chartSexo').getContext('2d');
-      chartSexo = new Chart(ctxSexo, {
-        type: 'doughnut',
-        data: {
-          labels: ['Femenino', 'Masculino'],
-          datasets: [{ data: [casesBySexo["F"], casesBySexo["M"]], backgroundColor: ['#ec4899', '#0284c7'], borderWidth: 2 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
-      });
+      const elSexo = document.getElementById('chartSexo');
+      if (elSexo) {
+        chartSexo = new Chart(elSexo.getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Femenino', 'Masculino'],
+            datasets: [{ data: [casesBySexo["F"], casesBySexo["M"]], backgroundColor: ['#ec4899', '#0284c7'], borderWidth: 2 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+        });
+      }
 
-      // GRAFICOS DE LA IMAGEN image_a4ce82.png
-      const ctxGlicemico = document.getElementById('chartGlicemico').getContext('2d');
-      chartGlicemico = new Chart(ctxGlicemico, {
-        type: 'doughnut',
-        data: {
-          labels: ['Controlados/Estables', 'Descompensados'],
-          datasets: [{ data: [casesByGlicemico["controlado"], casesByGlicemico["descompensado"]], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 2 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
-      });
+      const elGlicemico = document.getElementById('chartGlicemico');
+      if (elGlicemico) {
+        chartGlicemico = new Chart(elGlicemico.getContext('2d'), {
+          type: 'doughnut',
+          data: {
+            labels: ['Controlados/Estables', 'Descompensados'],
+            datasets: [{ data: [casesByGlicemico["controlado"], casesByGlicemico["descompensado"]], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 2 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+        });
+      }
 
-      const ctxComorbilidades = document.getElementById('chartComorbilidades').getContext('2d');
-      chartComorbilidades = new Chart(ctxComorbilidades, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(casesByComorbilidad),
-          datasets: [{ data: Object.values(casesByComorbilidad), backgroundColor: '#1e3a8a', borderRadius: 4 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-      });
+      const elComorb = document.getElementById('chartComorbilidades');
+      if (elComorb) {
+        chartComorbilidades = new Chart(elComorb.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(casesByComorbilidad),
+            datasets: [{ data: Object.values(casesByComorbilidad), backgroundColor: '#1e3a8a', borderRadius: 4 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+        });
+      }
 
-      const ctxTipoDiabetes = document.getElementById('chartTipoDiabetes').getContext('2d');
-      chartTipoDiabetes = new Chart(ctxTipoDiabetes, {
-        type: 'pie',
-        data: {
-          labels: ['Tipo 1', 'Tipo 2', 'Gestacional'],
-          datasets: [{ data: [casesByTipoDiabetes["Tipo 1"], casesByTipoDiabetes["Tipo 2"], casesByTipoDiabetes["Gestacional"]], backgroundColor: ['#818cf8', '#0284c7', '#ec4899'], borderWidth: 2 }]
-        },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
-      });
+      const elTipoDb = document.getElementById('chartTipoDiabetes');
+      if (elTipoDb) {
+        chartTipoDiabetes = new Chart(elTipoDb.getContext('2d'), {
+          type: 'pie',
+          data: {
+            labels: ['Tipo 1', 'Tipo 2', 'Gestacional'],
+            datasets: [{ data: [casesByTipoDiabetes["Tipo 1"], casesByTipoDiabetes["Tipo 2"], casesByTipoDiabetes["Gestacional"]], backgroundColor: ['#818cf8', '#0284c7', '#ec4899'], borderWidth: 2 }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+        });
+      }
     }
 
     function setReportLayout(layout) {
@@ -2736,32 +2716,13 @@
       const btnPila = document.getElementById('btn_layout_pila');
 
       if (layout === 'grilla') {
-        btnGrilla.className = "flex-1 bg-blue-50 text-[#1e3a8a] border border-blue-200 py-2 px-3 rounded-lg font-bold transition flex items-center justify-center gap-1.5 shadow-sm";
-        btnPila.className = "flex-1 bg-white text-slate-600 border border-slate-200 py-2 px-3 rounded-lg font-bold transition flex items-center justify-center gap-1.5 hover:bg-slate-50 shadow-sm";
+        if (btnGrilla) btnGrilla.className = "bg-blue-50 text-[#1e3a8a] border border-blue-200 py-1 px-1.5 rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 shadow-xs";
+        if (btnPila) btnPila.className = "bg-white text-slate-600 border border-slate-200 py-1 px-1.5 rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 hover:bg-slate-50 shadow-xs";
       } else {
-        btnGrilla.className = "flex-1 bg-white text-slate-600 border border-slate-200 py-2 px-3 rounded-lg font-bold transition flex items-center justify-center gap-1.5 hover:bg-slate-50 shadow-sm";
-        btnPila.className = "flex-1 bg-blue-50 text-[#1e3a8a] border border-blue-200 py-2 px-3 rounded-lg font-bold transition flex items-center justify-center gap-1.5 shadow-sm";
+        if (btnGrilla) btnGrilla.className = "bg-white text-slate-600 border border-slate-200 py-1 px-1.5 rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 hover:bg-slate-50 shadow-xs";
+        if (btnPila) btnPila.className = "bg-blue-50 text-[#1e3a8a] border border-blue-200 py-1 px-1.5 rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 shadow-xs";
       }
 
-      updateReportLayout();
-    }
-
-    // AUDITORÍA DE REPORTES: Implementación de desmarcado y limpiador rápido
-    function clearReportSelection() {
-      const ids = ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'];
-      ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.checked = false;
-      });
-      updateReportLayout();
-    }
-
-    function selectAllReport() {
-      const ids = ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'];
-      ids.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.checked = true;
-      });
       updateReportLayout();
     }
 
@@ -2776,33 +2737,35 @@
       const chkComorb = document.getElementById('chk_g_comorbilidades').checked;
       const chkTipoDB = document.getElementById('chk_g_tipodb').checked;
 
-      document.getElementById('container_report_ano').style.display = chkAno ? 'flex' : 'none';
-      document.getElementById('container_report_mes').style.display = chkMes ? 'flex' : 'none';
-      document.getElementById('container_report_semana').style.display = chkSemana ? 'flex' : 'none';
-      document.getElementById('container_report_sexo').style.display = chkSexo ? 'flex' : 'none';
-      document.getElementById('container_report_glicemico').style.display = chkGlicemico ? 'flex' : 'none';
-      document.getElementById('container_report_comorbilidades').style.display = chkComorb ? 'flex' : 'none';
-      document.getElementById('container_report_tipodb').style.display = chkTipoDB ? 'flex' : 'none';
+      const c_ano = document.getElementById('container_report_ano'); if (c_ano) c_ano.style.display = chkAno ? 'flex' : 'none';
+      const c_mes = document.getElementById('container_report_mes'); if (c_mes) c_mes.style.display = chkMes ? 'flex' : 'none';
+      const c_sem = document.getElementById('container_report_semana'); if (c_sem) c_sem.style.display = chkSemana ? 'flex' : 'none';
+      const c_sex = document.getElementById('container_report_sexo'); if (c_sex) c_sex.style.display = chkSexo ? 'flex' : 'none';
+      const c_gli = document.getElementById('container_report_glicemico'); if (c_gli) c_gli.style.display = chkGlicemico ? 'flex' : 'none';
+      const c_com = document.getElementById('container_report_comorbilidades'); if (c_com) c_com.style.display = chkComorb ? 'flex' : 'none';
+      const c_tdb = document.getElementById('container_report_tipodb'); if (c_tdb) c_tdb.style.display = chkTipoDB ? 'flex' : 'none';
 
       const gridContainer = document.getElementById('reportChartsGrid');
       const activeChartsCount = [chkAno, chkMes, chkSemana, chkSexo, chkGlicemico, chkComorb, chkTipoDB].filter(Boolean).length;
 
-      if (reportLayout === 'grilla' && activeChartsCount > 1) {
-        gridContainer.className = "grid grid-cols-2 gap-3 mb-2";
-        const heightVal = activeChartsCount > 2 ? '102mm' : '205mm';
-        document.querySelectorAll('#reportChartsGrid > div').forEach(el => {
-          el.style.height = heightVal;
-        });
-      } else {
-        gridContainer.className = "grid grid-cols-1 gap-3 mb-2";
-        const heightVal = activeChartsCount === 1 ? '205mm' : (activeChartsCount === 2 ? '102mm' : '68mm');
-        document.querySelectorAll('#reportChartsGrid > div').forEach(el => {
-          el.style.height = heightVal;
-        });
+      if (gridContainer) {
+        if (reportLayout === 'grilla' && activeChartsCount > 1) {
+          gridContainer.className = "grid grid-cols-2 gap-3 mb-2";
+          const heightVal = activeChartsCount > 2 ? '102mm' : '205mm';
+          document.querySelectorAll('#reportChartsGrid > div').forEach(el => {
+            el.style.height = heightVal;
+          });
+        } else {
+          gridContainer.className = "grid grid-cols-1 gap-3 mb-2";
+          const heightVal = activeChartsCount === 1 ? '205mm' : (activeChartsCount === 2 ? '102mm' : '68mm');
+          document.querySelectorAll('#reportChartsGrid > div').forEach(el => {
+            el.style.height = heightVal;
+          });
+        }
       }
 
-      document.getElementById('txt_report_date').innerText = new Date().toLocaleDateString('es-PE');
-      document.getElementById('txt_report_cases_total').innerText = database.length;
+      const rep_date = document.getElementById('txt_report_date'); if (rep_date) rep_date.innerText = new Date().toLocaleDateString('es-PE');
+      const rep_cases = document.getElementById('txt_report_cases_total'); if (rep_cases) rep_cases.innerText = database.length;
 
       renderReportCharts(chkAno, chkMes, chkSemana, chkSexo, chkGlicemico, chkComorb, chkTipoDB);
     }
@@ -2833,27 +2796,31 @@
       };
 
       if (showAno) {
-        const ctx = document.getElementById('chartAnoReport').getContext('2d');
-        chartAnoRep = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: Object.keys(casesByYear),
-            datasets: [{ data: Object.values(casesByYear), backgroundColor: '#1e3a8a', borderRadius: 4 }]
-          },
-          options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 8, weight: 'bold' } } } } }
-        });
+        const el = document.getElementById('chartAnoReport');
+        if (el) {
+          chartAnoRep = new Chart(el.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: Object.keys(casesByYear),
+              datasets: [{ data: Object.values(casesByYear), backgroundColor: '#1e3a8a', borderRadius: 4 }]
+            },
+            options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 8, weight: 'bold' } } } } }
+          });
+        }
       }
 
       if (showMes) {
-        const ctx = document.getElementById('chartMesReport').getContext('2d');
-        chartMesRep = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: Object.keys(casesByMonth),
-            datasets: [{ data: Object.values(casesByMonth), backgroundColor: '#0d9488', borderRadius: 4 }]
-          },
-          options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 7, weight: 'bold' } } } } }
-        });
+        const el = document.getElementById('chartMesReport');
+        if (el) {
+          chartMesRep = new Chart(el.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: Object.keys(casesByMonth),
+              datasets: [{ data: Object.values(casesByMonth), backgroundColor: '#0d9488', borderRadius: 4 }]
+            },
+            options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 7, weight: 'bold' } } } } }
+          });
+        }
       }
 
       if (showSemana) {
@@ -2861,64 +2828,90 @@
         const weekLabels = sortedWeeks.map(w => `S${w}`);
         const weekData = sortedWeeks.map(w => casesByWeek[w]);
 
-        const ctx = document.getElementById('chartSemanaReport').getContext('2d');
-        chartSemanaRep = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: weekLabels.length > 0 ? weekLabels : ['S1'],
-            datasets: [{ data: weekData.length > 0 ? weekData : [0], borderColor: '#7c3aed', backgroundColor: 'rgba(124, 58, 237, 0.05)', fill: true, tension: 0.2 }]
-          },
-          options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 7 } } } } }
-        });
+        const el = document.getElementById('chartSemanaReport');
+        if (el) {
+          chartSemanaRep = new Chart(el.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: weekLabels.length > 0 ? weekLabels : ['S1'],
+              datasets: [{ data: weekData.length > 0 ? weekData : [0], borderColor: '#7c3aed', backgroundColor: 'rgba(124, 58, 237, 0.05)', fill: true, tension: 0.2 }]
+            },
+            options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 7 } } } } }
+          });
+        }
       }
 
       if (showSexo) {
-        const ctx = document.getElementById('chartSexoReport').getContext('2d');
-        chartSexoRep = new Chart(ctx, {
-          type: 'pie',
-          data: {
-            labels: ['Fem.', 'Masc.'],
-            datasets: [{ data: [casesBySexo["F"], casesBySexo["M"]], backgroundColor: ['#ec4899', '#0284c7'], borderWidth: 1 }]
-          },
-          options: optionsConfig
-        });
+        const el = document.getElementById('chartSexoReport');
+        if (el) {
+          chartSexoRep = new Chart(el.getContext('2d'), {
+            type: 'pie',
+            data: {
+              labels: ['Fem.', 'Masc.'],
+              datasets: [{ data: [casesBySexo["F"], casesBySexo["M"]], backgroundColor: ['#ec4899', '#0284c7'], borderWidth: 1 }]
+            },
+            options: optionsConfig
+          });
+        }
       }
 
       if (showGlicemico) {
-        const ctx = document.getElementById('chartGlicemicoReport').getContext('2d');
-        chartGlicemicoRep = new Chart(ctx, {
-          type: 'pie',
-          data: {
-            labels: ['Estables', 'Descomp.'],
-            datasets: [{ data: [casesByGlicemico["controlado"], casesByGlicemico["descompensated"] || casesByGlicemico["descompensado"]], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 1 }]
-          },
-          options: optionsConfig
-        });
+        const el = document.getElementById('chartGlicemicoReport');
+        if (el) {
+          chartGlicemicoRep = new Chart(el.getContext('2d'), {
+            type: 'pie',
+            data: {
+              labels: ['Estables', 'Descomp.'],
+              datasets: [{ data: [casesByGlicemico["controlado"], casesByGlicemico["descompensated"] || casesByGlicemico["descompensado"]], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 1 }]
+            },
+            options: optionsConfig
+          });
+        }
       }
 
       if (showComorb) {
-        const ctx = document.getElementById('chartComorbilidadesReport').getContext('2d');
-        chartComorbilidadesRep = new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: Object.keys(casesByComorbilidad),
-            datasets: [{ data: Object.values(casesByComorbilidad), backgroundColor: '#1e3a8a', borderRadius: 4 }]
-          },
-          options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 8, weight: 'bold' } } } } }
-        });
+        const el = document.getElementById('chartComorbilidadesReport');
+        if (el) {
+          chartComorbilidadesRep = new Chart(el.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: Object.keys(casesByComorbilidad),
+              datasets: [{ data: Object.values(casesByComorbilidad), backgroundColor: '#1e3a8a', borderRadius: 4 }]
+            },
+            options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 8, weight: 'bold' } } } } }
+          });
+        }
       }
 
       if (showTipoDB) {
-        const ctx = document.getElementById('chartTipoDiabetesReport').getContext('2d');
-        chartTipoDiabetesRep = new Chart(ctx, {
-          type: 'pie',
-          data: {
-            labels: ['Tipo 1', 'Tipo 2', 'Gestacional'],
-            datasets: [{ data: [casesByTipoDiabetes["Tipo 1"], casesByTipoDiabetes["Tipo 2"], casesByTipoDiabetes["Gestacional"]], backgroundColor: ['#818cf8', '#0284c7', '#ec4899'], borderWidth: 1 }]
-          },
-          options: optionsConfig
-        });
+        const el = document.getElementById('chartTipoDiabetesReport');
+        if (el) {
+          chartTipoDiabetesRep = new Chart(el.getContext('2d'), {
+            type: 'pie',
+            data: {
+              labels: ['Tipo 1', 'Tipo 2', 'Gestacional'],
+              datasets: [{ data: [casesByTipoDiabetes["Tipo 1"], casesByTipoDiabetes["Tipo 2"], casesByTipoDiabetes["Gestacional"]], backgroundColor: ['#818cf8', '#0284c7', '#ec4899'], borderWidth: 1 }]
+            },
+            options: optionsConfig
+          });
+        }
       }
+    }
+
+    function selectAllReportCharts() {
+      ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = true;
+      });
+      updateReportLayout();
+    }
+
+    function clearReportSelection() {
+      ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = false;
+      });
+      updateReportLayout();
     }
 
     function downloadChart(chartId, fileName) {
@@ -2943,17 +2936,55 @@
       document.body.removeChild(link);
     }
 
+    function triggerSmartA4Report() {
+      const total = database.length;
+      if (total === 0) {
+        showAlert("Base de Datos Vacía", "Por favor, espera que se sincronicen los casos de Google Sheets.", "info");
+        return;
+      }
+
+      recalculateAnalyticsData();
+      const { descompensados, total: tot, casesByComorbilidad } = precalculatedMetrics;
+      const rate = tot > 0 ? (descompensados / tot) : 0;
+
+      let reasoning = "";
+      let activeCharts = [];
+
+      if (rate > 0.45) {
+        activeCharts = ['chk_g_mes', 'chk_g_semana', 'chk_g_glicemico', 'chk_g_tipodb'];
+        reasoning = `¡Alerta! La tasa de descompensación es elevada (${Math.round(rate*100)}%). He diseñado el Reporte A4 priorizando el Control Glicémico, Estacionalidad y el tipo de Diabetes prevalente.`;
+      } else if (casesByComorbilidad["Obesidad"] > (tot * 0.4)) {
+        activeCharts = ['chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'];
+        reasoning = `Se detectó alta prevalencia de Obesidad/HTA en Ventanilla. Se diseñó el Reporte A4 cruzando comorbilidades, sexo y control glicémico en una hoja.`;
+      } else {
+        activeCharts = ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_tipodb'];
+        reasoning = `Base de datos equilibrada. El Reporte A4 ha sido configurado con la curva temporal estándar del Hospital de Ventanilla y tipos de Diabetes.`;
+      }
+
+      ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.checked = activeCharts.includes(id);
+      });
+
+      reportLayout = 'grilla';
+      setReportLayout(reportLayout);
+      switchMainTab('reporte');
+      showAlert("Reporte A4 Diseñado por IA", reasoning, "success");
+    }
+
     function toggleImportPanel() {
       const panel = document.getElementById('importPanel');
-      panel.classList.toggle('hidden');
-      panel.classList.toggle('flex');
+      if (panel) {
+        panel.classList.toggle('hidden');
+        panel.classList.toggle('flex');
+      }
     }
 
     function toggleApiSettings() {
       const area = document.getElementById('apiSettingsArea');
       const chev = document.getElementById('apiChevron');
-      area.classList.toggle('hidden');
-      chev.classList.toggle('rotate-180');
+      if (area) area.classList.toggle('hidden');
+      if (chev) chev.classList.toggle('rotate-180');
     }
 
     function saveApiKey() {
@@ -2964,6 +2995,7 @@
 
     function toggleEditPanel() {
       const panel = document.getElementById('editPanel');
+      if (!panel) return;
       panel.classList.toggle('hidden');
       panel.classList.toggle('flex');
       
@@ -3021,8 +3053,8 @@
       const dateObj = parseDateStringRobustly(p.date, p.ano);
       const year = dateObj.year;
       const monthName = dateObj.monthName;
-      if (activeYears[year] === undefined) activeYears[year] = false;
-      if (activeMonths[`${year}-${monthName}`] === undefined) activeMonths[`${year}-${monthName}`] = false;
+      activeYears[year] = true;
+      activeMonths[`${year}-${monthName}`] = true;
 
       renderPatientList();
       selectPatient(currentActiveId);
@@ -3038,10 +3070,12 @@
       const dropLoader = document.getElementById('dropLoader');
       const dropLoaderText = document.getElementById('dropLoaderText');
 
-      dropPrompt.classList.add('hidden');
-      dropLoader.classList.remove('hidden');
-      dropLoader.classList.add('flex');
-      dropLoaderText.innerText = "Abriendo base de datos...";
+      if (dropPrompt) dropPrompt.classList.add('hidden');
+      if (dropLoader) {
+        dropLoader.classList.remove('hidden');
+        dropLoader.classList.add('flex');
+      }
+      if (dropLoaderText) dropLoaderText.innerText = "Abriendo base de datos...";
 
       selectedFileType = file.type;
       const fileName = file.name.toLowerCase();
@@ -3081,7 +3115,7 @@
             ctx.drawImage(img, 0, 0, w, h);
             selectedFileBase64 = canvas.toDataURL("image/jpeg", 0.8).split(',')[1];
             
-            dropLoaderText.innerText = "Documento cargado. Presiona 'Procesar con IA'.";
+            if (dropLoaderText) dropLoaderText.innerText = "Documento cargado. Presiona 'Procesar con IA'.";
             document.getElementById('importRawText').value = "[Imagen clínica lista para escaneo con Inteligencia Artificial]";
           };
           img.src = e.target.result;
@@ -3154,8 +3188,8 @@
         const dateObj = parseDateStringRobustly(p.date, p.ano);
         const year = dateObj.year;
         const monthName = dateObj.monthName;
-        if (activeYears[year] === undefined) activeYears[year] = false;
-        if (activeMonths[`${year}-${monthName}`] === undefined) activeMonths[`${year}-${monthName}`] = false;
+        activeYears[year] = true;
+        activeMonths[`${year}-${monthName}`] = true;
       });
 
       renderPatientList();
@@ -3190,21 +3224,23 @@
         sexo: getVal(["sexo", "sex"]),
         nacimiento: getVal(["fecha_nac", "nacimiento", "fecha_nacimiento"]),
         sub_nac: getVal(["ubigeo_nac"]),
-        text: "controlado",
         edad: getVal(["edad", "age"]),
         direccion: getVal(["direccion", "dirección", "domicilio"]),
         telefono: getVal(["telefono", "teléfono"]),
         celular: getVal(["celular"]),
         asegurado: getVal(["asegurado"]),
         tseguro: getVal(["tseguro", "tipo_seguro"]),
+        
         notcaso: getVal(["notcaso", "tipo_caso"]),
         tdiabetes: getVal(["tdiabetes", "tipo_db", "tipo_diabetes"]),
         edad_diag: getVal(["edad_diag", "edad_diagnostico"]),
+        
         peso: getVal(["peso"]),
         talla: getVal(["talla"]),
         cintura: getVal(["pcint", "cintura"]),
         pa_sis: getVal(["sistolica", "pa_sis"]),
         pa_dia: getVal(["diastolica", "pa_dia"]),
+        
         glicemia: getVal(["glicemia"]),
         glic_post: getVal(["postpandrial", "glic_post"]),
         hba1c: getVal(["hemoglic", "hba1c"]),
@@ -3216,6 +3252,7 @@
         col_hdl: getVal(["hdl", "col_hdl"]),
         creatinina: getVal(["creatinina"]),
         status: getVal(["status", "estado"]),
+        
         hta: getVal(["hta"]),
         obesity: getVal(["obesidad", "obesidaddisplidemiaanemia", "obesity"]),
         dislipidemia: getVal(["displidemia", "dislipidemia"]),
@@ -3224,12 +3261,14 @@
         tbc: getVal(["tbc"]),
         tabaquismo: getVal(["tabaquismo"]),
         cancer: getVal(["cancer", "cáncer"]),
+        
         neuro: getVal(["neuropatia", "neuropatía", "neuropatia"]),
         renal: getVal(["nefropatia", "nefropatía", "nefropatia"]),
         retino_np: getVal(["noproliferativa"]),
         retino_p: getVal(["proliferativa"]),
         pie_sa: getVal(["sinamputacion"]),
         pie_ca: getVal(["conamputacion"]),
+        
         tratamiento: getVal(["tratamiento"]),
         medico: getVal(["medico"]),
         cmp: getVal(["cmp"]),
@@ -3311,7 +3350,7 @@
           fullText += pageText + "\n";
         }
         document.getElementById('importRawText').value = fullText;
-        dropLoaderText.innerText = "PDF leído con éxito. Presiona 'Procesar con IA'.";
+        if (dropLoaderText) dropLoaderText.innerText = "PDF leído con éxito. Presiona 'Procesar con IA'.";
       } catch (err) {
         console.error("Error al extraer texto PDF: ", err);
         showAlert("Error", "No se pudo leer el contenido del PDF.", "error");
@@ -3320,9 +3359,13 @@
     }
 
     function resetDropZone() {
-      document.getElementById('dropPrompt').classList.remove('hidden');
-      document.getElementById('dropLoader').classList.add('hidden');
-      document.getElementById('dropLoader').classList.remove('flex');
+      const dropPrompt = document.getElementById('dropPrompt');
+      const dropLoader = document.getElementById('dropLoader');
+      if (dropPrompt) dropPrompt.classList.remove('hidden');
+      if (dropLoader) {
+        dropLoader.classList.add('hidden');
+        dropLoader.classList.remove('flex');
+      }
       selectedFileBase64 = null;
       selectedFileType = null;
       document.getElementById('fileInput').value = "";
@@ -3481,8 +3524,8 @@
       const dateObj = parseDateStringRobustly(newItem.date, newItem.ano);
       const year = dateObj.year;
       const monthName = dateObj.monthName;
-      if (activeYears[year] === undefined) activeYears[year] = false;
-      if (activeMonths[`${year}-${monthName}`] === undefined) activeMonths[`${year}-${monthName}`] = false;
+      activeYears[year] = true;
+      activeMonths[`${year}-${monthName}`] = true;
 
       renderPatientList();
       selectPatient(newItem.item);
@@ -3526,9 +3569,8 @@ Estadísticas de la Red actual de Ventanilla:
 
 Instrucciones:
 1. Responde de manera concisa y estructurada en español.
-2. Si el usuario pide un análisis o conteo de casos por dirección o sector, revisa las direcciones registradas en la base de datos de pacientes actual y clasifícalas detallando qué zonas presentan mayor volumen.
-3. Si consulta sobre los valores mínimos de glucosa para el registro de la ficha, explícale de forma técnica y formal los rangos según la directiva del MINSA (Glicemia en ayunas >= 126 mg/dL en dos oportunidades, o HbA1c >= 6.5%, etc.).
-4. Utiliza terminología formal de salud pública del Perú. Formatea usando markdown de manera limpia.`;
+2. Si el usuario pide análisis estadístico o procesamiento, proporciónale scripts de Python (pandas, matplotlib, seaborn, plotly) o R adaptados para resolver su consulta.
+3. Utiliza terminología formal de salud pública del Perú. Formatea usando markdown.`;
 
       const payload = {
         contents: [{ role: "user", parts: [{ text: queryText }] }],
@@ -3557,14 +3599,12 @@ Instrucciones:
 
     function triggerQuickPrompt(type) {
       let text = "";
-      if (type === 'casos_direccion') {
-        text = "Realiza un análisis rápido de la base de datos actual del Hospital de Ventanilla y muestra un conteo o resumen de los casos agrupados por dirección, calle o sector de residencia de los pacientes.";
-      } else if (type === 'criterios_glucosa') {
-        text = "¿Cuáles son los valores y rangos mínimos de Glicemia en ayunas, Glicemia post-prandial o Hemoglobina Glicosilada (HbA1c) necesarios para que un paciente sea clasificado y registrado formalmente en la Ficha de Vigilancia Epidemiológica de Diabetes Mellitus del MINSA?";
-      } else if (type === 'consultas_tecnicas') {
-        text = "Actúa como auditor de vigilancia epidemiológica. Revisa el estado de control metabólico de los pacientes en la base de datos de Ventanilla y sugiéreme qué fichas necesitan una revisión técnica urgente.";
+      if (type === 'reporte') {
+        text = "Genera un reporte epidemiológico de los nuevos indicadores clínicos: Año de notificación, meses, semanas epidemiológicas y sexos del Hospital de Ventanilla.";
+      } else if (type === 'python_analisis') {
+        text = "Escribe un código completo de Python usando pandas para crear un gráfico de línea temporal por semanas epidemiológicas basándose en 'BASE DB NOTI.xlsx'.";
       } else {
-        text = "Brinda orientación general sobre la ficha técnica de vigilancia de diabetes.";
+        text = "Sugiere un plan estratégico comunitario en base a la distribución mensual (estacionalidad) de casos de diabetes registrados en Ventanilla.";
       }
       document.getElementById('chatInput').value = text;
       sendChatMessage();
@@ -3609,39 +3649,49 @@ Instrucciones:
       
       const iconContainer = document.getElementById('alertIcon');
       if (type === "success") {
-        iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 text-emerald-800 text-2xl";
-        iconContainer.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+        if (iconContainer) {
+          iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-emerald-100 text-emerald-800 text-2xl";
+          iconContainer.innerHTML = `<i class="fa-solid fa-circle-check"></i>`;
+        }
       } else if (type === "error") {
-        iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 text-red-800 text-2xl";
-        iconContainer.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i>`;
+        if (iconContainer) {
+          iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 text-red-800 text-2xl";
+          iconContainer.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i>`;
+        }
       } else {
-        iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 text-blue-800 text-2xl";
-        iconContainer.innerHTML = `<i class="fa-solid fa-circle-info"></i>`;
+        if (iconContainer) {
+          iconContainer.className = "mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 text-blue-800 text-2xl";
+          iconContainer.innerHTML = `<i class="fa-solid fa-circle-info"></i>`;
+        }
       }
 
       const modal = document.getElementById('alertModal');
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+      if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
     }
 
     function closeAlert() {
       const modal = document.getElementById('alertModal');
-      modal.classList.add('hidden');
-      modal.classList.remove('flex');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
     }
 
-    function printCurrentMode() {
-      const originalZoom = currentZoom;
-      currentZoom = 1.0;
-      applyZoom();
-      
+    function printCurrentFicha() {
+      switchMainTab('ficha');
       setTimeout(() => {
         window.print();
-        setTimeout(() => {
-          currentZoom = originalZoom;
-          applyZoom();
-        }, 300);
-      }, 300);
+      }, 350);
+    }
+
+    function printCurrentReport() {
+      switchMainTab('reporte');
+      setTimeout(() => {
+        window.print();
+      }, 350);
     }
 
     window.onload = initApp;
