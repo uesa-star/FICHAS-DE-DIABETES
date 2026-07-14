@@ -929,7 +929,7 @@
 
       </div>
 
-      <!-- VISTA B: EPIDEMIOLOGICAL ANALYTICS DASHBOARD - Ajustado con max-w-full para ocupar todo el ancho visible -->
+      <!-- VISTA B: EPIDEMIOLOGICAL ANALYTICS DASHBOARD -->
       <div class="w-full max-w-full hidden flex-col gap-6 px-2 md:px-6" id="tabContentDashboard">
         
         <!-- Tarjetas KPI -->
@@ -975,7 +975,7 @@
           </div>
         </div>
 
-        <!-- SECCIÓN 1: VIGILANCIA TEMPORAL Y DEMOGRÁFICA (4 GRÁFICOS) -->
+        <!-- SECCIÓN 1: VIGILANCIA TEMPORAL Y DEMOGRÁFICA -->
         <div class="border-b border-slate-200 pb-3 mt-2">
           <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
             <i class="fa-solid fa-clock text-blue-800"></i>
@@ -1046,7 +1046,7 @@
           </div>
         </div>
 
-        <!-- SECCIÓN 2: PERFIL CLÍNICO Y PATOLÓGICO (3 GRÁFICOS) (image_a4ce82.png) -->
+        <!-- SECCIÓN 2: PERFIL CLÍNICO Y PATOLÓGICO -->
         <div class="border-b border-slate-200 pb-3 mt-6">
           <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
             <i class="fa-solid fa-heart-pulse text-rose-600"></i>
@@ -1056,7 +1056,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Gráfico 5: Control Glicémico (Compensados vs Descompensados) -->
+          <!-- Gráfico 5: Control Glicémico -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
             <div class="absolute top-4 right-4 flex items-center space-x-2 no-print">
               <button onclick="downloadChart('chartGlicemico', 'Control_Glicemico')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1.5 rounded transition" title="Descargar Imagen del Gráfico">
@@ -1104,7 +1104,7 @@
 
       </div>
 
-      <!-- VISTA C: REPORTE GRÁFICO A4 COMPACTO (Composición dinámica de 1 a 4 gráficos) -->
+      <!-- VISTA C: REPORTE GRÁFICO A4 COMPACTO -->
       <div class="print-container w-full max-w-[210mm] hidden flex-col items-center gap-4" id="tabContentReporte">
         
         <!-- Panel de control rápido no imprimible -->
@@ -1505,6 +1505,7 @@
         dni: "80518117",
         hc: "87921",
         paterno: "MURO",
+        text: "controlado",
         materno: "AREVALO",
         nombres: "CECILIA",
         sexo: "F",
@@ -1539,6 +1540,7 @@
         dni: "06691190",
         hc: "321080",
         paterno: "DAMIAN",
+        text: "controlado",
         materno: "SANTA MARIA",
         nombres: "ANA ISABEL",
         sexo: "F",
@@ -1991,6 +1993,7 @@
             }
             
             recalculateAnalyticsData();
+            updateDashboardData();
 
             statusText.innerText = "Sincronizado: " + database.length + " casos";
             statusText.className = "text-[8px] text-emerald-600 font-bold";
@@ -2017,6 +2020,7 @@
           selectPatient(database[0].item);
         }
         recalculateAnalyticsData();
+        updateDashboardData();
       }
     }
 
@@ -2040,13 +2044,21 @@
       sortedYears.forEach(year => {
         const isYearExpanded = activeYears[year] === true;
 
+        // Calcular el total de casos acumulados específicamente para este año
+        let yearTotalCases = 0;
+        Object.keys(hierarchy[year]).forEach(m => {
+          yearTotalCases += hierarchy[year][m].length;
+        });
+
         const yearHeader = document.createElement('div');
         yearHeader.className = "bg-white hover:bg-slate-50 border-b border-slate-200 p-3.5 flex justify-between items-center cursor-pointer transition select-none";
         yearHeader.onclick = () => toggleYear(year);
+        // Se inyecta la medalla del total acumulado anual justo al lado del nombre del año, respondiendo a la imagen image_a5b2cd.png
         yearHeader.innerHTML = `
           <div class="flex items-center space-x-2.5">
             <i class="fa-solid fa-folder text-amber-500 text-sm"></i>
             <span class="font-extrabold text-xs text-slate-700 tracking-wider">AÑO ${year}</span>
+            <span class="text-[10px] bg-blue-100 text-[#1e3a8a] border border-blue-200 px-2 py-0.5 rounded-full font-black shadow-sm">${yearTotalCases} casos</span>
           </div>
           <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform ${isYearExpanded ? 'rotate-180' : ''}"></i>
         `;
@@ -2081,6 +2093,7 @@
               const patientListContainer = document.createElement('div');
               patientListContainer.className = "divide-y divide-slate-100 bg-white";
 
+              // Los correlativos dentro de cada mes inician estrictamente desde 001
               patients.forEach((patient, index) => {
                 const relativeIdx = index + 1;
                 const row = document.createElement('div');
@@ -2136,7 +2149,7 @@
       if (q.trim() !== '') {
         database.forEach(p => {
           const matchText = `${p.paterno} ${p.materno} ${p.nombres} ${p.dni} ${p.hc}`.toLowerCase();
-          if (text.includes(q)) {
+          if (matchText.includes(q)) {
             const dateObj = parseDateStringRobustly(p.date, p.ano);
             const year = dateObj.year;
             const monthName = dateObj.monthName;
@@ -2183,7 +2196,6 @@
         contentReporte.classList.add('hidden');
         zoomControls.classList.remove('hidden');
         
-        // Restablecer anchos límites de A4
         topBarControls.classList.add('max-w-[210mm]');
         topBarControls.classList.remove('max-w-full');
         applyZoom();
@@ -2195,7 +2207,7 @@
         contentReporte.classList.add('hidden');
         zoomControls.classList.add('hidden');
         
-        // expandir al 100% el ancho de pantalla para eliminar márgenes laterales
+        // Se expande al 100% de la pantalla para rellenar las barras vacías marcadas en image_a4e0ee.png
         topBarControls.classList.remove('max-w-[210mm]');
         topBarControls.classList.add('max-w-full');
 
@@ -2211,7 +2223,6 @@
         contentReporte.classList.add('flex');
         zoomControls.classList.remove('hidden');
 
-        // Restablecer anchos límites de A4 para impresión de reporte
         topBarControls.classList.add('max-w-[210mm]');
         topBarControls.classList.remove('max-w-full');
 
@@ -2358,6 +2369,7 @@
 
       const relativeIndex = monthlyPatients.findIndex(item => item.item === p.item) + 1;
 
+      // Código de correlativo de ficha mensual (image_46b91d.png)
       document.getElementById('f_correlative_num').innerText = String(relativeIndex).padStart(3, '0');
       document.getElementById('f_hc_num').innerText = p.hc;
       document.getElementById('f_paterno').innerText = p.paterno;
@@ -2605,7 +2617,6 @@
       document.getElementById('kpi_hba1c').innerText = `${avgHba1c}%`;
       document.getElementById('kpi_descompensados').innerText = descompensados;
 
-      // Destruir instancias previas de gráficos
       if (chartAnos) chartAnos.destroy();
       if (chartMeses) chartMeses.destroy();
       if (chartSemanas) chartSemanas.destroy();
@@ -2898,22 +2909,17 @@
       let reasoning = "";
       let activeCharts = [];
 
-      // La IA evalúa la prioridad epidemiológica para elegir los 4 mejores gráficos
       if (rate > 0.45) {
-        // Alta descompensación clínica -> Foco glicémico
         activeCharts = ['chk_g_mes', 'chk_g_semana', 'chk_g_glicemico', 'chk_g_tipodb'];
         reasoning = `¡Alerta! La tasa de descompensación es elevada (${Math.round(rate*100)}%). He diseñado el Reporte A4 priorizando el Control Glicémico, Estacionalidad y el tipo de Diabetes prevalente.`;
       } else if (casesByComorbilidad["Obesidad"] > (tot * 0.4)) {
-        // Alta prevalencia de riesgo cardiovascular -> Foco comorbilidades
         activeCharts = ['chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'];
         reasoning = `Se detectó alta prevalencia de Obesidad/HTA en Ventanilla. Se diseñó el Reporte A4 cruzando comorbilidades, sexo y control glicémico en una hoja.`;
       } else {
-        // Estado general balanceado -> Reporte tradicional temporal + Tipo de Patología
         activeCharts = ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_tipodb'];
         reasoning = `Base de datos equilibrada. El Reporte A4 ha sido configurado con la curva temporal estándar del Hospital de Ventanilla y tipos de Diabetes.`;
       }
 
-      // Desmarcar todo
       ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'].forEach(id => {
         document.getElementById(id).checked = activeCharts.includes(id);
       });
@@ -3142,6 +3148,7 @@
       renderPatientList();
       selectPatient(database[database.length - 1].item);
       recalculateAnalyticsData();
+      updateDashboardData();
       toggleImportPanel();
       resetDropZone();
 
@@ -3472,6 +3479,7 @@
       renderPatientList();
       selectPatient(newItem.item);
       recalculateAnalyticsData();
+      updateDashboardData();
       toggleImportPanel();
       resetDropZone();
       document.getElementById('importRawText').value = "";
