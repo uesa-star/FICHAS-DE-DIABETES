@@ -449,13 +449,9 @@
           <div class="mt-3 border-t border-slate-200 pt-3">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Acciones Operativas</span>
             <div class="flex flex-col gap-2">
-              <button onclick="toggleImportPanel()" class="w-full bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center space-x-2 transition shadow-md border border-blue-800">
-                <i class="fa-solid fa-cloud-arrow-up text-sm"></i>
-                <span>Importar Archivo / IA</span>
-              </button>
-              <button onclick="toggleEditPanel()" class="w-full bg-white hover:bg-slate-50 text-slate-700 text-xs px-3 py-2.5 rounded-lg font-bold flex items-center justify-center gap-2 transition border border-slate-200 shadow-sm">
-                <i class="fa-solid fa-pen-to-square text-slate-500"></i>
-                <span>Editar Casillas</span>
+              <button onclick="toggleEditPanel()" class="w-full bg-[#1e3a8a] hover:bg-blue-900 text-white px-3 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition shadow-md border border-blue-800">
+                <i class="fa-solid fa-pen-to-square"></i>
+                <span>Editar Casillas de la Ficha</span>
               </button>
             </div>
           </div>
@@ -532,8 +528,11 @@
            <span>VISTA PREVIA DE FOLIO CLÍNICO AUDITADO: <span id="auditPatientName" class="underline uppercase text-amber-950 font-black">Nombres Paciente</span>.</span>
          </span>
          <div class="flex gap-2">
-           <button onclick="approveCurrentSimulated()" class="bg-slate-950 hover:bg-slate-900 text-white px-3.5 py-2 rounded-lg font-black text-[10px] transition uppercase shadow">
-             <i class="fa-solid fa-check-circle mr-1 text-emerald-400"></i> Integrar Caso Clínico
+           <button onclick="toggleEditPanel()" class="bg-slate-950 hover:bg-slate-900 text-white px-3.5 py-2 rounded-lg font-black text-[10px] transition uppercase shadow">
+             <i class="fa-solid fa-pen-to-square mr-1 text-amber-400"></i> Editar Folio
+           </button>
+           <button onclick="approveCurrentSimulated()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg font-black text-[10px] transition uppercase shadow">
+             <i class="fa-solid fa-check-circle mr-1 text-white"></i> Integrar Caso Clínico
            </button>
            <button onclick="closeSimulatorPreview()" class="bg-amber-600 hover:bg-amber-700 text-amber-950 px-3 py-2 rounded-lg font-bold text-[10px] transition uppercase">
              Salir
@@ -3228,32 +3227,46 @@
       panel.classList.toggle('flex');
       
       if (!panel.classList.contains('hidden')) {
-        const p = database.find(item => item.item === currentActiveId);
+        let p;
+        if (activeSimulatorId) {
+          // Edit target is the simulated card
+          p = simulatorDatabase.find(item => item.id === activeSimulatorId);
+        } else {
+          // Edit target is the registered patient database
+          p = database.find(item => item.item === currentActiveId);
+        }
         if(!p) return;
-        document.getElementById('edit_paterno').value = p.paterno;
-        document.getElementById('edit_materno').value = p.materno;
-        document.getElementById('edit_nombres').value = p.nombres;
-        document.getElementById('edit_dni').value = p.dni;
-        document.getElementById('edit_hc').value = p.hc;
-        document.getElementById('edit_date').value = p.date;
-        document.getElementById('edit_edad').value = p.edad;
-        document.getElementById('edit_direccion').value = p.direccion;
-        document.getElementById('edit_peso').value = p.peso;
-        document.getElementById('edit_talla').value = p.talla;
-        document.getElementById('edit_pa_sis').value = p.pa_sis;
-        document.getElementById('edit_pa_dia').value = p.pa_dia;
-        document.getElementById('edit_glicemia').value = p.glicemia;
-        document.getElementById('edit_hba1c').value = p.hba1c;
-        document.getElementById('edit_col_total').value = p.col_total;
-        document.getElementById('edit_trigliceridos').value = p.trigliceridos;
-        document.getElementById('edit_creatinina').value = p.creatinina;
-        document.getElementById('edit_medico').value = p.medico;
-        document.getElementById('edit_cmp').value = p.cmp;
+        document.getElementById('edit_paterno').value = p.paterno || '';
+        document.getElementById('edit_materno').value = p.materno || '';
+        document.getElementById('edit_nombres').value = p.nombres || '';
+        document.getElementById('edit_dni').value = p.dni || '';
+        document.getElementById('edit_hc').value = p.hc || '';
+        document.getElementById('edit_date').value = p.date || '';
+        document.getElementById('edit_edad').value = p.edad || '';
+        document.getElementById('edit_direccion').value = p.direccion || '';
+        document.getElementById('edit_peso').value = p.peso || '';
+        document.getElementById('edit_talla').value = p.talla || '';
+        document.getElementById('edit_pa_sis').value = p.pa_sis || '';
+        document.getElementById('edit_pa_dia').value = p.pa_dia || '';
+        document.getElementById('edit_glicemia').value = p.glicemia || '';
+        document.getElementById('edit_hba1c').value = p.hba1c || '';
+        document.getElementById('edit_col_total').value = p.col_total || '';
+        document.getElementById('edit_trigliceridos').value = p.trigliceridos || '';
+        document.getElementById('edit_creatinina').value = p.creatinina || '';
+        document.getElementById('edit_medico').value = p.medico || '';
+        document.getElementById('edit_cmp').value = p.cmp || '';
       }
     }
 
     function saveChanges() {
-      const p = database.find(item => item.item === currentActiveId);
+      let p;
+      let isSimulated = false;
+      if (activeSimulatorId) {
+        p = simulatorDatabase.find(item => item.id === activeSimulatorId);
+        isSimulated = true;
+      } else {
+        p = database.find(item => item.item === currentActiveId);
+      }
       if(!p) return;
 
       p.paterno = document.getElementById('edit_paterno').value.toUpperCase();
@@ -3276,11 +3289,20 @@
       p.medico = document.getElementById('edit_medico').value;
       p.cmp = document.getElementById('edit_cmp').value;
 
-      saveDatabaseToLocalStorage();
-
-      renderPatientList();
-      selectPatient(currentActiveId);
-      recalculateAnalyticsData();
+      if (isSimulated) {
+        // Refresh Simulated UI & active sheet fields immediately
+        renderSimulatedList();
+        populateFichaFields(p, "SIM");
+        const bannerName = document.getElementById('auditPatientName');
+        if (bannerName) {
+          bannerName.innerText = `${p.paterno} ${p.materno}, ${p.nombres}`;
+        }
+      } else {
+        saveDatabaseToLocalStorage();
+        renderPatientList();
+        selectPatient(currentActiveId);
+        recalculateAnalyticsData();
+      }
       toggleEditPanel();
     }
 
