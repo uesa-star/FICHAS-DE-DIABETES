@@ -1162,9 +1162,9 @@
               </div>
             </div>
 
-            <div id="reportChartsGrid" class="grid grid-cols-2 gap-3 mb-2">
-              <div id="container_report_ano" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white">
-                <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
+            <div id="reportChartsGrid" class="grid grid-cols-2 gap-2.5 mb-1.5">
+              <div id="container_report_ano" class="border border-black p-1.5 flex flex-col justify-between bg-white">
+                <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
                   1. Casos por Año de Notificación
                 </span>
                 <div class="flex-1 min-h-0 relative flex items-center justify-center">
@@ -1172,8 +1172,8 @@
                 </div>
               </div>
 
-              <div id="container_report_mes" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white">
-                <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
+              <div id="container_report_mes" class="border border-black p-1.5 flex flex-col justify-between bg-white">
+                <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
                   2. Distribución Mensual de Casos
                 </span>
                 <div class="flex-1 min-h-0 relative flex items-center justify-center">
@@ -1181,8 +1181,8 @@
                 </div>
               </div>
 
-              <div id="container_report_semana" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white">
-                <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
+              <div id="container_report_semana" class="border border-black p-1.5 flex flex-col justify-between bg-white">
+                <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
                   3. Casos por Semana Epidemiológica
                 </span>
                 <div class="flex-1 min-h-0 relative flex items-center justify-center">
@@ -1190,8 +1190,8 @@
                 </div>
               </div>
 
-              <div id="container_report_sexo" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white">
-                <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
+              <div id="container_report_sexo" class="border border-black p-1.5 flex flex-col justify-between bg-white">
+                <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
                   4. Distribución por Sexo (Demografía)
                 </span>
                 <div class="flex-1 min-h-0 relative flex items-center justify-center">
@@ -1199,8 +1199,8 @@
                 </div>
               </div>
 
-              <div id="container_report_glicemico" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white hidden">
-                <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
+              <div id="container_report_glicemico" class="border border-black p-1.5 flex flex-col justify-between bg-white hidden">
+                <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
                   5. Control Glicémico
                 </span>
                 <div class="flex-1 min-h-0 relative flex items-center justify-center">
@@ -1208,8 +1208,8 @@
                 </div>
               </div>
 
-              <div id="container_report_comorbilidades" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white hidden">
-                <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
+              <div id="container_report_comorbilidades" class="border border-black p-1.5 flex flex-col justify-between bg-white hidden">
+                <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
                   6. Prevalencia de Comorbilidades
                 </span>
                 <div class="flex-1 min-h-0 relative flex items-center justify-center">
@@ -1217,8 +1217,8 @@
                 </div>
               </div>
 
-              <div id="container_report_tipodb" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white hidden">
-                <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
+              <div id="container_report_tipodb" class="border border-black p-1.5 flex flex-col justify-between bg-white hidden">
+                <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
                   7. Tipos de Diabetes Mellitus
                 </span>
                 <div class="flex-1 min-h-0 relative flex items-center justify-center">
@@ -2660,15 +2660,33 @@
       const activeChartsCount = [chkAno, chkMes, chkSemana, chkSexo, chkGlicemico, chkComorb, chkTipoDB].filter(Boolean).length;
 
       if (gridContainer) {
-        if (reportLayout === 'grilla' && activeChartsCount > 1) {
-          gridContainer.className = "grid grid-cols-2 gap-3 mb-2";
-          const heightVal = activeChartsCount > 2 ? '102mm' : '205mm';
-          document.querySelectorAll('#reportChartsGrid > div').forEach(el => {
-            el.style.height = heightVal;
-          });
+        if (reportLayout === 'grilla') {
+          if (activeChartsCount > 1) {
+            gridContainer.className = "grid grid-cols-2 gap-2.5 mb-1.5";
+            let heightVal = "92mm"; // Alto perfecto para 2 filas de gráficos (2 * 92 = 184mm de espacio)
+            if (activeChartsCount <= 2) {
+              heightVal = "185mm"; // Ocupa todo el alto disponible si es solo 1 fila
+            }
+            document.querySelectorAll('#reportChartsGrid > div').forEach(el => {
+              el.style.height = heightVal;
+            });
+          } else {
+            gridContainer.className = "grid grid-cols-1 gap-2.5 mb-1.5";
+            document.querySelectorAll('#reportChartsGrid > div').forEach(el => {
+              el.style.height = "185mm";
+            });
+          }
         } else {
-          gridContainer.className = "grid grid-cols-1 gap-3 mb-2";
-          const heightVal = activeChartsCount === 1 ? '205mm' : (activeChartsCount === 2 ? '102mm' : '68mm');
+          // Diseño en Pila: distribución proporcional matemática para garantizar 1 sola hoja
+          gridContainer.className = "grid grid-cols-1 gap-2 mb-1.5";
+          let heightVal = "92mm";
+          if (activeChartsCount === 1) {
+            heightVal = "185mm";
+          } else if (activeChartsCount === 2) {
+            heightVal = "92mm";
+          } else {
+            heightVal = Math.floor(185 / activeChartsCount) + "mm";
+          }
           document.querySelectorAll('#reportChartsGrid > div').forEach(el => {
             el.style.height = heightVal;
           });
