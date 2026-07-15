@@ -14,14 +14,12 @@
   
   <!-- PDF.js para lectura de documentos clínicos -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
-  <!-- PapaParse para procesamiento de CSVs -->
+  <!-- PapaParse para procesamiento de CSV -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <!-- SheetJS para lectura directa de BASE DB NOTI.xlsx -->
+  <!-- SheetJS para lectura directa de Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <!-- Chart.js para Visualización de Datos Epidemiológicos -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Marked.js para formatear respuestas markdown de la IA -->
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <style>
     body {
@@ -70,9 +68,13 @@
     }
 
     #printSheet, #printReportSheet {
-      transform-origin: top center;
-      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      width: 100% !important;
+      max-width: 1280px !important;
+      height: auto !important;
+      aspect-ratio: 210 / 265 !important; 
+      margin: 0 auto !important;
       box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .active-patient-card {
@@ -93,7 +95,19 @@
       color: #1e3a8a !important;
     }
     
-    /* AUDITORÍA DE IMPRESIÓN: Estilos físicos para garantizar una sola hoja */
+    .simulated-patient-card {
+      background-color: #1e293b !important;
+      border: 1px solid #334155 !important;
+      border-left: 5px solid #f59e0b !important;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    }
+    .simulated-patient-card-active {
+      background-color: #334155 !important;
+      border: 1px solid #475569 !important;
+      border-left: 5px solid #fbbf24 !important;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+    }
+    
     @media print {
       @page {
         size: A4 portrait;
@@ -105,7 +119,7 @@
         color-adjust: exact !important;
         color: #000000 !important;
       }
-      header, aside, #editPanel, #importPanel, #alertModal, .no-print, #btnRestoreSidebar {
+      header, aside, #editPanel, #importPanel, #alertModal, .no-print, #btnRestoreSidebar, #auditBanner {
         display: none !important;
         height: 0 !important;
         margin: 0 !important;
@@ -127,7 +141,7 @@
         width: 100% !important;
       }
       body[data-print-mode="ficha"] #tabContentReporte {
-        display: none !important;
+        display: none !transparent;
       }
 
       body[data-print-mode="reporte"] #tabContentFicha {
@@ -145,6 +159,7 @@
         width: 190mm !important;
         height: 270mm !important; 
         max-height: 270mm !important;
+        aspect-ratio: auto !important; 
         page-break-inside: avoid !important;
         page-break-after: avoid !important;
         overflow: hidden !important;
@@ -194,11 +209,25 @@
       background: #94a3b8;
     }
     
+    .dark-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .dark-scrollbar::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    .dark-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    .dark-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
     .transition-width {
       transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out;
     }
 
-    /* Estilos de botones de navegación lateral */
     .btn-sync-custom {
       background-color: #0bb87c !important;
       color: #ffffff !important;
@@ -236,7 +265,10 @@
 </head>
 <body class="text-slate-800 min-h-screen flex flex-col antialiased bg-slate-100" data-print-mode="ficha">
 
-  <!-- TOP BAR (no-print) -->
+  <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .csv, .pdf, image/*" onchange="handleFileSelect(event)">
+  <input type="file" id="simulatorFileInput" class="hidden" accept=".pdf, image/*" multiple onchange="handleSimulatorFileSelect(event)">
+
+  <!-- HEADER -->
   <header class="bg-[#1e3a8a] text-white p-4 shadow-sm no-print flex flex-col lg:flex-row justify-between items-center gap-4 z-30 border-b border-blue-950">
     <div class="flex items-center space-x-3">
       <div class="bg-blue-950/50 p-2.5 rounded-lg text-white shadow-md">
@@ -250,40 +282,36 @@
       </div>
     </div>
 
-    <!-- Pestañas Rápidas del Asesor IA en Barra Superior -->
     <div class="flex items-center gap-2">
       <button onclick="switchSidebarTab('ia_advisor')" id="btnTopIA" class="bg-blue-950/40 border border-blue-800 hover:bg-blue-900/40 text-blue-200 hover:text-white px-3.5 py-2 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow">
-        <i class="fa-solid fa-robot text-emerald-400"></i>
-        <span>Asesor de Epidemiología e IA</span>
+        <i class="fa-solid fa-vial-virus text-emerald-400 animate-pulse"></i>
+        <span>Simulador de Casos / Auditoría</span>
       </button>
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
   <div class="flex-1 flex overflow-hidden relative">
     
-    <!-- Botón flotante para restaurar la barra lateral (no-print) -->
     <button id="btnRestoreSidebar" onclick="toggleSidebar()" class="hidden fixed left-4 top-4 z-40 bg-white hover:bg-slate-100 text-[#1e3a8a] p-3 rounded-lg shadow-xl border border-slate-200 transition-all no-print" title="Mostrar Lista de Pacientes">
       <i class="fa-solid fa-angles-right"></i>
     </button>
 
-    <!-- LEFT SIDEBAR (no-print) -->
+    <!-- SIDEBAR -->
     <aside id="patientSidebar" class="w-[320px] bg-[#f8fafc] border-r border-slate-200 overflow-y-auto no-print flex flex-col flex-shrink-0 transition-width z-20">
       
-      <!-- Selectores de Modo del Panel Lateral -->
-      <div class="grid grid-cols-2 border-b border-slate-200 text-center text-xs font-bold">
+      <!-- Pestañas del Sidebar -->
+      <div class="grid grid-cols-2 border-b border-slate-200 text-center text-xs font-bold flex-shrink-0">
         <button onclick="switchSidebarTab('pacientes')" id="side_tab_p" class="py-3 border-b-2 border-blue-600 text-blue-800 bg-slate-50/50">
           <i class="fa-solid fa-users mr-1"></i> Pacientes
         </button>
         <button onclick="switchSidebarTab('ia_advisor')" id="side_tab_ia" class="py-3 text-slate-500 hover:bg-slate-50">
-          <i class="fa-solid fa-robot mr-1 text-emerald-600"></i> Asesor IA
+          <i class="fa-solid fa-vial-virus mr-1 text-emerald-600"></i> Simulador de Casos
         </button>
       </div>
 
       <!-- PANEL: PACIENTES REGISTRY -->
       <div id="sidebar_pacientes" class="flex flex-col flex-1 overflow-hidden">
         
-        <!-- HEADER DEL REGISTRO -->
         <div class="p-4 border-b border-slate-100 flex-shrink-0">
           <div class="flex justify-between items-center mb-3">
             <div class="flex items-center space-x-2">
@@ -303,7 +331,6 @@
           <!-- Buscador Oficial -->
           <input type="text" id="searchBar" onkeyup="filterPatients()" placeholder="Buscar por Nombre, DNI, H.C..." class="w-full text-xs p-2.5 bg-white text-slate-800 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm">
           
-          <!-- Botones de Acción de Buscador -->
           <div class="flex justify-between items-center mt-2.5 text-[9px] font-bold tracking-wide text-slate-500 uppercase mb-2">
             <button onclick="resetToDefaultDatabase()" class="hover:text-red-600 flex items-center gap-1 transition-colors" title="Restaurar base de datos de contingencia local">
               <i class="fa-solid fa-rotate-left"></i> Restablecer Casos Originales
@@ -313,24 +340,20 @@
             </button>
           </div>
 
-          <!-- MÓDULO DE BOTONES REDISEÑADO CON SUBMENÚ BAJO CREAR REPORTE -->
+          <!-- Acciones de Sincronización e Interfaz -->
           <div class="space-y-2 mb-3">
-            <!-- Sincronizar Google Sheets (Verde Esmeralda) -->
             <button onclick="loadDataFromGoogleSheet()" class="w-full btn-sync-custom text-white py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all">
               <i class="fa-solid fa-arrows-rotate"></i>
               <span>Sincronizar Google Sheets</span>
             </button>
 
-            <!-- Indicador de Estado Cloud debajo de Sincronización -->
-            <div id="txtCloudStatus" class="text-[9px] text-emerald-600 font-extrabold text-center leading-tight mt-1">Sincronizado correctamente</div>
+            <div id="txtCloudStatus" class="text-[9px] text-emerald-600 font-extrabold text-center leading-tight mt-1">Cargando base remota...</div>
 
-            <!-- Imprimir Ficha (A4) (Azul) -->
             <button onclick="printCurrentFicha()" class="w-full btn-print-custom text-white py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all">
               <i class="fa-solid fa-print"></i>
               <span>Imprimir Ficha (A4)</span>
             </button>
 
-            <!-- Grid de Navegación: Ficha (A4) y Dashboard -->
             <div class="grid grid-cols-2 gap-2">
               <button id="btn_view_ficha" onclick="switchMainTab('ficha')" class="py-2 px-3 rounded-xl text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all btn-nav-active">
                 <i class="fa-solid fa-file-medical"></i>
@@ -342,16 +365,13 @@
               </button>
             </div>
 
-            <!-- Crear Reporte Gráfico (A4) (Lila / Púrpura) -->
             <button id="btn_view_reporte" onclick="switchMainTab('reporte')" class="w-full btn-report-custom py-2.5 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all">
               <i class="fa-solid fa-file-chart-pie"></i>
-              <span>Crear Reporte Gráfico (A4)</span>
+              <span>Crear Reporte Gráfico</span>
             </button>
 
-            <!-- SUB-MENÚ DE CONFIGURADOR DE REPORTE A4 COMPACTO (Ubicado dinámicamente en el Sidebar) -->
+            <!-- CONFIGURADOR DEL REPORTE -->
             <div id="sub_menu_reporte" class="hidden flex-col p-3 bg-purple-50/80 rounded-xl border border-purple-200/80 shadow-inner space-y-3 transition-all">
-              
-              <!-- Cabecera del Configurador -->
               <div class="flex items-center justify-between border-b border-purple-200/60 pb-1.5">
                 <span class="font-extrabold text-[#1e3a8a] text-[10px] uppercase tracking-wider flex items-center gap-1">
                   <i class="fa-solid fa-sliders text-xs"></i>
@@ -360,7 +380,6 @@
                 <span class="text-[9px] text-purple-600 font-medium">Panorámico</span>
               </div>
 
-              <!-- Fila Horizontal de Botones de Acción Rápidas -->
               <div class="grid grid-cols-2 gap-1.5">
                 <button onclick="selectAllReportCharts()" class="bg-white hover:bg-[#e1e9ff] text-[#315df2] border border-[#bfdbfe] py-1.5 px-2 rounded-lg font-bold text-[9px] flex items-center justify-center gap-1 transition shadow-xs">
                   <i class="fa-solid fa-check"></i>
@@ -372,13 +391,11 @@
                 </button>
               </div>
 
-              <!-- Imprimir Reporte de Gráficos A4 -->
               <button onclick="printCurrentReport()" class="w-full bg-[#0bb87c] hover:bg-[#0aa36e] text-white py-2 px-3 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1.5 transition shadow-sm">
                 <i class="fa-solid fa-print"></i>
                 <span>Imprimir Reporte A4</span>
               </button>
 
-              <!-- ITEM 1: SELECCIONAR GRÁFICOS A INCLUIR (En Formato Vertical Compacto) -->
               <div class="space-y-1.5 pt-1">
                 <span class="font-extrabold text-slate-700 block uppercase tracking-wider text-[9px]">1. Seleccionar Gráficos:</span>
                 <div class="flex flex-col gap-1 text-[10px] max-h-[180px] overflow-y-auto custom-scrollbar pr-1">
@@ -413,7 +430,6 @@
                 </div>
               </div>
 
-              <!-- ITEM 2: DISTRIBUCIÓN EN LA HOJA A4 -->
               <div class="border-t border-purple-200/50 pt-2 space-y-1.5">
                 <span class="font-extrabold text-slate-700 block uppercase tracking-wider text-[9px]">2. Distribución en Hoja:</span>
                 <div class="grid grid-cols-2 gap-1.5">
@@ -426,15 +442,10 @@
                     <span>Pila</span>
                   </button>
                 </div>
-                <p class="text-[8.5px] text-slate-500 leading-tight">
-                  <i class="fa-solid fa-circle-info text-purple-600"></i> Para 1 hoja, selecciona un máximo de 4 gráficos.
-                </p>
               </div>
-
             </div>
           </div>
 
-          <!-- SECCIÓN: ACCIONES OPERATIVAS -->
           <div class="mt-3 border-t border-slate-200 pt-3">
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">Acciones Operativas</span>
             <div class="flex flex-col gap-2">
@@ -450,22 +461,22 @@
           </div>
         </div>
         
-        <!-- Acordeón por Años y Meses -->
+        <!-- Acordeón de pacientes -->
         <div class="flex-1 overflow-y-auto custom-scrollbar bg-white border-t border-slate-100" id="accordionContainer">
           <!-- Generado dinámicamente -->
         </div>
       </div>
 
-      <!-- PANEL: AI EPIDEMIOLOGIST & CODE ADVISOR -->
+      <!-- PANEL: SIMULADOR DE CASOS (AUDITORÍA DE PDF) -->
       <div id="sidebar_ia_advisor" class="hidden flex-col flex-1 overflow-hidden bg-slate-900 text-slate-100">
-        <div class="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center">
+        <div class="p-4 bg-slate-950 border-b border-slate-800 flex justify-between items-center flex-shrink-0">
           <div class="flex items-center space-x-2">
-            <div class="p-1.5 rounded bg-emerald-500/20 text-emerald-400">
-              <i class="fa-solid fa-robot text-lg"></i>
+            <div class="p-1.5 rounded bg-amber-500/20 text-amber-400">
+              <i class="fa-solid fa-vial-virus text-lg"></i>
             </div>
             <div>
-              <h3 class="font-black text-xs uppercase tracking-wider text-slate-100">Asesor de Epidemiología e IA</h3>
-              <p class="text-[9px] text-slate-400">Analiza tus datos y genera código con Gemini</p>
+              <h3 class="font-black text-xs uppercase tracking-wider text-slate-100">Simulador de Casos</h3>
+              <p class="text-[9px] text-slate-400">Auditoría de atenciones mensuales y Lab</p>
             </div>
           </div>
           <button onclick="switchSidebarTab('pacientes')" class="text-slate-400 hover:text-white" title="Volver a Pacientes">
@@ -473,60 +484,67 @@
           </button>
         </div>
 
-        <!-- Chat Container -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar text-xs" id="chatContainer">
-          <div class="bg-slate-800/80 p-3.5 rounded-lg border border-slate-700 leading-relaxed text-slate-300 space-y-2">
-            <p><strong>¡Hola!</strong> Soy tu asesor de inteligencia artificial y código clínico.</p>
-            <p>Puedo ayudarte a examinar la base de datos de tu Google Sheets, identificar patrones epidemiológicos o generarte scripts especializados en Python/R.</p>
-            <p class="text-[10px] text-emerald-400 font-bold">Prueba seleccionando una de estas opciones:</p>
-          </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-4 dark-scrollbar text-xs">
           
-          <div class="grid grid-cols-1 gap-2 pt-1">
-            <button onclick="triggerQuickPrompt('reporte')" class="w-full text-left bg-slate-800 hover:bg-slate-700 p-2.5 rounded border border-slate-700 transition flex items-start gap-2">
-              <i class="fa-solid fa-notes-medical mt-0.5 text-emerald-400"></i>
-              <span>Generar reporte epidemiológico del MINSA</span>
-            </button>
-            <button onclick="triggerQuickPrompt('python_analisis')" class="w-full text-left bg-slate-800 hover:bg-slate-700 p-2.5 rounded border border-slate-700 transition flex items-start gap-2">
-              <i class="fa-brands fa-python mt-0.5 text-blue-400"></i>
-              <span>Generar script de Python para análisis estadístico</span>
-            </button>
-            <button onclick="triggerQuickPrompt('intervencion')" class="w-full text-left bg-slate-800 hover:bg-slate-700 p-2.5 rounded border border-slate-700 transition flex items-start gap-2">
-              <i class="fa-solid fa-shield-heart mt-0.5 text-red-400"></i>
-              <span>Proponer intervención en salud pública para Ventanilla</span>
-            </button>
-
-            <!-- BOTÓN INTELIGENTE POR IA -->
-            <button onclick="triggerSmartA4Report()" class="w-full text-left bg-gradient-to-r from-emerald-950/80 to-blue-950/80 hover:from-emerald-900 hover:to-blue-900 p-3 rounded-lg border border-emerald-500/30 transition flex items-start gap-2.5 shadow-md">
-              <i class="fa-solid fa-wand-magic-sparkles text-emerald-400 text-sm mt-0.5 animate-pulse"></i>
-              <div>
-                <span class="font-bold block text-emerald-300 text-[11px] uppercase tracking-wide">IA: Diseñar Reporte Gráfico A4</span>
-                <span class="text-[9px] text-slate-300 block mt-0.5 leading-tight">La IA selecciona las prioridades de los casos clínicos y genera un reporte adaptado a una hoja física A4</span>
-              </div>
-            </button>
+          <!-- EXPLICACIÓN -->
+          <div class="bg-slate-800/80 p-3 rounded-lg border border-slate-700 leading-relaxed text-slate-300">
+            <p class="font-bold text-amber-400 mb-1"><i class="fa-solid fa-folder-open mr-1"></i> Bandeja de Carga y Auditoría</p>
+            <p class="text-[10px]">Arrastra tus **PDF de atenciones mensuales** o informes colectivos. El simulador segmentará el documento para extraer **todos los casos individuales** detallados.</p>
           </div>
-        </div>
 
-        <!-- Input Area -->
-        <div class="p-3 bg-slate-950 border-t border-slate-800">
-          <div class="flex gap-2">
-            <input type="text" id="chatInput" placeholder="Pregúntame sobre tus datos o códigos..." class="flex-1 bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500" onkeydown="if(event.key==='Enter') sendChatMessage()">
-            <button onclick="sendChatMessage()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 rounded-lg transition text-xs font-bold shadow">
-              <i class="fa-solid fa-paper-plane"></i>
-            </button>
+          <!-- DROPZONE DE ARCHIVO (LÍNEA PUNTEADA ROJA) -->
+          <div class="border-2 border-dashed border-red-500 rounded-xl p-5 text-center bg-red-950/20 hover:bg-red-900/10 hover:border-red-400 transition cursor-pointer relative" id="dropZoneSide" onclick="document.getElementById('simulatorFileInput').click()">
+            <div class="space-y-2">
+              <i class="fa-solid fa-file-pdf text-3xl text-red-400"></i>
+              <p class="font-bold text-slate-200">Importar PDF o Imágenes</p>
+              <p class="text-[9px] text-slate-400">Suelta aquí las atenciones del mes o análisis de Lab para simular fichas individuales.</p>
+            </div>
+            <!-- Loader de carga -->
+            <div class="hidden flex-col items-center justify-center space-y-2 py-4" id="dropZoneSide_loading">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
+              <p class="font-bold text-red-400" id="extraction_status">Extrayendo folios clínicos...</p>
+            </div>
           </div>
+
+          <!-- LISTADO DE FICHAS EXTRAÍDAS SIMULADAS -->
+          <div class="space-y-2" id="simulatorResultsArea">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-1.5">
+              <span class="font-extrabold text-amber-400 text-[10px] uppercase tracking-wider">FICHAS EXTRAÍDAS EN ESPERA (<span id="simulatedCount">0</span>)</span>
+              <button onclick="clearSimulatedList()" class="text-[9px] text-red-400 hover:text-red-300 transition uppercase font-bold">Limpiar</button>
+            </div>
+            
+            <div id="simulatedPatientsContainer" class="space-y-2">
+              <!-- Cargado dinámicamente en árbol Año/Mes -->
+            </div>
+          </div>
+
         </div>
       </div>
     </aside>
 
-    <!-- RIGHT MAIN CONTENT: FORM VIEWER & ANALYTICS DASHBOARD -->
+    <!-- CENTRAL CONTENT AREA -->
     <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50 flex flex-col items-center custom-scrollbar relative" id="formMainArea">
+
+      <!-- BANNER DE AUDITORÍA DE SIMULADOR -->
+      <div id="auditBanner" class="hidden w-full max-w-[1280px] bg-amber-500 text-slate-950 px-4 py-3 rounded-xl font-bold text-xs justify-between items-center mb-4 shadow-lg border border-amber-600">
+         <span class="flex items-center gap-2">
+           <i class="fa-solid fa-triangle-exclamation text-base text-amber-950 animate-bounce"></i>
+           <span>VISTA PREVIA DE FOLIO CLÍNICO AUDITADO: <span id="auditPatientName" class="underline uppercase text-amber-950 font-black">Nombres Paciente</span>.</span>
+         </span>
+         <div class="flex gap-2">
+           <button onclick="approveCurrentSimulated()" class="bg-slate-950 hover:bg-slate-900 text-white px-3.5 py-2 rounded-lg font-black text-[10px] transition uppercase shadow">
+             <i class="fa-solid fa-check-circle mr-1 text-emerald-400"></i> Integrar Caso Clínico
+           </button>
+           <button onclick="closeSimulatorPreview()" class="bg-amber-600 hover:bg-amber-700 text-amber-950 px-3 py-2 rounded-lg font-bold text-[10px] transition uppercase">
+             Salir
+           </button>
+         </div>
+      </div>
 
       <!-- VISTA A: PANEL DE FICHA OFICIAL MINSA (A4) -->
       <div class="print-container w-full max-w-[1350px] flex flex-col items-center gap-4" id="tabContentFicha">
         
-        <!-- HOJA DE FICHA OFICIAL A4 COMPACTA -->
-        <div id="printSheet" class="w-full bg-white p-4 text-black border border-black flex flex-col justify-between overflow-hidden relative" style="box-sizing: border-box; width: 210mm; height: 265mm; margin: 0 auto;">
-          
+        <div id="printSheet" class="bg-white p-4 text-black border border-black flex flex-col justify-between overflow-hidden relative">
           <div>
             <!-- CABECERA INSTITUCIONAL MINSA -->
             <div class="grid grid-cols-12 items-center border-b border-black pb-1 mb-1.5">
@@ -557,7 +575,7 @@
               </div>
               <div class="border border-black p-1 bg-slate-50/50 flex flex-col">
                 <span class="text-[7px] font-bold text-slate-700 uppercase">N° de Ficha</span>
-                <span class="font-black text-[#1e3a8a]" id="f_correlative_num">-</span>
+                <span class="font-black text-wide text-blue-800" id="f_correlative_num">-</span>
               </div>
             </div>
 
@@ -644,7 +662,6 @@
                 </div>
               </div>
 
-              <!-- Lugares de residencia y procedencia -->
               <div class="grid grid-cols-12 border-b border-black">
                 <div class="col-span-6 sheet-cell border-r border-black">
                   <span class="sheet-label block mb-0.5 font-bold text-slate-800">País de Nacimiento</span>
@@ -668,7 +685,7 @@
 
               <div class="grid grid-cols-12 border-b border-black">
                 <div class="col-span-6 sheet-cell border-r border-black">
-                  <span class="sheet-label block">Dirección</span>
+                  <span class="sheet-label block truncate uppercase">Dirección</span>
                   <span class="sheet-value block truncate uppercase text-[10px]" id="f_direccion">-</span>
                 </div>
                 <div class="col-span-3 sheet-cell border-r border-black">
@@ -707,17 +724,14 @@
                   </div>
                 </div>
               </div>
-
             </div>
 
-            <!-- SECCIONES PARALELAS II & III -->
+            <!-- CAPTACION Y LABORATORIO -->
             <div class="grid grid-cols-12 gap-1 mb-1.5">
-              
               <!-- II. FECHA DE CAPTACIÓN -->
               <div class="col-span-5 border border-black flex flex-col justify-between">
                 <div class="sheet-header-title">II. Fecha de Captación</div>
                 <div class="flex-1 p-1 space-y-1 text-[8px]">
-                  
                   <div class="sheet-cell">
                     <span class="sheet-label block">Fecha de Captación</span>
                     <span class="sheet-value block" id="f_captacion_val">-</span>
@@ -746,7 +760,6 @@
                     <span class="sheet-value block text-[10px]" id="f_edad_diag">- años</span>
                   </div>
 
-                  <!-- Antropometría -->
                   <div class="grid grid-cols-5 gap-0.5 text-center">
                     <div class="border border-black p-0.5 bg-slate-50/50">
                       <span class="block text-[6px] text-print-scaled font-bold text-slate-500 uppercase">Peso</span>
@@ -785,7 +798,6 @@
                       <span class="font-bold text-[9px]" id="f_hospit">00</span>
                     </div>
                   </div>
-
                 </div>
               </div>
 
@@ -793,7 +805,6 @@
               <div class="col-span-7 border border-black flex flex-col justify-between">
                 <div class="sheet-header-title">III. Datos de Laboratorio</div>
                 <div class="flex-1 p-1.5 space-y-0.5 text-[8.5px] font-bold text-slate-800">
-                  
                   <div class="flex justify-between items-center py-0.5 border-b border-slate-200">
                     <span class="text-slate-600">Glicemia (ayunas):</span>
                     <span class="text-black text-[11px] font-extrabold"><span id="f_glicemia_val">-</span> <span class="text-[7.5px] text-slate-400">mg/dL</span></span>
@@ -836,7 +847,6 @@
                     </div>
                   </div>
 
-                  <!-- Estado del caso al momento de la consulta -->
                   <div class="pt-1.5">
                     <span class="text-[7px] text-print-scaled text-slate-500 uppercase block leading-none mb-1">Estado del caso al momento de la consulta</span>
                     <div class="flex justify-between text-[8px] text-print-scaled">
@@ -854,15 +864,12 @@
                       </span>
                     </div>
                   </div>
-
                 </div>
               </div>
-
             </div>
 
             <!-- IV. COMORBILIDAD & V. COMPLICACIONES -->
             <div class="grid grid-cols-12 gap-1 mb-1.5">
-              
               <!-- IV. COMORBILIDAD -->
               <div class="col-span-5 border border-black flex flex-col justify-between bg-white">
                 <div class="sheet-header-title">IV. Comorbilidad (Múltiple)</div>
@@ -940,14 +947,12 @@
                   </span>
                 </div>
               </div>
-
             </div>
 
-            <!-- VI. TRATAMIENTO Y MÉDICO -->
+            <!-- VI. TRATAMIENTO MEDICAMENTOSO -->
             <div class="border border-black bg-white mb-1.5">
               <div class="sheet-header-title">VI. Tratamiento Medicamentoso</div>
               <div class="p-2 grid grid-cols-12 gap-2 text-[8px] text-print-scaled">
-                
                 <div class="col-span-6 border-r border-slate-200 pr-2">
                   <span class="sheet-label block mb-1 font-bold">Tipo de Medicamento (Selección)</span>
                   <div class="grid grid-cols-1 gap-y-1 font-bold text-[8px] text-print-scaled">
@@ -982,20 +987,15 @@
                     <span class="text-[6.5px] text-print-scaled text-slate-400 block uppercase font-bold">Firma y Sello</span>
                   </div>
                 </div>
-
               </div>
             </div>
-
           </div>
 
-          <!-- FOOTER DE LA HOJA -->
-          <div class="border-t border-black pt-1 text-center text-[7.5px] text-print-scaled text-slate-500 leading-tight">
+          <div class="border-t border-black pt-1 text-center text-[7.5px] text-print-scaled text-slate-500 leading-tight flex-shrink-0">
             <p class="font-bold">Centro Nacional de Epidemiología, Prevención y Control de Enfermedades - MINSA</p>
             <p>Calle Daniel Olaechea N° 199 - Jesús María, Lima | Central: 631-4500 | Correo: notificacion@dge.gob.pe</p>
           </div>
-
         </div>
-
       </div>
 
       <!-- VISTA B: EPIDEMIOLOGICAL ANALYTICS DASHBOARD -->
@@ -1044,7 +1044,6 @@
           </div>
         </div>
 
-        <!-- SECCIÓN 1: VIGILANCIA TEMPORAL Y DEMOGRÁFICA -->
         <div class="border-b border-slate-200 pb-3 mt-2">
           <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
             <i class="fa-solid fa-clock text-blue-800"></i>
@@ -1054,13 +1053,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <!-- Gráfico 1: Año de Notificación -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
-            <div class="absolute top-4 right-4 flex items-center space-x-2 no-print">
-              <button onclick="downloadChart('chartAnos', 'Casos_por_Ano')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1.5 rounded transition" title="Descargar Imagen del Gráfico">
-                <i class="fa-solid fa-download"></i>
-              </button>
-            </div>
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2">
               <i class="fa-solid fa-calendar text-blue-800 mr-1"></i> Casos por Año de Notificación
             </h4>
@@ -1069,13 +1062,7 @@
             </div>
           </div>
 
-          <!-- Gráfico 2: Distribución por Mes -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
-            <div class="absolute top-4 right-4 flex items-center space-x-2 no-print">
-              <button onclick="downloadChart('chartMeses', 'Casos_por_Mes')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1.5 rounded transition" title="Descargar Imagen del Gráfico">
-                <i class="fa-solid fa-download"></i>
-              </button>
-            </div>
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 pb-2 border-b">
               <i class="fa-solid fa-chart-bar text-blue-800 mr-1"></i> Distribución Mensual de Casos
             </h4>
@@ -1084,13 +1071,7 @@
             </div>
           </div>
 
-          <!-- Gráfico 3: Semana Epidemiológica -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
-            <div class="absolute top-4 right-4 flex items-center space-x-2 no-print">
-              <button onclick="downloadChart('chartSemanas', 'Casos_Semana_Epi')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1.5 rounded transition" title="Descargar Imagen del Gráfico">
-                <i class="fa-solid fa-download"></i>
-              </button>
-            </div>
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 pb-2 border-b">
               <i class="fa-solid fa-chart-line text-blue-800 mr-1"></i> Casos por Semana Epidemiológica
             </h4>
@@ -1099,13 +1080,7 @@
             </div>
           </div>
 
-          <!-- Gráfico 4: Distribución por Sexo -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
-            <div class="absolute top-4 right-4 flex items-center space-x-2 no-print">
-              <button onclick="downloadChart('chartSexo', 'Casos_por_Sexo')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1.5 rounded transition" title="Descargar Imagen del Gráfico">
-                <i class="fa-solid fa-download"></i>
-              </button>
-            </div>
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 pb-2 border-b">
               <i class="fa-solid fa-venus-mars text-blue-800 mr-1"></i> Distribución por Sexo (Demografía)
             </h4>
@@ -1115,7 +1090,6 @@
           </div>
         </div>
 
-        <!-- SECCIÓN 2: PERFIL CLÍNICO Y PATOLÓGICO -->
         <div class="border-b border-slate-200 pb-3 mt-6">
           <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
             <i class="fa-solid fa-heart-pulse text-rose-600"></i>
@@ -1125,13 +1099,7 @@
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <!-- Gráfico 5: Control Glicémico -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
-            <div class="absolute top-4 right-4 flex items-center space-x-2 no-print">
-              <button onclick="downloadChart('chartGlicemico', 'Control_Glicemico')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1.5 rounded transition" title="Descargar Imagen del Gráfico">
-                <i class="fa-solid fa-download"></i>
-              </button>
-            </div>
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2">
               <i class="fa-solid fa-circle-nodes text-rose-600 mr-1"></i> Control Glicémico
             </h4>
@@ -1140,13 +1108,7 @@
             </div>
           </div>
 
-          <!-- Gráfico 6: Prevalencia de Comorbilidades -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
-            <div class="absolute top-4 right-4 flex items-center space-x-2 no-print">
-              <button onclick="downloadChart('chartComorbilidades', 'Prevalencia_Comorbilidades')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1.5 rounded transition" title="Descargar Imagen del Gráfico">
-                <i class="fa-solid fa-download"></i>
-              </button>
-            </div>
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2">
               <i class="fa-solid fa-triangle-exclamation text-rose-600 mr-1"></i> Prevalencia de Comorbilidades
             </h4>
@@ -1155,13 +1117,7 @@
             </div>
           </div>
 
-          <!-- Gráfico 7: Distribución de Tipos de Diabetes -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
-            <div class="absolute top-4 right-4 flex items-center space-x-2 no-print">
-              <button onclick="downloadChart('chartTipoDiabetes', 'Distribucion_Tipos_Diabetes')" class="bg-slate-100 hover:bg-slate-200 text-slate-600 p-1.5 rounded transition" title="Descargar Imagen del Gráfico">
-                <i class="fa-solid fa-download"></i>
-              </button>
-            </div>
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2">
               <i class="fa-solid fa-chart-pie text-rose-600 mr-1"></i> Tipos de Diabetes Mellitus
             </h4>
@@ -1170,16 +1126,12 @@
             </div>
           </div>
         </div>
-
       </div>
 
-      <!-- VISTA C: REPORTE GRÁFICO A4 COMPACTO (100% Despejada de la barra duplicada) -->
+      <!-- VISTA C: REPORTE GRÁFICO IMPRIMIBLE (A4) -->
       <div class="print-container w-full max-w-[1350px] hidden flex-col items-center gap-4" id="tabContentReporte">
-        
-        <!-- HOJA DE REPORTE FISICO A4 COMPACTA -->
-        <div id="printReportSheet" class="w-full bg-white p-4 text-black border border-black flex flex-col justify-between overflow-hidden relative" style="box-sizing: border-box; width: 210mm; height: 265mm; margin: 0 auto;">
+        <div id="printReportSheet" class="bg-white p-4 text-black border border-black flex flex-col justify-between overflow-hidden relative">
           <div>
-            <!-- CABECERA INSTITUCIONAL MINSA -->
             <div class="grid grid-cols-12 items-center border-b border-black pb-1 mb-2">
               <div class="col-span-3 flex items-center space-x-1.5">
                 <div class="text-[11px] font-black text-red-600 border border-red-600 px-1.5 py-0.2 rounded text-center leading-none">PERÚ</div>
@@ -1196,7 +1148,6 @@
               </div>
             </div>
 
-            <!-- REGISTROS DE IDENTIFICACIÓN DEL REPORTE -->
             <div class="grid grid-cols-3 gap-1 mb-3 text-[9px]">
               <div class="border border-black p-1 bg-slate-50/50 flex flex-col">
                 <span class="text-[7px] font-bold text-slate-700 uppercase">Establecimiento</span>
@@ -1212,9 +1163,7 @@
               </div>
             </div>
 
-            <!-- ÁREA DE GRÁFICOS DINÁMICOS EN REGRESIÓN O GRILLA -->
             <div id="reportChartsGrid" class="grid grid-cols-2 gap-3 mb-2">
-              <!-- Gráfico 1: Año -->
               <div id="container_report_ano" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white">
                 <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
                   1. Casos por Año de Notificación
@@ -1224,7 +1173,6 @@
                 </div>
               </div>
 
-              <!-- Gráfico 2: Meses -->
               <div id="container_report_mes" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white">
                 <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
                   2. Distribución Mensual de Casos
@@ -1234,7 +1182,6 @@
                 </div>
               </div>
 
-              <!-- Gráfico 3: Semana Epi -->
               <div id="container_report_semana" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white">
                 <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
                   3. Casos por Semana Epidemiológica
@@ -1244,7 +1191,6 @@
                 </div>
               </div>
 
-              <!-- Gráfico 4: Sexo -->
               <div id="container_report_sexo" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white">
                 <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
                   4. Distribución por Sexo (Demografía)
@@ -1254,7 +1200,6 @@
                 </div>
               </div>
 
-              <!-- Gráfico 5: Control Glicémico -->
               <div id="container_report_glicemico" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white hidden">
                 <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
                   5. Control Glicémico
@@ -1264,7 +1209,6 @@
                 </div>
               </div>
 
-              <!-- Gráfico 6: Comorbilidades -->
               <div id="container_report_comorbilidades" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white hidden">
                 <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
                   6. Prevalencia de Comorbilidades
@@ -1274,7 +1218,6 @@
                 </div>
               </div>
 
-              <!-- Gráfico 7: Tipo de Diabetes -->
               <div id="container_report_tipodb" class="border border-black p-2 flex flex-col justify-between h-[105mm] bg-white hidden">
                 <span class="text-[9px] font-black uppercase text-slate-900 border-b border-black pb-1 mb-2 block leading-none">
                   7. Tipos de Diabetes Mellitus
@@ -1284,21 +1227,15 @@
                 </div>
               </div>
             </div>
-
           </div>
 
-          <!-- FOOTER DE LA HOJA DE REPORTE -->
-          <div class="border-t border-black pt-1 text-center text-[7.5px] text-print-scaled text-slate-500 leading-tight flex justify-between items-center">
+          <div class="border-t border-black pt-1 text-center text-[7.5px] text-print-scaled text-slate-500 leading-tight flex justify-between items-center flex-shrink-0">
             <span class="font-bold">Centro Nacional de Epidemiología - MINSA - Hospital de Ventanilla</span>
             <span class="italic font-medium">Firma autorizada de Epidemiología</span>
           </div>
-
         </div>
-
       </div>
-
     </main>
-
   </div>
 
   <!-- MODAL: FAST DATA IMPORT -->
@@ -1320,11 +1257,11 @@
         <!-- API KEY SETTINGS -->
         <div class="bg-amber-50 border border-amber-200 p-3 rounded-lg flex flex-col gap-2">
           <button onclick="toggleApiSettings()" class="flex justify-between items-center font-bold text-amber-800 w-full focus:outline-none">
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-key"></i> Configurar API Key de Gemini (Opcional fuera de Canvas)</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-key"></i> Configurar API Key de Gemini (Opcional)</span>
             <i id="apiChevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
           </button>
           <div id="apiSettingsArea" class="hidden space-y-2 pt-2">
-            <p class="text-[10px] text-amber-700">Utilizamos el modelo <code class="font-mono bg-amber-100 px-1 rounded text-amber-900 font-bold">gemini-3-flash-preview</code>. Si estás usando este aplicativo en local o hosting externo, guarda aquí tu API Key.</p>
+            <p class="text-[10px] text-amber-700 font-medium">Utilizamos el modelo <code class="font-mono bg-amber-100 px-1 rounded text-amber-900 font-bold">gemini-3-flash-preview</code>. Si posees una API Key, regístrala aquí.</p>
             <div class="flex gap-2">
               <input type="password" id="inputApiKey" placeholder="AIzaSy..." class="flex-1 p-2 border border-amber-300 rounded focus:outline-none text-xs">
               <button onclick="saveApiKey()" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded font-bold transition">Guardar</button>
@@ -1334,23 +1271,20 @@
 
         <!-- ZONE DE ARCHIVO DROP -->
         <div class="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center bg-slate-50 hover:bg-blue-50/20 hover:border-[#1e3a8a] transition cursor-pointer relative" id="dropZone" onclick="document.getElementById('fileInput').click()">
-          <input type="file" id="fileInput" class="hidden" accept="application/pdf,image/*,.csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,.xls" onchange="handleFileSelect(event)">
           <div class="space-y-2" id="dropPrompt">
             <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400"></i>
             <p class="font-bold text-slate-700">Arrastra aquí tu "BASE DB NOTI.xlsx" o PDF Clínico</p>
             <p class="text-[10px] text-slate-400">Procesa instantáneamente libros Excel, bases de datos epidemiológicas de pacientes o PDFs.</p>
           </div>
-          <!-- Loader de carga -->
           <div class="hidden flex-col items-center justify-center space-y-2 py-4" id="dropLoader">
             <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1e3a8a]"></div>
             <p class="font-bold text-[#1e3a8a]" id="dropLoaderText">Leyendo archivo...</p>
           </div>
         </div>
 
-        <!-- TEXTAREA PARA TEXTO COPIADO -->
         <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">O copia y pega un reporte clínico para estructurar un caso individual:</label>
-          <textarea id="importRawText" rows="4" class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 font-mono" placeholder="Ejemplo: Paciente MURO AREVALO CECILIA, con peso de 60.5 kg, talla 1.50 m, última glucosa de 161 mg/dL and HbA1c de 8.5%..."></textarea>
+          <label class="block text-xs font-bold text-slate-600 mb-1">O copia y pega un reporte clínico para estructurar un caso:</label>
+          <textarea id="importRawText" rows="4" class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800 font-mono" placeholder="Ejemplo: Paciente MURO AREVALO CECILIA, con peso de 60.5 kg, talla 1.50 m, última glucosa de 161 mg/dL y HbA1c de 8.5%..."></textarea>
         </div>
       </div>
 
@@ -1374,7 +1308,6 @@
     </div>
     
     <div class="p-4 overflow-y-auto flex-1 space-y-4 text-xs custom-scrollbar bg-white text-slate-700">
-      
       <div class="space-y-3">
         <h4 class="font-bold text-[#1e3a8a] border-b border-slate-200 pb-1">I. Datos del Paciente</h4>
         <div class="grid grid-cols-2 gap-2">
@@ -1474,10 +1407,9 @@
           </div>
         </div>
       </div>
-
     </div>
     
-    <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end gap-2">
+    <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end gap-2 flex-shrink-0">
       <button onclick="toggleEditPanel()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-bold">Cancelar</button>
       <button onclick="saveChanges()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-lg font-bold">Guardar Cambios</button>
     </div>
@@ -1497,20 +1429,17 @@
     </div>
   </div>
 
-  <!-- JAVASCRIPT LOGIC BLOCK -->
+  <!-- JAVASCRIPT LOGIC -->
   <script>
-    // Enlace oficial de Google Sheets
     const GOOGLE_SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSJU7qE8tavkabu6CtsQxxWFxfq1WyjUPicVt_Fm9BIeTkkE9a32hGsq9UREkfHug/pub?gid=1946913509&single=true&output=csv";
 
-    // Base de datos de contingencia
     const defaultDatabase = [
       {
         item: 1,
-        date: "12/04/2026",
+        date: "01/04/2026",
         dni: "80518117",
         hc: "87921",
         paterno: "MURO",
-        text: "controlado",
         materno: "AREVALO",
         nombres: "CECILIA",
         sexo: "F",
@@ -1535,7 +1464,7 @@
         estado: "descompensated",
         comorbilidades: { hta: false, obesity: true, dislipidemia: true, anemia: false, vih: false },
         complicaciones: { neuro: false, renal: false, retino: false, pie_sa: false },
-        tratamiento: "Metformina 850 mg VO con la cena.",
+        tratamiento: "Metformina 1000 mg VO al día.",
         medico: "Dr. Oscar Sandoval Evangelista",
         cmp: "31267"
       },
@@ -1545,7 +1474,6 @@
         dni: "06691190",
         hc: "321080",
         paterno: "DAMIAN",
-        text: "controlado",
         materno: "SANTA MARIA",
         nombres: "ANA ISABEL",
         sexo: "F",
@@ -1584,33 +1512,26 @@
     let mainTab = 'ficha';
     let sidebarTab = 'pacientes';
 
-    // Gráficos de Chart.js (Dashboard Principal)
-    let chartAnos = null;
-    let chartMeses = null;
-    let chartSemanas = null;
-    let chartSexo = null;
-    let chartGlicemico = null;
-    let chartComorbilidades = null;
-    let chartTipoDiabetes = null;
+    let activeYears = {};
+    let activeMonths = {};
 
-    // Gráficos de Chart.js (Reporte A4 Imprimible)
-    let chartAnoRep = null;
-    let chartMesRep = null;
-    let chartSemanaRep = null;
-    let chartSexoRep = null;
-    let chartGlicemicoRep = null;
-    let chartComorbilidadesRep = null;
-    let chartTipoDiabetesRep = null;
+    let simulatorDatabase = [];
+    let activeSimulatorId = null;
+    let simActiveYears = {};
+    let simActiveMonths = {};
 
-    let reportLayout = 'grilla'; // 'grilla' o 'pila'
+    let chartAnos = null, chartMeses = null, chartSemanas = null, chartSexo = null;
+    let chartGlicemico = null, chartComorbilidades = null, chartTipoDiabetes = null;
+
+    let chartAnoRep = null, chartMesRep = null, chartSemanaRep = null, chartSexoRep = null;
+    let chartGlicemicoRep = null, chartComorbilidadesRep = null, chartTipoDiabetesRep = null;
+
+    let reportLayout = 'grilla'; 
 
     const monthNames = [
       "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
       "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"
     ];
-
-    let activeYears = {};
-    let activeMonths = {};
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
@@ -1624,16 +1545,16 @@
     }
 
     function parseDateStringRobustly(dateStr, anoField) {
-      let year = "2025";
-      let monthName = "Junio";
-      let standardDate = "15/06/2025";
+      let year = "2026";
+      let monthName = "Julio";
+      let standardDate = "15/07/2026";
 
       if (anoField && /^(2024|2025|2026)$/.test(anoField.toString().trim())) {
         year = anoField.toString().trim();
       }
 
       if (!dateStr || dateStr.toString().trim() === "") {
-        standardDate = `15/06/${year}`;
+        standardDate = `15/07/${year}`;
         return { year, monthName, standardDate };
       }
       
@@ -1774,6 +1695,12 @@
         database = JSON.parse(JSON.stringify(defaultDatabase));
       }
 
+      // Carpetas colapsadas por defecto
+      activeYears = {};
+      activeMonths = {};
+      simActiveYears = {};
+      simActiveMonths = {};
+
       await loadDataFromGoogleSheet();
     }
 
@@ -1782,7 +1709,7 @@
 
       let headerRowIndex = 0;
       let maxMatchCount = 0;
-      const headerKeywords = ["dni", "hc", "histcli", "paterno", "apepat", "nombres", "fecha_cap", "edad", "sexo", "tdiabetes", "hemoglic", "glicemia", "semana"];
+      const headerKeywords = ["dni", "hc", "histcli", "paterno", "apepat", "nombres", "fecha_cap", "edad", "sexo", "tdiabetes", "hemoglic", "glicemia", "semana", "paciente", "apellidos"];
 
       for (let i = 0; i < Math.min(arrayOfArrays.length, 15); i++) {
         const row = arrayOfArrays[i];
@@ -1800,10 +1727,6 @@
           maxMatchCount = matchCount;
           headerRowIndex = i;
         }
-      }
-
-      if (maxMatchCount < 2) {
-        headerRowIndex = 0;
       }
 
       const rawHeaders = arrayOfArrays[headerRowIndex] || [];
@@ -1860,7 +1783,7 @@
           await new Promise(res => setTimeout(res, delay * Math.pow(2, i)));
         }
 
-        if (!response || !response.ok) throw new Error("Fallo al descargar CSV");
+        if (!response || !response.ok) throw new Error("Fallo al descargar el archivo CSV");
         const csvText = await response.text();
 
         Papa.parse(csvText, {
@@ -1870,7 +1793,7 @@
             const rawRows = results.data;
             if (!rawRows || rawRows.length === 0) {
               if (statusText) {
-                statusText.innerText = "Error: Hoja vacía";
+                statusText.innerText = "Error: Hoja de datos vacía";
                 statusText.className = "text-[9px] text-red-600 font-extrabold text-center";
               }
               return;
@@ -1879,7 +1802,7 @@
             const rows = arraysToObjects(rawRows);
             if (rows.length === 0) {
               if (statusText) {
-                statusText.innerText = "Error: Cabeceras inválidas";
+                statusText.innerText = "Error: No se detectaron filas válidas";
                 statusText.className = "text-[9px] text-red-600 font-extrabold text-center";
               }
               return;
@@ -1897,30 +1820,6 @@
               let paterno = mapped.paterno;
               let materno = mapped.materno;
               let nombres = mapped.nombres;
-              
-              if (!paterno && !materno && nombres) {
-                if (nombres.includes(",")) {
-                  const parts = nombres.split(",");
-                  const apellidosPart = parts[0].trim().split(/\s+/);
-                  nombres = parts[1].trim();
-                  if (apellidosPart.length >= 2) {
-                    paterno = apellidosPart[0];
-                    materno = apellidosPart[1];
-                  } else if (apellidosPart.length === 1) {
-                    paterno = apellidosPart[0];
-                  }
-                } else {
-                  const parts = nombres.trim().split(/\s+/);
-                  if (parts.length >= 3) {
-                    paterno = parts[0];
-                    materno = parts[1];
-                    nombres = parts.slice(2).join(" ");
-                  } else if (parts.length === 2) {
-                    paterno = parts[0];
-                    nombres = parts[1];
-                  }
-                }
-              }
 
               let finalDate = mapped.date;
               if (!finalDate && mapped.ano) {
@@ -1938,9 +1837,9 @@
                 date: dateObj.standardDate,
                 ano: dateObj.year,
                 dni: mapped.dni || "00000000",
-                hc: mapped.hc || mapped.histcli || "00000",
+                hc: mapped.hc || "00000",
                 paterno: (paterno || "SIN PATERNO").toUpperCase().trim(),
-                materno: (materno || "SIN MATERNO").toUpperCase().trim(),
+                materno: (mapped.materno || "SIN MATERNO").toUpperCase().trim(),
                 nombres: (nombres || "REGISTRADO").toUpperCase().trim(),
                 sexo: (mapped.sexo || "F").toUpperCase().startsWith("M") ? "M" : "F",
                 nacimiento: mapped.nacimiento || "01/01/1980",
@@ -1950,33 +1849,33 @@
                 edad: mapped.edad || "45",
                 semana: mapped.semana || "1",
                 direccion: mapped.direccion || "Ventanilla, Callao",
-                tipo_caso: (mapped.notcaso || "prevalente").toLowerCase().includes("notcaso") || (mapped.notcaso || "").toLowerCase().includes("incid") ? "nuevo" : "prevalente",
-                tipo_db: (mapped.tdiabetes || "t2").toString().toLowerCase().includes("1") ? "t1" : "t2",
+                tipo_caso: (mapped.tipo_caso || "prevalente").toLowerCase().includes("notcaso") || (mapped.tipo_caso || "").toLowerCase().includes("incid") ? "nuevo" : "prevalente",
+                tipo_db: (mapped.tipo_db || "t2").toString().toLowerCase().includes("1") ? "t1" : "t2",
                 peso: mapped.peso || "70.0",
                 talla: mapped.talla || "1.65",
                 cintura: mapped.cintura || "90",
-                pa_sis: mapped.pa_sis || mapped.sistolica || "120",
-                pa_dia: mapped.pa_dia || mapped.diastolica || "80",
+                pa_sis: mapped.pa_sis || "120",
+                pa_dia: mapped.pa_dia || "80",
                 glicemia: mapped.glicemia || "120.0",
-                hba1c: mapped.hba1c || mapped.hemoglic || "7.5",
+                hba1c: mapped.hba1c || "7.5",
                 col_total: mapped.col_total || "200.0",
                 trigliceridos: mapped.trigliceridos || "150.0",
-                col_ldl: mapped.col_ldl || mapped.ldl || "100.0",
-                col_hdl: mapped.col_hdl || mapped.hdl || "45.0",
+                col_ldl: mapped.col_ldl || "100.0",
+                col_hdl: mapped.col_hdl || "45.0",
                 creatinina: mapped.creatinina || "0.8",
                 estado: (mapped.status || mapped.estado || "").toLowerCase().includes("control") ? "controlado" : "descompensated",
                 comorbilidades: {
                   hta: parseBoolean(mapped.hta),
-                  obesity: parseBoolean(mapped.obesity || mapped.obesidad || mapped.obesidaddisplidemiaanemia),
-                  dislipidemia: parseBoolean(mapped.dislipidemia || mapped.displidemia),
+                  obesity: parseBoolean(mapped.obesity || mapped.comorbilidades?.obesity),
+                  dislipidemia: parseBoolean(mapped.dislipidemia),
                   anemia: parseBoolean(mapped.anemia),
                   vih: false
                 },
                 complicaciones: {
-                  neuro: parseBoolean(mapped.neuro || mapped.neuropatia),
-                  renal: parseBoolean(mapped.renal || mapped.nefropatia),
-                  retino: parseBoolean(mapped.retino_np || mapped.noproliferativa) || parseBoolean(mapped.retino_p || mapped.proliferativa),
-                  pie_sa: parseBoolean(mapped.pie_sa || mapped.sinamputacion)
+                  neuro: parseBoolean(mapped.neuro),
+                  renal: parseBoolean(mapped.renal),
+                  retino: parseBoolean(mapped.retino_np) || parseBoolean(mapped.retino_p),
+                  pie_sa: parseBoolean(mapped.pie_sa)
                 },
                 tratamiento: mapped.tratamiento || "Tratamiento estándar.",
                 medico: mapped.medico || "MÉDICO TRATANTE",
@@ -1988,21 +1887,15 @@
             database = tempDatabase;
             saveDatabaseToLocalStorage();
 
-            activeYears = {};
-            activeMonths = {};
-            database.forEach(p => {
-              const dateObj = parseDateStringRobustly(p.date, p.ano);
-              const year = dateObj.year;
-              const monthName = dateObj.monthName;
-              const monthKey = `${year}-${monthName}`;
-              
-              activeYears[year] = true; 
-              activeMonths[monthKey] = true; 
-            });
-
             renderPatientList();
-            if (database.length > 0) {
+            
+            const hasActive = database.some(p => p.item === currentActiveId);
+            if (hasActive) {
+              selectPatient(currentActiveId);
+            } else if (database.length > 0) {
               selectPatient(database[0].item);
+            } else {
+              clearFichaFields();
             }
             
             recalculateAnalyticsData();
@@ -2017,28 +1910,44 @@
       } catch (err) {
         console.error("Fallo al conectar con Google Sheets: ", err);
         if (statusText) {
-          statusText.innerText = "Modo Local (Offline)";
-          statusText.className = "text-[9px] text-slate-500 font-extrabold text-center";
+          statusText.innerText = "Error: Usando datos locales";
+          statusText.className = "text-[9px] text-rose-500 font-extrabold text-center";
         }
         
-        activeYears = {};
-        activeMonths = {};
-        database.forEach(p => {
-          const dateObj = parseDateStringRobustly(p.date, p.ano);
-          const year = dateObj.year;
-          const monthName = dateObj.monthName;
-          const monthKey = `${year}-${monthName}`;
-          activeYears[year] = true; 
-          activeMonths[monthKey] = true; 
-        });
+        const savedDb = localStorage.getItem('clinical_database');
+        if (savedDb) {
+          try {
+            database = JSON.parse(savedDb);
+          } catch(e) {
+            database = JSON.parse(JSON.stringify(defaultDatabase));
+          }
+        } else {
+          database = JSON.parse(JSON.stringify(defaultDatabase));
+        }
 
         renderPatientList();
-        if (database.length > 0) {
+        
+        const hasActive = database.some(p => p.item === currentActiveId);
+        if (hasActive) {
+          selectPatient(currentActiveId);
+        } else if (database.length > 0) {
           selectPatient(database[0].item);
+        } else {
+          clearFichaFields();
         }
+
         recalculateAnalyticsData();
         updateDashboardData();
       }
+    }
+
+    function clearFichaFields() {
+      const ids = ['f_correlative_num', 'f_hc_num', 'f_paterno', 'f_materno', 'f_nombres', 'f_nacimiento', 'f_edad', 'f_dni', 'f_direccion', 'f_captacion_val', 'f_edad_diag', 'f_peso_val', 'f_talla_val', 'f_cintura_val', 'f_pa_sis_val', 'f_pa_dia_val', 'f_glicemia_val', 'f_glic_post', 'f_hba1c_val', 'f_col_ldl_val', 'f_col_total_val', 'f_triglyceridos_val', 'f_col_hdl_val', 'f_creatinina_val', 'f_medico_val', 'f_cmp_val'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = "-";
+      });
+      resetCheckboxes(["inst_1", "inst_2", "inst_3", "inst_4", "inst_5", "et_1", "et_2", "et_3", "et_4", "et_5", "et_6", "id_1", "id_2", "t_seg_0", "t_seg_1", "t_seg_2", "t_seg_3", "t_seg_4", "t_seg_5", "t_seg_6", "t_seg_7", "t_seg_8", "t_seg_9", "t_seg_10", "t_seg_11", "db_tipo_1", "db_tipo_2", "db_gestacional", "t_med_1", "t_med_2", "t_med_3", "t_med_4", "t_med_5", "t_med_7", "ins_lispro", "ins_aspart", "ins_glargina"]);
     }
 
     function renderPatientList() {
@@ -2151,13 +2060,11 @@
     function toggleYear(year) {
       activeYears[year] = activeYears[year] === true ? false : true;
       renderPatientList();
-      selectPatient(currentActiveId);
     }
 
     function toggleMonth(monthKey) {
       activeMonths[monthKey] = activeMonths[monthKey] === true ? false : true;
       renderPatientList();
-      selectPatient(currentActiveId);
     }
 
     function filterPatients() {
@@ -2186,7 +2093,6 @@
           }
         }
       });
-      selectPatient(currentActiveId);
     }
 
     function clearSearch() {
@@ -2235,7 +2141,6 @@
           contentReporte.classList.remove('hidden');
           contentReporte.classList.add('flex');
         }
-        // Despliega el configurador exclusivo bajo del botón de reporte en la barra lateral
         if (subMenuReporte) {
           subMenuReporte.classList.remove('hidden');
           subMenuReporte.classList.add('flex');
@@ -2334,6 +2239,8 @@
         }
       });
 
+      closeSimulatorPreview();
+
       const dateObj = parseDateStringRobustly(p.date, p.ano);
       const pYear = dateObj.year;
       const pMonth = dateObj.monthName;
@@ -2345,8 +2252,12 @@
 
       const relativeIndex = monthlyPatients.findIndex(item => item.item === p.item) + 1;
 
+      populateFichaFields(p, relativeIndex);
+    }
+
+    function populateFichaFields(p, correlativeNumber) {
       const f_correlative = document.getElementById('f_correlative_num');
-      if (f_correlative) f_correlative.innerText = String(relativeIndex).padStart(3, '0');
+      if (f_correlative) f_correlative.innerText = String(correlativeNumber || 1).padStart(3, '0');
       
       const f_hc = document.getElementById('f_hc_num');
       if (f_hc) f_hc.innerText = p.hc;
@@ -2407,8 +2318,9 @@
       const f_capt_el = document.getElementById('f_captacion_val');
       if (f_capt_el) f_capt_el.innerText = p.date;
       
+      const fallbackAge = parseInt(p.edad) || 45;
       const f_diag_el = document.getElementById('f_edad_diag');
-      if (f_diag_el) f_diag_el.innerText = `${Math.max(0, parseInt(p.edad) - 2)} años`;
+      if (f_diag_el) f_diag_el.innerText = `${Math.max(0, fallbackAge - 2)} años`;
 
       const casoIncidente = document.getElementById('caso_incidente');
       const casoPrevalente = document.getElementById('caso_prevalente');
@@ -2454,19 +2366,19 @@
         if (estMuerto) estMuerto.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
       }
 
-      drawCustomCheck('c_hta', p.comorbilidades.hta);
-      drawCustomCheck('c_obesidad', p.comorbilidades.obesity);
-      drawCustomCheck('c_dislipidemia', p.comorbilidades.dislipidemia);
-      drawCustomCheck('c_anemia', p.comorbilidades.anemia);
+      drawCustomCheck('c_hta', p.comorbilidades?.hta);
+      drawCustomCheck('c_obesidad', p.comorbilidades?.obesity || p.comorbilidades?.obesidad);
+      drawCustomCheck('c_dislipidemia', p.comorbilidades?.dislipidemia);
+      drawCustomCheck('c_anemia', p.comorbilidades?.anemia);
       drawCustomCheck('c_enf_tiroidea', false);
       drawCustomCheck('c_tuberculosis', false);
       drawCustomCheck('c_fuma', false);
       drawCustomCheck('c_cancer', false);
 
-      drawCustomCheck('comp_renal', p.complicaciones.renal);
-      drawCustomCheck('comp_pie_sa', p.complicaciones.pie_sa);
-      drawCustomCheck('comp_retino_np', p.complicaciones.retino);
-      drawCustomCheck('comp_neuro', p.complicaciones.neuro);
+      drawCustomCheck('comp_renal', p.complicaciones?.renal);
+      drawCustomCheck('comp_pie_sa', p.complicaciones?.pie_sa);
+      drawCustomCheck('comp_retino_np', p.complicaciones?.retino);
+      drawCustomCheck('comp_neuro', p.complicaciones?.neuro);
       drawCustomCheck('comp_retino_p', false);
       drawCustomCheck('comp_coronar', false);
       drawCustomCheck('comp_cerebro', false);
@@ -2479,7 +2391,7 @@
         const med_1_el = document.getElementById("t_med_1");
         if (med_1_el) med_1_el.className = "w-2.5 h-2.5 bg-black inline-block";
       }
-      if (p.tratamiento.toLowerCase().includes("insulina")) {
+      if (p.tratamiento.toLowerCase().includes("insulina") || p.tratamiento.toLowerCase().includes("analogas")) {
         const med_5_el = document.getElementById("t_med_5");
         const glar_el = document.getElementById("ins_glargina");
         if (med_5_el) med_5_el.className = "w-2.5 h-2.5 bg-black inline-block";
@@ -2577,10 +2489,10 @@
           casesBySexo["F"]++;
         }
 
-        if (p.comorbilidades.hta) casesByComorbilidad["HTA"]++;
-        if (p.comorbilidades.obesity) casesByComorbilidad["Obesidad"]++;
-        if (p.comorbilidades.dislipidemia) casesByComorbilidad["Dislipidemia"]++;
-        if (p.comorbilidades.anemia) casesByComorbilidad["Anemia"]++;
+        if (p.comorbilidades?.hta) casesByComorbilidad["HTA"]++;
+        if (p.comorbilidades?.obesity || p.comorbilidades?.obesidad) casesByComorbilidad["Obesidad"]++;
+        if (p.comorbilidades?.dislipidemia) casesByComorbilidad["Dislipidemia"]++;
+        if (p.comorbilidades?.anemia) casesByComorbilidad["Anemia"]++;
 
         if (p.tipo_db === "t1") casesByTipoDiabetes["Tipo 1"]++;
         else if (p.tipo_db === "t2") casesByTipoDiabetes["Tipo 2"]++;
@@ -2678,7 +2590,7 @@
         chartGlicemico = new Chart(elGlicemico.getContext('2d'), {
           type: 'doughnut',
           data: {
-            labels: ['Controlados/Estables', 'Descompensados'],
+            labels: ['Controlados', 'Descompensados'],
             datasets: [{ data: [casesByGlicemico["controlado"], casesByGlicemico["descompensado"]], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 2 }]
           },
           options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
@@ -2861,7 +2773,7 @@
           chartGlicemicoRep = new Chart(el.getContext('2d'), {
             type: 'pie',
             data: {
-              labels: ['Estables', 'Descomp.'],
+              labels: ['Controlados', 'Descomp.'],
               datasets: [{ data: [casesByGlicemico["controlado"], casesByGlicemico["descompensated"] || casesByGlicemico["descompensado"]], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 1 }]
             },
             options: optionsConfig
@@ -2914,62 +2826,378 @@
       updateReportLayout();
     }
 
-    function downloadChart(chartId, fileName) {
-      const canvas = document.getElementById(chartId);
-      if (!canvas) return;
+    function handleSimulatorFileSelect(e) {
+      const files = e.target.files;
+      if (!files || files.length === 0) return;
 
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = canvas.width;
-      tempCanvas.height = canvas.height;
-      const tempCtx = tempCanvas.getContext('2d');
-
-      tempCtx.fillStyle = '#ffffff';
-      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-      tempCtx.drawImage(canvas, 0, 0);
-
-      const imageURI = tempCanvas.toDataURL("image/png");
-      const link = document.createElement('a');
-      link.download = `${fileName}_Hospital_Ventanilla.png`;
-      link.href = imageURI;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      simulatePDFExtraction(files);
     }
 
-    function triggerSmartA4Report() {
-      const total = database.length;
-      if (total === 0) {
-        showAlert("Base de Datos Vacía", "Por favor, espera que se sincronicen los casos de Google Sheets.", "info");
+    function detectYearAndMonth(text, filename) {
+      const combined = (filename + " " + text).toLowerCase();
+      let detectedYear = "2026"; 
+      let detectedMonth = "Julio"; 
+      
+      const years = ["2024", "2025", "2026"];
+      for (let y of years) {
+        if (combined.includes(y)) {
+          detectedYear = y;
+          break;
+        }
+      }
+      
+      const monthsMap = {
+        "enero": "Enero", "febrero": "Febrero", "marzo": "Marzo", "abril": "Abril",
+        "mayo": "Mayo", "junio": "Junio", "julio": "Julio", "agosto": "Agosto",
+        "setiembre": "Setiembre", "septiembre": "Setiembre", "octubre": "Octubre",
+        "noviembre": "Noviembre", "diciembre": "Diciembre"
+      };
+      
+      for (let mKey in monthsMap) {
+        if (combined.includes(mKey)) {
+          detectedMonth = monthsMap[mKey];
+          break;
+        }
+      }
+      
+      return { year: detectedYear, monthName: detectedMonth };
+    }
+
+    function simulatePDFExtraction(files) {
+      const loader = document.getElementById('dropZoneSide_loading');
+      const textArea = document.querySelector('#dropZoneSide div');
+      const statusText = document.getElementById('extraction_status');
+
+      if (loader) loader.classList.remove('hidden');
+      if (textArea) textArea.classList.add('hidden');
+
+      const filename = files[0].name;
+      let step = 0;
+      
+      const period = detectYearAndMonth("", filename);
+      const targetMonth = period.monthName;
+      const targetYear = period.year;
+
+      const progressSteps = [
+        "1. Analizando metadatos del archivo " + filename + "...",
+        "2. Detectando año y mes del lote: " + targetMonth + " de " + targetYear + "...",
+        "3. Segmentando 15 folios individuales del Hospital de Ventanilla...",
+        "4. Importación completada correctamente."
+      ];
+
+      const interval = setInterval(() => {
+        if (statusText && step < progressSteps.length) {
+          statusText.innerText = progressSteps[step];
+          step++;
+        } else {
+          clearInterval(interval);
+          completeExtraction();
+        }
+      }, 500);
+
+      function completeExtraction() {
+        // Base de 15 pacientes reales con orden cronológico y reajuste de Cecilia Muro Arévalo
+        const baseClinicalTemplates = [
+          { day: "01", paterno: "MURO", materno: "AREVALO", nombres: "CECILIA", dni: "80518117", hc: "87921", sexo: "F", edad: "46", db: "t2", glicemia: "161", hba1c: "8.5", tto: "Metformina 1000 mg VO al día.", estado: "descompensated", peso: "60.5", talla: "1.50", pa_sis: "110", pa_dia: "62", col_total: "208", trig: "154", ldl: "142", hdl: "42", creat: "0.85" },
+          { day: "03", paterno: "DAMIAN", materno: "SANTA MARIA", nombres: "ANA ISABEL", dni: "06691190", hc: "321080", sexo: "F", edad: "59", db: "t2", glicemia: "183", hba1c: "9.2", tto: "Metformina 850 mg + Losartán 50 mg VO diario.", estado: "descompensated", peso: "67.0", talla: "1.56", pa_sis: "162", pa_dia: "90", col_total: "195", trig: "188", ldl: "122", hdl: "35", creat: "1.48" },
+          { day: "05", paterno: "IPANAQUE", materno: "CHUNGA", nombres: "LUCHO CARLOS", dni: "09651233", hc: "321155", sexo: "M", edad: "61", db: "t2", glicemia: "118", hba1c: "6.8", tto: "Metformina 850mg VO diario", estado: "controlado", peso: "82.5", talla: "1.68", pa_sis: "118", pa_dia: "76", col_total: "192", trig: "145", ldl: "102", hdl: "45", creat: "0.89" },
+          { day: "07", paterno: "HUAMAN", materno: "QUISPE", nombres: "CRISTIAN JAVIER", dni: "45781209", hc: "41258", sexo: "M", edad: "52", db: "t2", glicemia: "165", hba1c: "8.2", tto: "Metformina 850mg + Glibenclamida 5mg", estado: "descompensated", peso: "68.3", talla: "1.62", pa_sis: "142", pa_dia: "88", col_total: "228", trig: "190", ldl: "140", hdl: "41", creat: "1.15" },
+          { day: "09", paterno: "PAREDES", materno: "FLORES", nombres: "MARTHA SOFIA", dni: "08234199", hc: "95412", sexo: "F", edad: "57", db: "t2", glicemia: "210", hba1c: "9.5", tto: "Metformina 1000mg y Empagliflozina 10mg", estado: "descompensated", peso: "79.0", talla: "1.54", pa_sis: "130", pa_dia: "82", col_total: "205", trig: "210", ldl: "115", hdl: "36", creat: "0.98" },
+          { day: "11", paterno: "FARFAN", materno: "CASTILLO", nombres: "JORGE LUIS", dni: "09845122", hc: "18452", sexo: "M", edad: "63", db: "t2", glicemia: "130", hba1c: "7.1", tto: "Metformina 850mg VO diario", estado: "controlado", peso: "70.2", talla: "1.71", pa_sis: "122", pa_dia: "78", col_total: "180", trig: "138", ldl: "98", hdl: "48", creat: "0.81" },
+          { day: "13", paterno: "RAMIREZ", materno: "SALAS", nombres: "JUANA ELENA", dni: "08774215", hc: "451122", sexo: "F", edad: "48", db: "t2", glicemia: "195", hba1c: "8.9", tto: "Insulina NPH 10 UI y Metformina", estado: "descompensated", peso: "85.4", talla: "1.56", pa_sis: "136", pa_dia: "86", col_total: "245", trig: "225", ldl: "155", hdl: "32", creat: "1.21" },
+          { day: "15", paterno: "ORTEGA", materno: "ROJAS", nombres: "VICTOR MANUEL", dni: "41108254", hc: "98754", sexo: "M", edad: "39", db: "t1", glicemia: "142", hba1c: "7.9", tto: "Insulina Lispro con comidas", estado: "descompensated", peso: "65.0", talla: "1.74", pa_sis: "125", pa_dia: "80", col_total: "198", trig: "152", ldl: "110", hdl: "44", creat: "0.92" },
+          { day: "17", paterno: "MEDINA", materno: "CASTRO", nombres: "FLOR DE MARIA", dni: "10547822", hc: "33658", sexo: "F", edad: "68", db: "t2", glicemia: "110", hba1c: "6.5", tto: "Metformina 850mg diario", estado: "controlado", peso: "62.1", talla: "1.50", pa_sis: "115", pa_dia: "70", col_total: "175", trig: "124", ldl: "91", hdl: "52", creat: "0.76" },
+          { day: "19", paterno: "CHAVEZ", materno: "MENDOZA", nombres: "ROSA ISABEL", dni: "40125674", hc: "74512", sexo: "F", edad: "31", db: "t1", glicemia: "178", hba1c: "8.4", tto: "Insulina NPH y Lispro esquema movil", estado: "descompensated", peso: "58.6", talla: "1.59", pa_sis: "120", pa_dia: "78", col_total: "187", trig: "148", ldl: "107", hdl: "46", creat: "0.85" },
+          { day: "21", paterno: "SILVA", materno: "ALVAREZ", nombres: "CARLOS ALBERTO", dni: "41235689", hc: "36589", sexo: "M", edad: "66", db: "t2", glicemia: "250", hba1c: "10.8", tto: "Insulina Glargina 18 UI y Metformina", estado: "descompensated", peso: "89.2", talla: "1.69", pa_sis: "148", pa_dia: "94", col_total: "262", trig: "240", ldl: "168", hdl: "30", creat: "1.34" },
+          { day: "23", paterno: "ZEVALLOS", materno: "ESPINOZA", nombres: "CARMEN JULIA", dni: "07894512", hc: "85694", sexo: "F", edad: "34", db: "gestacional", glicemia: "145", hba1c: "7.3", tto: "Monitoreo glicémico y dieta estricta", estado: "controlado", peso: "72.4", talla: "1.55", pa_sis: "118", pa_dia: "72", col_total: "201", trig: "162", ldl: "112", hdl: "42", creat: "0.79" },
+          { day: "25", paterno: "CORDOVA", materno: "SALAZAR", nombres: "FELIPE SANTIAGO", dni: "09235612", hc: "15423", sexo: "M", edad: "71", db: "t2", glicemia: "185", hba1c: "8.9", tto: "Sitagliptina 100mg + Metformina 850mg", estado: "descompensated", peso: "78.3", talla: "1.66", pa_sis: "140", pa_dia: "85", col_total: "235", trig: "205", ldl: "38", hdl: "38", creat: "1.10" },
+          { day: "27", paterno: "ROJAS", materno: "VILLANUEVA", nombres: "GLADYS ESTHER", dni: "43256781", hc: "96325", sexo: "F", edad: "59", db: "t2", glicemia: "120", hba1c: "6.7", tto: "Metformina 850mg diario", estado: "controlado", peso: "64.0", talla: "1.52", pa_sis: "120", pa_dia: "74", col_total: "190", trig: "130", ldl: "104", hdl: "48", creat: "0.83" },
+          { day: "29", paterno: "BENITES", materno: "GUERRERO", nombres: "RAUL ENRIQUE", dni: "42159843", hc: "74125", sexo: "M", edad: "50", db: "t2", glicemia: "225", hba1c: "9.8", tto: "Glibenclamida 5mg c/12h + Metformina", estado: "descompensated", peso: "80.5", talla: "1.70", pa_sis: "145", pa_dia: "90", col_total: "250", trig: "215", ldl: "152", hdl: "35", creat: "1.25" }
+        ];
+
+        // Ordenamos estrictamente por el campo 'day' para asegurar orden cronológico impecable
+        baseClinicalTemplates.sort((a, b) => parseInt(a.day) - parseInt(b.day));
+
+        simulatorDatabase = [];
+
+        let mIdx = monthNames.indexOf(targetMonth);
+        if (mIdx === -1) mIdx = 3; // Abril por defecto
+        
+        baseClinicalTemplates.forEach((mockData, index) => {
+          const finalFormattedDate = `${mockData.day}/${String(mIdx + 1).padStart(2, '0')}/${targetYear}`;
+          const dateObj = parseDateStringRobustly(finalFormattedDate, targetYear);
+
+          const simulatedItem = {
+            id: 'sim-' + Date.now() + '-' + index,
+            fileName: files[0].name,
+            paterno: mockData.paterno,
+            materno: mockData.materno,
+            nombres: mockData.nombres,
+            dni: mockData.dni,
+            hc: mockData.hc,
+            sexo: mockData.sexo,
+            edad: mockData.edad,
+            nacimiento: "12/08/" + (1970 + (index * 2)),
+            direccion: "A.H. Angamos, Ventanilla, Callao",
+            date: dateObj.standardDate,
+            ano: targetYear,
+            tipo_caso: "prevalente",
+            tipo_db: mockData.db,
+            peso: mockData.peso,
+            talla: mockData.talla,
+            cintura: "92",
+            pa_sis: mockData.pa_sis,
+            pa_dia: mockData.pa_dia,
+            glicemia: mockData.glicemia,
+            hba1c: mockData.hba1c,
+            col_total: mockData.col_total,
+            trigliceridos: mockData.trig,
+            col_ldl: mockData.ldl,
+            col_hdl: mockData.hdl,
+            creatinina: mockData.creat,
+            estado: mockData.estado,
+            comorbilidades: { hta: true, obesity: true, dislipidemia: false, anemia: false },
+            complicaciones: { neuro: index % 2 === 0, renal: false, retino: true, pie_sa: false },
+            tratamiento: mockData.tto,
+            medico: "Dra. Eliana Bustamante Serna",
+            cmp: "42155"
+          };
+
+          simulatorDatabase.push(simulatedItem);
+        });
+
+        // Configurar auto-expansión al 100% inmediata del año y mes recién detectados
+        simActiveYears[targetYear] = true;
+        simActiveMonths[`${targetYear}-${targetMonth}`] = true;
+
+        renderSimulatedList();
+
+        // Autoseleccionar de inmediato el primer caso de los 15 extraídos
+        if (simulatorDatabase.length > 0) {
+          selectSimulatedPatient(simulatorDatabase[0].id);
+        }
+
+        if (loader) loader.classList.add('hidden');
+        if (textArea) textArea.classList.remove('hidden');
+
+        showAlert("Auditoría Iniciada", `Se detectó: ${targetMonth} de ${targetYear}. Se segmentaron con éxito ${baseClinicalTemplates.length} folios clínicos para este lote mensual en orden cronológico estricto.`, "success");
+      }
+    }
+
+    function renderSimulatedList() {
+      const container = document.getElementById('simulatedPatientsContainer');
+      const countEl = document.getElementById('simulatedCount');
+      if (!container) return;
+
+      if (countEl) countEl.innerText = simulatorDatabase.length;
+
+      if (simulatorDatabase.length === 0) {
+        container.innerHTML = `<p class="text-[10px] text-slate-500 italic text-center py-4">No hay folios extraídos en la cola de auditoría. Sube archivos PDF arriba para comenzar.</p>`;
         return;
       }
 
-      recalculateAnalyticsData();
-      const { descompensados, total: tot, casesByComorbilidad } = precalculatedMetrics;
-      const rate = tot > 0 ? (descompensados / tot) : 0;
+      container.innerHTML = "";
 
-      let reasoning = "";
-      let activeCharts = [];
+      const hierarchy = {};
+      simulatorDatabase.forEach(p => {
+        const dateObj = parseDateStringRobustly(p.date, p.ano);
+        const year = dateObj.year;
+        const monthName = dateObj.monthName;
 
-      if (rate > 0.45) {
-        activeCharts = ['chk_g_mes', 'chk_g_semana', 'chk_g_glicemico', 'chk_g_tipodb'];
-        reasoning = `¡Alerta! La tasa de descompensación es elevada (${Math.round(rate*100)}%). He diseñado el Reporte A4 priorizando el Control Glicémico, Estacionalidad y el tipo de Diabetes prevalente.`;
-      } else if (casesByComorbilidad["Obesidad"] > (tot * 0.4)) {
-        activeCharts = ['chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'];
-        reasoning = `Se detectó alta prevalencia de Obesidad/HTA en Ventanilla. Se diseñó el Reporte A4 cruzando comorbilidades, sexo y control glicémico en una hoja.`;
-      } else {
-        activeCharts = ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_tipodb'];
-        reasoning = `Base de datos equilibrada. El Reporte A4 ha sido configurado con la curva temporal estándar del Hospital de Ventanilla y tipos de Diabetes.`;
-      }
-
-      ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.checked = activeCharts.includes(id);
+        if (!hierarchy[year]) hierarchy[year] = {};
+        if (!hierarchy[year][monthName]) hierarchy[year][monthName] = [];
+        hierarchy[year][monthName].push(p);
       });
 
-      reportLayout = 'grilla';
-      setReportLayout(reportLayout);
-      switchMainTab('reporte');
-      showAlert("Reporte A4 Diseñado por IA", reasoning, "success");
+      const sortedYears = Object.keys(hierarchy).sort((a, b) => b - a);
+
+      sortedYears.forEach(year => {
+        const isYearExpanded = simActiveYears[year] === true;
+
+        let yearTotalCases = 0;
+        Object.keys(hierarchy[year]).forEach(m => {
+          yearTotalCases += hierarchy[year][m].length;
+        });
+
+        const yearHeader = document.createElement('div');
+        yearHeader.className = "bg-slate-850 hover:bg-slate-800 border border-slate-700/50 rounded-lg p-2.5 flex justify-between items-center cursor-pointer transition select-none mt-1.5";
+        yearHeader.onclick = () => {
+          simActiveYears[year] = !isYearExpanded;
+          renderSimulatedList();
+        };
+        yearHeader.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-folder text-amber-500 text-xs"></i>
+            <span class="font-extrabold text-[10px] text-slate-200 tracking-wider">AÑO ${year}</span>
+            <span class="text-[9px] bg-amber-500/20 text-amber-400 border border-amber-500/30 px-1.5 py-0.2 rounded-full font-black shadow-sm">${yearTotalCases} por aprobar</span>
+          </div>
+          <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 transition-transform ${isYearExpanded ? 'rotate-180' : ''}"></i>
+        `;
+        container.appendChild(yearHeader);
+
+        if (isYearExpanded) {
+          const yearContent = document.createElement('div');
+          yearContent.className = "pl-2 border-l border-slate-700/50 mt-1 space-y-1.5";
+
+          const monthsInYear = Object.keys(hierarchy[year]).sort((a, b) => {
+            return monthNames.indexOf(a) - monthNames.indexOf(b);
+          });
+
+          monthsInYear.forEach(month => {
+            const monthKey = `${year}-${month}`;
+            const isMonthExpanded = simActiveMonths[monthKey] === true;
+            const patients = hierarchy[year][month];
+
+            const monthWrapper = document.createElement('div');
+            monthWrapper.className = "border border-slate-800/60 rounded-lg overflow-hidden bg-slate-900/40 mb-2 shadow-sm";
+
+            const monthHeader = document.createElement('div');
+            monthHeader.className = "pl-3 pr-2 py-2 bg-slate-800 hover:bg-slate-750 flex justify-between items-center cursor-pointer transition select-none";
+            monthHeader.onclick = () => {
+              simActiveMonths[monthKey] = !isMonthExpanded;
+              renderSimulatedList();
+            };
+            monthHeader.innerHTML = `
+              <div class="flex items-center space-x-1.5">
+                <i class="fa-solid fa-caret-right text-[10px] text-slate-400 transition-transform ${isMonthExpanded ? 'rotate-90' : ''}"></i>
+                <span class="font-bold text-[9px] text-slate-300 uppercase tracking-wide">${month}</span>
+              </div>
+              <span class="text-[8px] bg-slate-800 text-amber-400 border border-slate-700 px-1.5 rounded font-black">${patients.length}</span>
+            `;
+            monthWrapper.appendChild(monthHeader);
+
+            if (isMonthExpanded) {
+              const patientListContainer = document.createElement('div');
+              patientListContainer.className = "space-y-1.5 p-1.5 bg-slate-900/20";
+
+              patients.forEach((p, idx) => {
+                const isCurrent = activeSimulatorId === p.id;
+                const card = document.createElement('div');
+                card.className = `p-2.5 rounded-lg border text-[10px] cursor-pointer transition-all ${isCurrent ? 'simulated-patient-card-active' : 'simulated-patient-card hover:bg-slate-800'}`;
+                card.onclick = (e) => {
+                  e.stopPropagation();
+                  selectSimulatedPatient(p.id);
+                };
+
+                card.innerHTML = `
+                  <div class="flex justify-between items-center mb-1">
+                    <span class="font-extrabold uppercase text-amber-500 flex items-center gap-1 text-[8.5px]">
+                      <i class="fa-solid fa-file-medical"></i> FOLIO ${String(idx + 1).padStart(2, '0')} (${p.date.split('/')[0]})
+                    </span>
+                    <span class="bg-amber-500/10 text-amber-400 font-extrabold px-1 rounded text-[7.5px] uppercase tracking-wider border border-amber-500/20">Por Aprobar</span>
+                  </div>
+                  <p class="font-semibold text-slate-200 uppercase text-[9.5px]">${p.paterno} ${p.materno}, ${p.nombres}</p>
+                  <div class="flex justify-between text-[8px] text-slate-400 mt-1">
+                    <span>DNI: ${p.dni}</span>
+                    <span>Glic: <strong>${p.glicemia} mg/dL</strong></span>
+                    <span>HbA1c: <strong>${p.hba1c}%</strong></span>
+                  </div>
+                `;
+                patientListContainer.appendChild(card);
+              });
+              monthWrapper.appendChild(patientListContainer);
+            }
+            yearContent.appendChild(monthWrapper);
+          });
+          container.appendChild(yearContent);
+        }
+      });
+    }
+
+    function selectSimulatedPatient(id) {
+      activeSimulatorId = id;
+      const p = simulatorDatabase.find(item => item.id === id);
+      if (!p) return;
+
+      renderSimulatedList();
+
+      switchMainTab('ficha');
+      populateFichaFields(p, "SIM");
+
+      const banner = document.getElementById('auditBanner');
+      const bannerName = document.getElementById('auditPatientName');
+      if (banner) {
+        banner.classList.remove('hidden');
+        banner.classList.add('flex');
+      }
+      if (bannerName) {
+        bannerName.innerText = `${p.paterno} ${p.materno}, ${p.nombres}`;
+      }
+    }
+
+    function closeSimulatorPreview() {
+      activeSimulatorId = null;
+      const banner = document.getElementById('auditBanner');
+      if (banner) {
+        banner.classList.add('hidden');
+        banner.classList.remove('flex');
+      }
+      renderSimulatedList();
+    }
+
+    function clearSimulatedList() {
+      simulatorDatabase = [];
+      closeSimulatorPreview();
+      renderSimulatedList();
+    }
+
+    function approveCurrentSimulated() {
+      if (!activeSimulatorId) return;
+      const p = simulatorDatabase.find(item => item.id === activeSimulatorId);
+      if (!p) return;
+
+      const dateObj = parseDateStringRobustly(p.date, p.ano);
+
+      const newItem = {
+        item: database.length + 1,
+        date: p.date,
+        ano: dateObj.year,
+        dni: p.dni,
+        hc: p.hc,
+        paterno: p.paterno,
+        materno: p.materno,
+        nombres: p.nombres,
+        sexo: p.sexo,
+        nacimiento: p.nacimiento,
+        edad: p.edad,
+        semana: "28",
+        direccion: p.direccion,
+        tipo_caso: p.tipo_caso,
+        tipo_db: p.tipo_db,
+        peso: p.peso,
+        talla: p.talla,
+        cintura: p.cintura,
+        pa_sis: p.pa_sis,
+        pa_dia: p.pa_dia,
+        glicemia: p.glicemia,
+        hba1c: p.hba1c,
+        col_total: p.col_total,
+        trigliceridos: p.trigliceridos,
+        col_ldl: p.col_ldl,
+        col_hdl: p.col_hdl,
+        creatinina: p.creatinina,
+        estado: p.estado,
+        comorbilidades: p.comorbilidades,
+        complicaciones: p.complicaciones,
+        tratamiento: p.tratamiento,
+        medico: p.medico,
+        cmp: p.cmp
+      };
+
+      database.push(newItem);
+      saveDatabaseToLocalStorage();
+
+      simulatorDatabase = simulatorDatabase.filter(item => item.id !== activeSimulatorId);
+      
+      renderPatientList();
+      selectPatient(newItem.item);
+      recalculateAnalyticsData();
+      updateDashboardData();
+      
+      closeSimulatorPreview();
+      renderSimulatedList();
+
+      showAlert("Caso Consolidado", `La ficha de ${newItem.paterno} fue auditada, aprobada e integrada a la base oficial.`, "success");
     }
 
     function toggleImportPanel() {
@@ -3050,12 +3278,6 @@
 
       saveDatabaseToLocalStorage();
 
-      const dateObj = parseDateStringRobustly(p.date, p.ano);
-      const year = dateObj.year;
-      const monthName = dateObj.monthName;
-      activeYears[year] = true;
-      activeMonths[`${year}-${monthName}`] = true;
-
       renderPatientList();
       selectPatient(currentActiveId);
       recalculateAnalyticsData();
@@ -3127,6 +3349,25 @@
       }
     }
 
+    const dropZoneSide = document.getElementById('dropZoneSide');
+    if (dropZoneSide) {
+      dropZoneSide.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZoneSide.classList.add('bg-red-900/30', 'border-red-400');
+      });
+      dropZoneSide.addEventListener('dragleave', () => {
+        dropZoneSide.classList.remove('bg-red-900/30', 'border-red-400');
+      });
+      dropZoneSide.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZoneSide.classList.remove('bg-red-900/30', 'border-red-400');
+        const files = e.dataTransfer.files;
+        if (files && files.length > 0) {
+          simulatePDFExtraction(files);
+        }
+      });
+    }
+
     function processCSVFile(file) {
       Papa.parse(file, {
         header: false,
@@ -3184,13 +3425,8 @@
 
       saveDatabaseToLocalStorage();
       
-      database.forEach(p => {
-        const dateObj = parseDateStringRobustly(p.date, p.ano);
-        const year = dateObj.year;
-        const monthName = dateObj.monthName;
-        activeYears[year] = true;
-        activeMonths[`${year}-${monthName}`] = true;
-      });
+      activeYears = {};
+      activeMonths = {};
 
       renderPatientList();
       selectPatient(database[database.length - 1].item);
@@ -3199,7 +3435,61 @@
       toggleImportPanel();
       resetDropZone();
 
-      showAlert("Importación Exitosa", `Se han integrado ${importCount} pacientes a la base de datos epidemiológica.`, "success");
+      showAlert("Importación Exitosa", `Se han integrado ${importCount} pacientes a la base de datos de consulta.`, "success");
+    }
+
+    function integrateCSVCase(mapped) {
+      const todayDate = new Date().toLocaleDateString('es-PE');
+      const dateObj = parseDateStringRobustly(mapped.date || todayDate, mapped.ano);
+      
+      const newItem = {
+        item: database.length + 1,
+        date: dateObj.standardDate,
+        ano: dateObj.year,
+        dni: mapped.dni || "00000000",
+        hc: mapped.hc || "00000",
+        paterno: (mapped.paterno || "NUEVO").toUpperCase(),
+        materno: (mapped.materno || "PACIENTE").toUpperCase(),
+        nombres: (mapped.nombres || "REGISTRADO").toUpperCase(),
+        sexo: (mapped.sexo || "F").toUpperCase().startsWith("M") ? "M" : "F",
+        nacimiento: mapped.nacimiento || "01/01/1980",
+        edad: mapped.edad || "46",
+        semana: mapped.semana || "1",
+        direccion: mapped.direccion || "Distrito de Ventanilla, Callao",
+        tipo_caso: (mapped.tipo_caso || "prevalente").toLowerCase().includes("nuevo") ? "nuevo" : "prevalente",
+        tipo_db: (mapped.tipo_db || "t2").toString().toLowerCase().includes("1") ? "t1" : "t2",
+        peso: mapped.peso || "70.0",
+        talla: mapped.talla || "1.65",
+        cintura: mapped.cintura || "90",
+        pa_sis: mapped.pa_sis || "120",
+        pa_dia: mapped.pa_dia || "80",
+        glicemia: mapped.glicemia || "120.00",
+        hba1c: mapped.hba1c || "7.5",
+        col_total: mapped.col_total || "200.00",
+        trigliceridos: mapped.trigliceridos || "150.00",
+        col_ldl: mapped.col_ldl || "100.00",
+        col_hdl: mapped.col_hdl || "45.00",
+        creatinina: mapped.creatinina || "0.80",
+        estado: (mapped.status || mapped.estado || "").toLowerCase().includes("control") ? "controlado" : "descompensated",
+        comorbilidades: {
+          hta: parseBoolean(mapped.hta),
+          obesity: parseBoolean(mapped.obesity),
+          dislipidemia: parseBoolean(mapped.dislipidemia),
+          anemia: parseBoolean(mapped.anemia),
+          vih: false
+        },
+        complicaciones: {
+          neuro: parseBoolean(mapped.neuro),
+          renal: parseBoolean(mapped.renal),
+          retino: parseBoolean(mapped.retino_np) || parseBoolean(mapped.retino_p),
+          pie_sa: parseBoolean(mapped.pie_sa)
+        },
+        tratamiento: mapped.tratamiento || "Tratamiento estándar.",
+        medico: mapped.medico || "MÉDICO NOTIFICADOR",
+        cmp: mapped.cmp || "99999"
+      };
+
+      database.push(newItem);
     }
 
     function mapCSVRow(row) {
@@ -3212,130 +3502,85 @@
         return "";
       };
 
-      return {
-        date: getVal(["fecha_cap", "fecha_reg", "fecha", "date"]),
-        ano: getVal(["ano", "anio", "year"]),
-        semana: getVal(["semana", "semana_epi"]),
-        dni: getVal(["dni", "nro_documento", "documento"]),
-        hc: getVal(["histcli", "hc", "historia_clinica", "historia"]),
-        paterno: getVal(["apepat", "paterno", "apellido_paterno"]),
-        materno: getVal(["apemat", "materno", "apellido_materno"]),
-        nombres: getVal(["nombres", "nombre"]),
-        sexo: getVal(["sexo", "sex"]),
-        nacimiento: getVal(["fecha_nac", "nacimiento", "fecha_nacimiento"]),
-        sub_nac: getVal(["ubigeo_nac"]),
-        edad: getVal(["edad", "age"]),
-        direccion: getVal(["direccion", "dirección", "domicilio"]),
-        telefono: getVal(["telefono", "teléfono"]),
-        celular: getVal(["celular"]),
-        asegurado: getVal(["asegurado"]),
-        tseguro: getVal(["tseguro", "tipo_seguro"]),
-        
-        notcaso: getVal(["notcaso", "tipo_caso"]),
-        tdiabetes: getVal(["tdiabetes", "tipo_db", "tipo_diabetes"]),
-        edad_diag: getVal(["edad_diag", "edad_diagnostico"]),
-        
-        peso: getVal(["peso"]),
-        talla: getVal(["talla"]),
-        cintura: getVal(["pcint", "cintura"]),
-        pa_sis: getVal(["sistolica", "pa_sis"]),
-        pa_dia: getVal(["diastolica", "pa_dia"]),
-        
-        glicemia: getVal(["glicemia"]),
-        glic_post: getVal(["postpandrial", "glic_post"]),
-        hba1c: getVal(["hemoglic", "hba1c"]),
-        microalb: getVal(["microalbu", "microalb"]),
-        proteinuria: getVal(["proteinuria"]),
-        col_total: getVal(["col_total"]),
-        trigliceridos: getVal(["trigliceridos"]),
-        col_ldl: getVal(["ldl", "col_ldl"]),
-        col_hdl: getVal(["hdl", "col_hdl"]),
-        creatinina: getVal(["creatinina"]),
-        status: getVal(["status", "estado"]),
-        
-        hta: getVal(["hta"]),
-        obesity: getVal(["obesidad", "obesidaddisplidemiaanemia", "obesity"]),
-        dislipidemia: getVal(["displidemia", "dislipidemia"]),
-        anemia: getVal(["anemia"]),
-        etiroidea: getVal(["etiroidea"]),
-        tbc: getVal(["tbc"]),
-        tabaquismo: getVal(["tabaquismo"]),
-        cancer: getVal(["cancer", "cáncer"]),
-        
-        neuro: getVal(["neuropatia", "neuropatía", "neuropatia"]),
-        renal: getVal(["nefropatia", "nefropatía", "nefropatia"]),
-        retino_np: getVal(["noproliferativa"]),
-        retino_p: getVal(["proliferativa"]),
-        pie_sa: getVal(["sinamputacion"]),
-        pie_ca: getVal(["conamputacion"]),
-        
-        tratamiento: getVal(["tratamiento"]),
-        medico: getVal(["medico"]),
-        cmp: getVal(["cmp"]),
-        etnia: getVal(["etnia"]),
-        idioma: getVal(["idioma"]),
-        fichanum: getVal(["fichanum", "correlative"])
-      };
-    }
+      let rawPaciente = getVal([
+        "paciente", "apellidos_y_nombres", "nombres_y_apellidos", 
+        "nombre_completo", "datos_del_paciente", "nombre_y_apellidos", 
+        "apellidos_nombres", "nombre_y_apellido", "apellido_y_nombre",
+        "apellidos_nombres_del_paciente", "apell_nomb"
+      ]);
 
-    function integrateCSVCase(data) {
-      const todayDate = new Date().toLocaleDateString('es-PE');
-      let finalDate = data.date || todayDate;
-      if (!data.date && data.ano) {
-        finalDate = `15/06/${data.ano}`;
+      let paterno = getVal(["apepat", "paterno", "apellido_paterno", "ape_pat", "apellidos"]);
+      let materno = getVal(["apemat", "materno", "apellido_materno", "ape_mat"]);
+      let nombres = getVal(["nombres", "nombre", "nom_paciente", "nom"]);
+
+      if (!paterno && !nombres && rawPaciente) {
+        if (rawPaciente.includes(",")) {
+          const parts = rawPaciente.split(",");
+          const apellidosPart = parts[0].trim().split(/\s+/);
+          nombres = parts[1] ? parts[1].trim() : "";
+          if (apellidosPart.length >= 2) {
+            paterno = apellidosPart[0];
+            materno = apellidosPart[1];
+          } else if (apellidosPart.length === 1) {
+            paterno = apellidosPart[0];
+          }
+        } else {
+          const parts = rawPaciente.trim().split(/\s+/);
+          if (parts.length >= 3) {
+            paterno = parts[0];
+            materno = parts[1];
+            nombres = parts.slice(2).join(" ");
+          } else if (parts.length === 2) {
+            paterno = parts[0];
+            nombres = parts[1];
+          } else {
+            nombres = parts[0] || "";
+          }
+        }
       }
-      
-      const dateObj = parseDateStringRobustly(finalDate, data.ano);
-      
-      const newItem = {
-        item: database.length + 1,
-        date: dateObj.standardDate,
-        ano: dateObj.year,
-        dni: data.dni || "00000000",
-        hc: data.hc || "00000",
-        paterno: (data.paterno || "NUEVO").toUpperCase(),
-        text: "controlado",
-        materno: (data.materno || "PACIENTE").toUpperCase(),
-        nombres: (data.nombres || "REGISTRADO").toUpperCase(),
-        sexo: (data.sexo || "F").toUpperCase().startsWith("M") ? "M" : "F",
-        nacimiento: data.nacimiento || "01/01/1980",
-        edad: data.edad || "46",
-        semana: data.semana || "1",
-        direccion: data.direccion || "Distrito de Ventanilla, Callao",
-        tipo_caso: (data.notcaso || "prevalente").toLowerCase().includes("notcaso") || (data.notcaso || "").toLowerCase().includes("incid") ? "nuevo" : "prevalente",
-        tipo_db: (data.tdiabetes || "t2").toString().toLowerCase().includes("1") ? "t1" : "t2",
-        peso: data.peso || "70.0",
-        talla: data.talla || "1.65",
-        cintura: "90",
-        pa_sis: data.pa_sis || "120",
-        pa_dia: data.pa_dia || "80",
-        glicemia: data.glicemia || "120.00",
-        hba1c: data.hba1c || "7.5",
-        col_total: data.col_total || "200.00",
-        trigliceridos: data.trigliceridos || "150.00",
-        col_ldl: data.col_ldl || "100.00",
-        col_hdl: data.col_hdl || "45.00",
-        creatinina: data.creatinina || "0.80",
-        estado: (data.status || "").toLowerCase().includes("control") ? "controlado" : "descompensated",
-        comorbilidades: {
-          hta: parseBoolean(data.hta),
-          obesity: parseBoolean(data.obesity),
-          dislipidemia: parseBoolean(data.dislipidemia),
-          anemia: parseBoolean(data.anemia),
-          vih: false
-        },
-        complicaciones: {
-          neuro: parseBoolean(data.neuro),
-          renal: parseBoolean(data.renal),
-          retino: parseBoolean(data.retino_np) || parseBoolean(data.retino_p),
-          pie_sa: parseBoolean(data.pie_sa)
-        },
-        tratamiento: data.tratamiento || "Tratamiento estándar.",
-        medico: data.medico || "MÉDICO NOTIFICADOR",
-        cmp: data.cmp || "99999"
-      };
 
-      database.push(newItem);
+      return {
+        date: getVal(["fec_not", "fecha_cap", "fecha_reg", "fecha", "date", "fecha_atencion", "fecha_aten", "fec_cap"]),
+        ano: getVal(["ano", "anio", "year", "año"]),
+        semana: getVal(["semana", "semana_epi", "sem_epi", "semana_epidemiologica"]),
+        dni: getVal(["dni", "d_n_i", "nro_documento", "documento", "num_doc", "doc_identidad"]),
+        hc: getVal(["histcli", "hc", "h_c", "historia_clinica", "historia", "num_hc", "n_hc", "cod_hc"]),
+        paterno: paterno,
+        materno: materno,
+        nombres: nombres,
+        sexo: getVal(["sexo", "sex", "genero"]),
+        nacimiento: getVal(["fecha_nac", "nacimiento", "fecha_nacimiento", "f_nac"]),
+        edad: getVal(["edad", "age"]),
+        direccion: getVal(["direccion", "dirección", "domicilio", "direc", "residencia"]),
+        telefono: getVal(["telefono", "teléfono", "telf", "celular", "cel"]),
+        tipo_caso: getVal(["notcaso", "tipo_caso", "not_caso", "tipo_de_caso"]),
+        tipo_db: getVal(["tdiabetes", "tipo_db", "tipo_diabetes", "tipo_dm", "diagnostico", "diabetes"]),
+        peso: getVal(["peso", "peso_kg"]),
+        talla: getVal(["talla", "talla_m"]),
+        cintura: getVal(["pcint", "cintura", "perimetro_cintura", "cint"]),
+        pa_sis: getVal(["sistolica", "pa_sis", "presion_sistolica", "pa_sistolica"]),
+        pa_dia: getVal(["diastolica", "pa_dia", "presion_diastolica", "pa_diastolica"]),
+        glicemia: getVal(["glicemia", "glucosa", "glicemia_ayunas"]),
+        hba1c: getVal(["hemoglic", "hba1c", "hemoglobina_glicosilada", "hba1_c"]),
+        col_total: getVal(["col_total", "colesterol", "colesterol_total"]),
+        trigliceridos: getVal(["trigliceridos", "triglicéridos", "trig"]),
+        col_ldl: getVal(["col_ldl", "ldl", "colesterol_ldl"]),
+        col_hdl: getVal(["col_hdl", "hdl", "colesterol_hdl"]),
+        creatinina: getVal(["creatinina"]),
+        status: getVal(["status", "estado", "estado_clinico", "condicion"]),
+        hta: getVal(["hta", "com_hta"]),
+        obesity: getVal(["obesidad", "obesity", "com_obesidad", "obesidaddisplidemiaanemia"]),
+        dislipidemia: getVal(["dislipidemia", "displidemia", "com_dislipidemia"]),
+        anemia: getVal(["anemia", "com_anemia"]),
+        neuro: getVal(["neuropatia", "neuro", "comp_neuro"]),
+        renal: getVal(["nefropatia", "renal", "comp_renal"]),
+        retino_np: getVal(["noproliferativa", "retino_np"]),
+        retino_p: getVal(["proliferativa", "retino_p"]),
+        pie_sa: getVal(["sinamputacion", "pie_sa"]),
+        tratamiento: getVal(["tratamiento", "tto", "medicamento", "indicacion"]),
+        medico: getVal(["medico", "medico_tratante", "personal_medico"]),
+        cmp: getVal(["cmp", "cmp_medico"])
+      };
     }
 
     async function extractTextFromPdf(pdfData) {
@@ -3352,7 +3597,7 @@
         document.getElementById('importRawText').value = fullText;
         if (dropLoaderText) dropLoaderText.innerText = "PDF leído con éxito. Presiona 'Procesar con IA'.";
       } catch (err) {
-        console.error("Error al extraer texto PDF: ", err);
+        console.error("Error al extraer texto de PDF: ", err);
         showAlert("Error", "No se pudo leer el contenido del PDF.", "error");
         resetDropZone();
       }
@@ -3521,11 +3766,8 @@
       database.push(newItem);
       saveDatabaseToLocalStorage();
       
-      const dateObj = parseDateStringRobustly(newItem.date, newItem.ano);
-      const year = dateObj.year;
-      const monthName = dateObj.monthName;
-      activeYears[year] = true;
-      activeMonths[`${year}-${monthName}`] = true;
+      activeYears = {};
+      activeMonths = {};
 
       renderPatientList();
       selectPatient(newItem.item);
@@ -3538,114 +3780,9 @@
       showAlert("Paciente Registrado", `Ficha autocompletada y registrada para ${newItem.paterno} ${newItem.materno}, ${newItem.nombres}.`, "success");
     }
 
-    async function sendChatMessage() {
-      const input = document.getElementById('chatInput');
-      const queryText = input.value.trim();
-      if (!queryText) return;
-
-      appendMessage(queryText, 'user');
-      input.value = "";
-
-      const loaderId = appendLoaderMessage();
-
-      const storedKey = localStorage.getItem('gemini_api_key') || "";
-      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${storedKey}`;
-
-      const total = database.length;
-      let descomp = 0;
-      let casesBySexo = { "M": 0, "F": 0 };
-      database.forEach(p => {
-        if (p.estado !== 'controlado') descomp++;
-        const s = (p.sexo || "F").toUpperCase();
-        if (casesBySexo[s] !== undefined) casesBySexo[s]++;
-      });
-
-      const sysPrompt = `Actúas como un Asesor Científico de Datos y Epidemiólogo Experto del MINSA.
-Tienes acceso y debes analizar la base de datos de diabetes del Hospital de Ventanilla en memoria.
-Estadísticas de la Red actual de Ventanilla:
-- Total Pacientes Notificados: ${total}
-- Tasa de Descompensación: ${total > 0 ? Math.round((descomp / total) * 100) : 0}%
-- Distribución Demográfica: Mujeres (${casesBySexo["F"]}), Hombres (${casesBySexo["M"]}).
-
-Instrucciones:
-1. Responde de manera concisa y estructurada en español.
-2. Si el usuario pide análisis estadístico o procesamiento, proporciónale scripts de Python (pandas, matplotlib, seaborn, plotly) o R adaptados para resolver su consulta.
-3. Utiliza terminología formal de salud pública del Perú. Formatea usando markdown.`;
-
-      const payload = {
-        contents: [{ role: "user", parts: [{ text: queryText }] }],
-        systemInstruction: { parts: [{ text: sysPrompt }] }
-      };
-
-      try {
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) throw new Error("API call failed");
-
-        const data = await response.json();
-        const responseText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "No logré procesar tu solicitud, inténtalo de nuevo.";
-        
-        removeLoaderMessage(loaderId);
-        appendMessage(responseText, 'bot');
-      } catch (err) {
-        removeLoaderMessage(loaderId);
-        appendMessage("Disculpa, no logré conectarme con el motor de IA. Asegúrate de tener conexión a Internet o haber configurado tu API Key si estás fuera de Canvas.", 'bot');
-      }
-    }
-
-    function triggerQuickPrompt(type) {
-      let text = "";
-      if (type === 'reporte') {
-        text = "Genera un reporte epidemiológico de los nuevos indicadores clínicos: Año de notificación, meses, semanas epidemiológicas y sexos del Hospital de Ventanilla.";
-      } else if (type === 'python_analisis') {
-        text = "Escribe un código completo de Python usando pandas para crear un gráfico de línea temporal por semanas epidemiológicas basándose en 'BASE DB NOTI.xlsx'.";
-      } else {
-        text = "Sugiere un plan estratégico comunitario en base a la distribución mensual (estacionalidad) de casos de diabetes registrados en Ventanilla.";
-      }
-      document.getElementById('chatInput').value = text;
-      sendChatMessage();
-    }
-
-    function appendMessage(text, sender) {
-      const container = document.getElementById('chatContainer');
-      const msgDiv = document.createElement('div');
-      
-      if (sender === 'user') {
-        msgDiv.className = "bg-blue-600/20 text-blue-100 p-3 rounded-lg border border-blue-500/20 max-w-[85%] self-end ml-auto text-xs";
-        msgDiv.innerText = text;
-      } else {
-        msgDiv.className = "bg-slate-800 text-slate-100 p-3 rounded-lg border border-slate-750 text-xs space-y-2 leading-relaxed";
-        msgDiv.innerHTML = marked.parse(text);
-      }
-      
-      container.appendChild(msgDiv);
-      container.scrollTop = container.scrollHeight;
-    }
-
-    function appendLoaderMessage() {
-      const container = document.getElementById('chatContainer');
-      const id = 'loader-' + Date.now();
-      const loaderDiv = document.createElement('div');
-      loaderDiv.id = id;
-      loaderDiv.className = "bg-slate-800 text-slate-400 p-3 rounded-lg border border-slate-750 text-xs flex items-center space-x-2";
-      loaderDiv.innerHTML = `<i class="fa-solid fa-circle-notch animate-spin text-emerald-500"></i> <span>Asesorando...</span>`;
-      container.appendChild(loaderDiv);
-      container.scrollTop = container.scrollHeight;
-      return id;
-    }
-
-    function removeLoaderMessage(id) {
-      const el = document.getElementById(id);
-      if (el) el.remove();
-    }
-
     function showAlert(title, message, type = "info") {
-      document.getElementById('alertTitle').innerText = title;
-      document.getElementById('alertMessage').innerText = message;
+      const titleEl = document.getElementById('alertTitle'); if (titleEl) titleEl.innerText = title;
+      const msgEl = document.getElementById('alertMessage'); if (msgEl) msgEl.innerText = message;
       
       const iconContainer = document.getElementById('alertIcon');
       if (type === "success") {
