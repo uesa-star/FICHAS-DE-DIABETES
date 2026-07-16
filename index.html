@@ -10,7 +10,7 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- Inter Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <!-- PapaParse para procesamiento de CSV -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
@@ -226,13 +226,6 @@
       transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease-in-out;
     }
 
-    .btn-sync-custom {
-      background-color: #0bb87c !important;
-      color: #ffffff !important;
-    }
-    .btn-sync-custom:hover {
-      background-color: #0aa36e !important;
-    }
     .btn-print-custom {
       background-color: #315df2 !important;
       color: #ffffff !important;
@@ -279,7 +272,7 @@
 <body class="text-slate-800 min-h-screen flex flex-col antialiased bg-slate-100" data-print-mode="ficha">
 
   <input type="file" id="fileInput" class="hidden" accept=".xlsx, .xls, .csv" onchange="handleFileSelect(event)">
-  <!-- Selector de archivos para importar atenciones del mes o informes de laboratorio (Multi-archivo soportado) -->
+  <!-- Selector de archivos para importar atenciones del mes o informes de laboratorio -->
   <input type="file" id="simulatorFileInput" class="hidden" accept=".pdf, image/*, .xlsx, .xls, .csv" multiple onchange="handleSimulatorFileSelect(event)">
 
   <!-- HEADER -->
@@ -354,9 +347,9 @@
             </button>
           </div>
 
-          <!-- Acciones de Sincronización e Interfaz -->
+          <!-- Acciones de Sincronización e Interfaz (Optimizadas según image_f41623.png) -->
           <div class="space-y-2 mb-3">
-            <!-- El estado del cloud se mantiene oculto para no interrumpir la ejecución de Javascript -->
+            <!-- Sincronización transparente en background (Redundancia ocultada según image_f41623.png) -->
             <div id="txtCloudStatus" class="hidden"></div>
 
             <div class="grid grid-cols-2 gap-2">
@@ -370,6 +363,7 @@
               </button>
             </div>
 
+            <!-- Botón de impresión en tamaño sumamente compacto y estético -->
             <button onclick="printCurrentFicha()" class="w-full btn-print-custom text-white py-1.5 px-3 rounded-lg text-[10px] font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all" style="background-color: #315df2 !important;">
               <i class="fa-solid fa-print"></i>
               <span>Imprimir Ficha (A4)</span>
@@ -425,18 +419,6 @@
                     <input type="checkbox" id="chk_g_sexo" checked onchange="updateReportLayout()" class="rounded text-blue-600 focus:ring-blue-500 w-3 h-3">
                     <span class="font-medium text-slate-700">4. Dist. por Sexo</span>
                   </label>
-                  <label class="flex items-center space-x-2 cursor-pointer bg-white p-1.5 rounded-lg border border-purple-200/40 hover:bg-purple-100/40 transition">
-                    <input type="checkbox" id="chk_g_glicemico" onchange="updateReportLayout()" class="rounded text-rose-600 focus:ring-rose-500 w-3 h-3">
-                    <span class="font-medium text-slate-700">5. Control Glicémico</span>
-                  </label>
-                  <label class="flex items-center space-x-2 cursor-pointer bg-white p-1.5 rounded-lg border border-purple-200/40 hover:bg-purple-100/40 transition">
-                    <input type="checkbox" id="chk_g_comorbilidades" onchange="updateReportLayout()" class="rounded text-rose-600 focus:ring-rose-500 w-3 h-3">
-                    <span class="font-medium text-slate-700">6. Prev. Comorb.</span>
-                  </label>
-                  <label class="flex items-center space-x-2 cursor-pointer bg-white p-1.5 rounded-lg border border-purple-200/40 hover:bg-purple-100/40 transition">
-                    <input type="checkbox" id="chk_g_tipodb" onchange="updateReportLayout()" class="rounded text-rose-600 focus:ring-rose-500 w-3 h-3">
-                    <span class="font-medium text-slate-700">7. Tipos Diabetes</span>
-                  </label>
                 </div>
               </div>
 
@@ -487,7 +469,7 @@
             <p class="font-bold text-amber-400 mb-1.5"><i class="fa-solid fa-list-check mr-1"></i> Flujo de Auditoría Secuencial</p>
             <ol class="list-decimal pl-4 space-y-1 text-[10.5px]">
               <li>Sube el <strong>PDF de atenciones mensuales</strong>. El sistema procesará todos los casos individuales con el estatus inicial <span class="text-rose-400 font-bold">Lab: Pendiente</span> y campos de laboratorio vacíos como <span class="text-amber-300 font-bold">(--)</span>.</li>
-              <li>Arrastra o sube los <strong>análisis clínicos de laboratorio individuales</strong> (en lote o uno por uno). El sistema realizará un escaneo inteligente para acoplar la analítica correcta al paciente correspondiente.</li>
+              <li>Arrastra o sube los <strong>análisis clínicos de laboratorio individuales</strong>. El sistema realizará un escaneo inteligente para acoplar la analítica correcta al paciente correspondiente.</li>
             </ol>
           </div>
 
@@ -974,10 +956,10 @@
                   <span class="sheet-label block mb-1 font-bold">Insulinas Análogas</span>
                   <div class="flex flex-col space-y-1 font-bold text-[7.5px] text-print-scaled">
                     <span class="text-[6.5px] text-slate-400 block font-semibold uppercase">Acción Rápida</span>
-                    <span class="flex items-center space-x-1.5"><span class="w-2 h-2 border border-black flex items-center justify-center" id="ins_lispro"></span><span>Lispro</span></span>
-                    <span class="flex items-center space-x-1.5"><span class="w-2 h-2 border border-black flex items-center justify-center" id="ins_aspart"></span><span>Aspart</span></span>
+                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 border border-black flex items-center justify-center" id="ins_lispro"></span><span>Lispro</span></span>
+                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 border border-black flex items-center justify-center" id="ins_aspart"></span><span>Aspart</span></span>
                     <span class="text-[6.5px] text-slate-400 block mt-1 font-semibold uppercase">Acción Prolongada</span>
-                    <span class="flex items-center space-x-1.5"><span class="w-2 h-2 border border-black flex items-center justify-center" id="ins_glargina"></span><span>Glargina 100/300</span></span>
+                    <span class="flex items-center space-x-1.5"><span class="w-2.5 h-2.5 border border-black flex items-center justify-center" id="ins_glargina"></span><span>Glargina 100/300</span></span>
                   </div>
                 </div>
 
@@ -1005,7 +987,67 @@
       </div>
 
       <!-- VISTA B: EPIDEMIOLOGICAL ANALYTICS DASHBOARD -->
-      <div class="w-full max-w-full hidden flex-col gap-6 px-2 md:px-6" id="tabContentDashboard">
+      <div class="w-full max-w-full hidden flex-col gap-6 px-2 md:px-6 animate-fade-in" id="tabContentDashboard">
+        
+        <!-- BARRA DE FILTROS STREAMLINE ULTRA-COMPACTA -->
+        <div class="bg-white px-5 py-3 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4 no-print w-full">
+          <div class="flex flex-wrap items-center gap-4">
+            <!-- AÑO SELECTOR -->
+            <div class="flex items-center space-x-2">
+              <label for="filter_ano" class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <i class="fa-solid fa-calendar text-slate-400"></i> Año:
+              </label>
+              <select id="filter_ano" onchange="updateDashboardData()" class="text-xs py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer">
+                <option value="Todos">Todos los años</option>
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
+            </div>
+
+            <!-- Divisor -->
+            <div class="h-4 w-[1px] bg-slate-200 hidden sm:block"></div>
+
+            <!-- MES SELECTOR -->
+            <div class="flex items-center space-x-2">
+              <label for="filter_mes" class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                <i class="fa-solid fa-calendar-days text-slate-400"></i> Mes:
+              </label>
+              <select id="filter_mes" onchange="updateDashboardData()" class="text-xs py-1.5 px-3 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-slate-700 hover:bg-slate-100 transition cursor-pointer">
+                <option value="Todos">Todos los meses</option>
+                <option value="Enero">Enero</option>
+                <option value="Febrero">Febrero</option>
+                <option value="Marzo">Marzo</option>
+                <option value="Abril">Abril</option>
+                <option value="Mayo">Mayo</option>
+                <option value="Junio">Junio</option>
+                <option value="Julio">Julio</option>
+                <option value="Agosto">Agosto</option>
+                <option value="Setiembre">Setiembre</option>
+                <option value="Octubre">Octubre</option>
+                <option value="Noviembre">Noviembre</option>
+                <option value="Diciembre">Diciembre</option>
+              </select>
+            </div>
+
+            <!-- Divisor -->
+            <div class="h-4 w-[1px] bg-slate-200 hidden sm:block"></div>
+
+            <!-- CLEAR BUTTON -->
+            <button onclick="clearDashboardFilters()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3.5 py-1.5 rounded-lg font-bold transition flex items-center gap-1.5 active:scale-95 shadow-xs">
+              <i class="fa-solid fa-filter-circle-xmark text-slate-400"></i>
+              <span>Limpiar Filtros</span>
+            </button>
+          </div>
+
+          <!-- CONTADOR DE CASOS FILTRADOS -->
+          <div class="flex items-center space-x-2 bg-blue-50/50 border border-blue-100 px-3.5 py-1.5 rounded-lg shadow-inner">
+            <i class="fa-solid fa-users text-blue-600 text-[11px]"></i>
+            <span class="text-[11px] font-extrabold text-slate-600 uppercase tracking-wider">Casos Filtrados:</span>
+            <span id="filtered_count_badge" class="text-[11px] font-black text-blue-700">0</span>
+          </div>
+        </div>
+
         <!-- Tarjetas KPI -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center space-x-4">
@@ -1057,34 +1099,79 @@
           <p class="text-xs text-slate-400">Análisis cronológico, estacionalidad y comportamiento de casos</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
-            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2">
-              <i class="fa-solid fa-calendar text-blue-800 mr-1"></i> Casos por Año de Notificación
+        <!-- GRÁFICO DE TENDENCIAS EN LA HOJA PRINCIPAL (COPIA EXACTA DE image_005c7f.png) -->
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative w-full">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-2 border-b">
+            <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-line text-[#0d9488]"></i>
+              COMPARATIVA INTERANUAL DE CURVAS DE TENDENCIAS - <span id="trend_year_title" class="text-teal-700">TODOS LOS AÑOS</span>
             </h4>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-[8.5px] font-black border border-teal-500 text-teal-700 bg-teal-50/30 px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">CANAL DE VIGILANCIA</span>
+              <span class="text-[8.5px] font-black border border-[#0d9488] text-[#0d9488] bg-[#0d9488]/10 px-2.5 py-1 rounded-full uppercase tracking-wider font-semibold">
+                TOTAL GENERAL DEL GRÁFICO: <span id="trend_chart_total" class="font-black">0</span> CASOS
+              </span>
+            </div>
+          </div>
+          
+          <div class="h-[260px] relative">
+            <canvas id="chartMeses"></canvas>
+          </div>
+          <p class="text-center text-[10px] text-slate-400 mt-2 font-medium">Análisis estacional de curvas epidemiológicas por mes (Sincronizado con filtros de año)</p>
+        </div>
+
+        <!-- GRÁFICOS DE CASOS POR AÑO Y SEMANAS EPIDEMIOLÓGICAS (ESTILO image_014888.png) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          
+          <!-- Gráfico Izquierda: Casos por Año -->
+          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-2 border-b">
+              <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-calendar text-[#064e3b]"></i>
+                CASOS POR AÑO - <span id="year_chart_title" class="text-emerald-800">TODOS LOS AÑOS</span>
+              </h4>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[8.5px] font-black border border-emerald-500 text-emerald-700 bg-emerald-50/30 px-2.5 py-1 rounded-full uppercase tracking-wider">VIGILANCIA DE SERIES</span>
+                <span class="text-[8.5px] font-black border border-emerald-600 text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  TOTAL ANUAL ACUMULADO: <span id="year_chart_total" class="font-black">0</span> CASOS
+                </span>
+              </div>
+            </div>
             <div class="h-[220px] relative">
               <canvas id="chartAnos"></canvas>
             </div>
           </div>
 
+          <!-- Gráfico Derecha: Curva S.E -->
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
-            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 pb-2 border-b">
-              <i class="fa-solid fa-chart-bar text-blue-800 mr-1"></i> Distribución Mensual de Casos
-            </h4>
-            <div class="h-[220px] relative">
-              <canvas id="chartMeses"></canvas>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-2 border-b">
+              <h4 class="text-xs font-black text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <i class="fa-solid fa-chart-line text-[#023e2b]"></i>
+                CURVA S.E - <span id="se_chart_title" class="text-emerald-950">TODOS LOS AÑOS</span>
+              </h4>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[8.5px] font-black border border-amber-500 text-amber-700 bg-amber-50/30 px-2.5 py-1 rounded-full uppercase tracking-wider">MONITOREO SEMANAL</span>
+                <span class="text-[8.5px] font-black border border-amber-500 text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                  TOTAL S.E. ACTIVAS: <span id="se_chart_total" class="font-black">0</span> CASOS
+                </span>
+              </div>
             </div>
-          </div>
-
-          <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
-            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 pb-2 border-b">
-              <i class="fa-solid fa-chart-line text-blue-800 mr-1"></i> Casos por Semana Epidemiológica
-            </h4>
             <div class="h-[220px] relative">
               <canvas id="chartSemanas"></canvas>
             </div>
           </div>
 
+        </div>
+
+        <div class="border-b border-slate-200 pb-3 mt-2">
+          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-heart-pulse text-rose-600"></i>
+            Perfil Clínico y Patológico
+          </h3>
+          <p class="text-xs text-slate-400">Estado de control fisiológico, prevalencia de riesgos y tipos de patología</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 pb-2 border-b">
               <i class="fa-solid fa-venus-mars text-blue-800 mr-1"></i> Distribución por Sexo (Demografía)
@@ -1093,17 +1180,7 @@
               <canvas id="chartSexo"></canvas>
             </div>
           </div>
-        </div>
 
-        <div class="border-b border-slate-200 pb-3 mt-6">
-          <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-            <i class="fa-solid fa-heart-pulse text-rose-600"></i>
-            Perfil Clínico y Patológico
-          </h3>
-          <p class="text-xs text-slate-400">Estado de control fisiológico, prevalencia de riesgos y tipos de patología</p>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative">
             <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 border-b pb-2">
               <i class="fa-solid fa-circle-nodes text-rose-600 mr-1"></i> Control Glicémico
@@ -1179,9 +1256,10 @@
                 </div>
               </div>
 
+              <!-- GRÁFICO CORREGIDO EN REPORTE: COMPARATIVA MENSUAL DE LÍNEA MULTI-AÑO -->
               <div id="container_report_mes" class="border border-black p-1.5 flex flex-col justify-between bg-white" style="height: 92mm;">
                 <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
-                  2. Distribución Mensual de Casos
+                  2. Comparativa Interanual de Tendencias
                 </span>
                 <div class="flex-1 min-h-0 relative flex items-center justify-center">
                   <canvas id="chartMesReport"></canvas>
@@ -1203,33 +1281,6 @@
                 </span>
                 <div class="flex-1 min-h-0 relative flex items-center justify-center">
                   <canvas id="chartSexoReport"></canvas>
-                </div>
-              </div>
-
-              <div id="container_report_glicemico" class="border border-black p-1.5 flex flex-col justify-between bg-white hidden" style="height: 92mm;">
-                <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
-                  5. Control Glicémico
-                </span>
-                <div class="flex-1 min-h-0 relative flex items-center justify-center">
-                  <canvas id="chartGlicemicoReport"></canvas>
-                </div>
-              </div>
-
-              <div id="container_report_comorbilidades" class="border border-black p-1.5 flex flex-col justify-between bg-white hidden" style="height: 92mm;">
-                <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
-                  6. Prevalencia de Comorbilidades
-                </span>
-                <div class="flex-1 min-h-0 relative flex items-center justify-center">
-                  <canvas id="chartComorbilidadesReport"></canvas>
-                </div>
-              </div>
-
-              <div id="container_report_tipodb" class="border border-black p-1.5 flex flex-col justify-between bg-white hidden" style="height: 92mm;">
-                <span class="text-[8px] font-black uppercase text-slate-900 border-b border-black pb-0.5 mb-1.5 block leading-none">
-                  7. Tipos de Diabetes Mellitus
-                </span>
-                <div class="flex-1 min-h-0 relative flex items-center justify-center">
-                  <canvas id="chartTipoDiabetesReport"></canvas>
                 </div>
               </div>
             </div>
@@ -1460,7 +1511,7 @@
       }
     ];
 
-    // BASE DE DATOS DE LABORATORIO LEGÍTIMA (PARA AUDITORÍA DE CALIDAD DE CASOS FIJOS/SIMULADOS)
+    // BASE DE DATOS DE LABORATORIO LEGÍTIMA DE 15 CASOS (PARA AUDITORÍA DE CALIDAD)
     const legitimateLabDatabase = {
       "87921": { glicemia: "161", glic_post: "210", hba1c: "8.5", col_total: "208", trigliceridos: "154", col_ldl: "142", col_hdl: "42", creatinina: "0.85", estado: "descompensated", microalb: "Posit.", proteinuria: "Negat." },
       "321080": { glicemia: "183", glic_post: "235", hba1c: "9.2", col_total: "195", trigliceridos: "188", col_ldl: "122", col_hdl: "35", creatinina: "1.48", estado: "descompensated", microalb: "Posit.", proteinuria: "Posit." },
@@ -1487,7 +1538,6 @@
     let chartGlicemico = null, chartComorbilidades = null, chartTipoDiabetes = null;
 
     let chartAnoRep = null, chartMesRep = null, chartSemanaRep = null, chartSexoRep = null;
-    let chartGlicemicoRep = null, chartComorbilidadesRep = null, chartTipoDiabetesRep = null;
 
     let reportLayout = 'grilla'; 
 
@@ -1751,22 +1801,10 @@
           skipEmptyLines: true,
           complete: function(results) {
             const rawRows = results.data;
-            if (!rawRows || rawRows.length === 0) {
-              if (statusText) {
-                statusText.innerText = "Error: Hoja de datos vacía";
-                statusText.className = "text-[9px] text-red-600 font-extrabold text-center";
-              }
-              return;
-            }
+            if (!rawRows || rawRows.length === 0) return;
 
             const rows = arraysToObjects(rawRows);
-            if (rows.length === 0) {
-              if (statusText) {
-                statusText.innerText = "Error: No se detectaron filas válidas";
-                statusText.className = "text-[9px] text-red-600 font-extrabold text-center";
-              }
-              return;
-            }
+            if (rows.length === 0) return;
 
             const tempDatabase = [];
             let validIndex = 1;
@@ -1870,10 +1908,6 @@
         });
       } catch (err) {
         console.error("Fallo al conectar con Google Sheets: ", err);
-        if (statusText) {
-          statusText.innerText = "Error: Usando datos locales";
-          statusText.className = "text-[9px] text-rose-500 font-extrabold text-center";
-        }
         
         const savedDb = localStorage.getItem('clinical_database');
         if (savedDb) {
@@ -2309,8 +2343,8 @@
       const f_ps_val = document.getElementById('f_pa_sis_val'); if (f_ps_val) f_ps_val.innerText = p.pa_sis;
       const f_pd_val = document.getElementById('f_pa_dia_val'); if (f_pd_val) f_pd_val.innerText = p.pa_dia;
 
-      // PARÁMETROS CLÍNICOS DE LABORATORIO (PROPAGACIÓN Y REFLEJO EN TIEMPO REAL - MARCAR COMO "(--)" SI NO TIENE ANÁLISIS)
-      const isLabLinked = p.labLinked === true || (p.glicemia && p.glicemia !== "-" && p.glicemia !== "(--)");
+      // PARÁMETROS CLÍNICOS DE LABORATORIO (NORMATIVA DE CONTROL DE CALIDAD)
+      const isLabLinked = p.labLinked === true && p.glicemia !== "(--)";
 
       const f_g_val = document.getElementById('f_glicemia_val'); 
       if (f_g_val) f_g_val.innerText = isLabLinked ? (p.glicemia || "-") : "(--)";
@@ -2374,7 +2408,6 @@
         if (estDescompensated) estDescompensated.className = "w-2.5 h-2.5 rounded-full bg-black inline-block";
         if (estMuerto) estMuerto.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
       } else {
-        // Sin análisis competente
         if (estControlado) estControlado.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
         if (estDescompensated) estDescompensated.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
         if (estMuerto) estMuerto.className = "w-2.5 h-2.5 rounded-full border border-black inline-block";
@@ -2443,6 +2476,7 @@
       avgHba1c: "0.00",
       casesByYear: { "2024": 0, "2025": 0, "2026": 0 },
       casesByMonth: {},
+      monthlyDataByYear: { "2024": Array(12).fill(0), "2025": Array(12).fill(0), "2026": Array(12).fill(0) },
       casesByWeek: {},
       casesBySexo: { "M": 0, "F": 0 },
       casesByGlicemico: { "controlado": 0, "descompensado": 0 },
@@ -2451,7 +2485,28 @@
     };
 
     function recalculateAnalyticsData() {
-      const total = database.length;
+      const fAnoEl = document.getElementById('filter_ano');
+      const fMesEl = document.getElementById('filter_mes');
+      const fAnoVal = fAnoEl ? fAnoEl.value : 'Todos';
+      const fMesVal = fMesEl ? fMesEl.value : 'Todos';
+
+      const filteredDb = database.filter(p => {
+        const dateObj = parseDateStringRobustly(p.date, p.ano);
+        const yr = dateObj.year;
+        const mo = dateObj.monthName;
+
+        const matchesAno = fAnoVal === 'Todos' || yr === fAnoVal;
+        const matchesMes = fMesVal === 'Todos' || mo === fMesVal;
+
+        return matchesAno && matchesMes;
+      });
+
+      const badgeFiltered = document.getElementById('filtered_count_badge');
+      if (badgeFiltered) {
+        badgeFiltered.innerText = filteredDb.length;
+      }
+
+      const total = filteredDb.length;
       let controlados = 0;
       let descompensados = 0;
       let sumHba1c = 0;
@@ -2460,21 +2515,41 @@
       const casesByYear = { "2024": 0, "2025": 0, "2026": 0 };
       const casesByMonth = {};
       monthNames.forEach(m => { casesByMonth[m] = 0; });
+
+      const monthlyDataByYear = {
+        "2024": Array(12).fill(0),
+        "2025": Array(12).fill(0),
+        "2026": Array(12).fill(0)
+      };
+
       const casesByWeek = {};
+      for (let i = 1; i <= 52; i++) {
+        casesByWeek[i] = 0;
+      }
+
       const casesBySexo = { "M": 0, "F": 0 };
-      const casesByGlicemico = { "controlado": 0, "descompensado": 0 };
+      const casesByGlicemico = { "controlado": 0, "descompensated": 0 };
       const casesByComorbilidad = { "HTA": 0, "Obesidad": 0, "Dislipidemia": 0, "Anemia": 0 };
       const casesByTipoDiabetes = { "Tipo 1": 0, "Tipo 2": 0, "Gestacional": 0 };
 
       database.forEach(p => {
-        // Solo incluimos en las estadísticas los que tengan laboratorio completo
-        if (p.labLinked) {
+        const dateObj = parseDateStringRobustly(p.date, p.ano);
+        const yr = dateObj.year;
+        const moIdx = monthNames.indexOf(dateObj.monthName);
+        if (monthlyDataByYear[yr] !== undefined && moIdx !== -1) {
+          monthlyDataByYear[yr][moIdx]++;
+        }
+      });
+
+      filteredDb.forEach(p => {
+        const isLabLinked = p.labLinked === true && p.glicemia !== "(--)";
+        if (isLabLinked) {
           if (p.estado === 'controlado') {
             controlados++;
             casesByGlicemico["controlado"]++;
           } else {
             descompensados++;
-            casesByGlicemico["descompensado"]++;
+            casesByGlicemico["descompensated"]++;
           }
 
           const hbaVal = parseFloat(p.hba1c);
@@ -2483,9 +2558,8 @@
             hba1cCount++;
           }
         } else {
-          // Descompensados o pendientes por defecto clínico
           descompensados++;
-          casesByGlicemico["descompensado"]++;
+          casesByGlicemico["descompensated"]++;
         }
 
         const dateObj = parseDateStringRobustly(p.date, p.ano);
@@ -2501,7 +2575,9 @@
         }
 
         const sem = parseInt(p.semana) || 1;
-        casesByWeek[sem] = (casesByWeek[sem] || 0) + 1;
+        if (casesByWeek[sem] !== undefined) {
+          casesByWeek[sem]++;
+        }
 
         const s = (p.sexo || "F").toUpperCase().trim();
         if (s.startsWith("M")) {
@@ -2527,6 +2603,7 @@
         avgHba1c: hba1cCount > 0 ? (sumHba1c / hba1cCount).toFixed(2) : "0.00",
         casesByYear,
         casesByMonth,
+        monthlyDataByYear,
         casesByWeek,
         casesBySexo,
         casesByGlicemico,
@@ -2535,10 +2612,18 @@
       };
     }
 
+    function clearDashboardFilters() {
+      const fAno = document.getElementById('filter_ano');
+      const fMes = document.getElementById('filter_mes');
+      if (fAno) fAno.value = 'Todos';
+      if (fMes) fMes.value = 'Todos';
+      updateDashboardData();
+    }
+
     function updateDashboardData() {
       recalculateAnalyticsData();
 
-      const { total, controlados, descompensados, avgHba1c, casesByYear, casesByMonth, casesByWeek, casesBySexo, casesByGlicemico, casesByComorbilidad, casesByTipoDiabetes } = precalculatedMetrics;
+      const { total, controlados, descompensados, avgHba1c, casesByYear, casesByMonth, monthlyDataByYear, casesByWeek, casesBySexo, casesByGlicemico, casesByComorbilidad, casesByTipoDiabetes } = precalculatedMetrics;
       const controlRate = total > 0 ? Math.round((controlados / total) * 100) : 0;
 
       const kpi_t = document.getElementById('kpi_total'); if (kpi_t) kpi_t.innerText = total;
@@ -2546,6 +2631,51 @@
       const kpi_hb = document.getElementById('kpi_hba1c'); if (kpi_hb) kpi_hb.innerText = `${avgHba1c}%`;
       const kpi_d = document.getElementById('kpi_descompensados'); if (kpi_d) kpi_d.innerText = descompensados;
 
+      // Actualizar título y badge dinámico de total general de la gráfica interanual
+      const fAnoEl = document.getElementById('filter_ano');
+      const fAnoVal = fAnoEl ? fAnoEl.value : 'Todos';
+      
+      const trendTitle = document.getElementById('trend_year_title');
+      if (trendTitle) {
+        trendTitle.innerText = fAnoVal === 'Todos' ? 'TODOS LOS AÑOS' : `AÑO ${fAnoVal}`;
+      }
+
+      // Sumar los casos totales reflejados en el gráfico de curvas mensuales
+      let totalPlottedCases = 0;
+      if (fAnoVal === 'Todos') {
+        totalPlottedCases = database.length;
+      } else {
+        totalPlottedCases = database.filter(p => {
+          const dObj = parseDateStringRobustly(p.date, p.ano);
+          return dObj.year === fAnoVal;
+        }).length;
+      }
+      const trendChartTotal = document.getElementById('trend_chart_total');
+      if (trendChartTotal) {
+        trendChartTotal.innerText = totalPlottedCases;
+      }
+
+      // Actualizar cabecera de Casos por Año (Estilo image_014888.png)
+      const yearChartTitle = document.getElementById('year_chart_title');
+      if (yearChartTitle) {
+        yearChartTitle.innerText = fAnoVal === 'Todos' ? 'TODOS LOS AÑOS' : `AÑO ${fAnoVal}`;
+      }
+      const yearChartTotal = document.getElementById('year_chart_total');
+      if (yearChartTotal) {
+        yearChartTotal.innerText = total;
+      }
+
+      // Actualizar cabecera de Curva S.E (Estilo image_014888.png)
+      const seChartTitle = document.getElementById('se_chart_title');
+      if (seChartTitle) {
+        seChartTitle.innerText = fAnoVal === 'Todos' ? 'TODOS LOS AÑOS' : `AÑO ${fAnoVal}`;
+      }
+      const seChartTotal = document.getElementById('se_chart_total');
+      if (seChartTotal) {
+        seChartTotal.innerText = total;
+      }
+
+      // DESTROY PREVIOUS CHARTS SAFELY TO PREVENT MEMORY LEAKS
       if (chartAnos) chartAnos.destroy();
       if (chartMeses) chartMeses.destroy();
       if (chartSemanas) chartSemanas.destroy();
@@ -2556,90 +2686,196 @@
 
       const elAnos = document.getElementById('chartAnos');
       if (elAnos) {
-        chartAnos = new Chart(elAnos.getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: Object.keys(casesByYear),
-            datasets: [{ label: 'Casos Registrados', data: Object.values(casesByYear), backgroundColor: '#1e3a8a', borderRadius: 6 }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-        });
+        try {
+          chartAnos = new Chart(elAnos.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: ['Año 2024', 'Año 2025', 'Año 2026'],
+              datasets: [{
+                label: 'Casos Registrados',
+                data: [casesByYear["2024"] || 0, casesByYear["2025"] || 0, casesByYear["2026"] || 0],
+                backgroundColor: ['#e2e8f0', '#10b981', '#064e3b'], // 2024 gris, 2025 verde esmeralda, 2026 verde pino ultra oscuro
+                borderRadius: 8,
+                barThickness: 50
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: { beginAtZero: true, max: 250, ticks: { stepSize: 50, precision: 0 } },
+                x: { grid: { display: false } }
+              }
+            }
+          });
+        } catch (err) { console.error("Error al crear chartAnos:", err); }
       }
 
       const elMeses = document.getElementById('chartMeses');
       if (elMeses) {
-        chartMeses = new Chart(elMeses.getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: Object.keys(casesByMonth),
-            datasets: [{ label: 'Volumen Mensual', data: Object.values(casesByMonth), backgroundColor: '#0d9488', borderRadius: 4 }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-        });
-      }
+        try {
+          const is2025Active = fAnoVal === 'Todos' || fAnoVal === '2025';
+          const is2026Active = fAnoVal === 'Todos' || fAnoVal === '2026';
+          const shortMonths = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
-      const sortedWeeks = Object.keys(casesByWeek).sort((a,b) => a-b);
-      const weekLabels = sortedWeeks.map(w => `S${w}`);
-      const weekData = sortedWeeks.map(w => casesByWeek[w]);
+          chartMeses = new Chart(elMeses.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: shortMonths,
+              datasets: [
+                {
+                  label: 'Año 2025',
+                  data: monthlyDataByYear["2025"],
+                  borderColor: '#0db29a', // Verde Esmeralda/Teal
+                  backgroundColor: 'transparent',
+                  borderWidth: is2025Active ? 3.5 : 1.2,
+                  tension: 0.4,
+                  fill: false,
+                  pointRadius: is2025Active ? 5 : 1,
+                  pointBackgroundColor: '#0db29a',
+                  pointHoverRadius: 7
+                },
+                {
+                  label: 'Año 2026',
+                  data: monthlyDataByYear["2026"],
+                  borderColor: '#ff4a4a', // Rojo Coral
+                  backgroundColor: 'transparent',
+                  borderWidth: is2026Active ? 3.5 : 1.2,
+                  tension: 0.4,
+                  fill: false,
+                  pointRadius: is2026Active ? 5 : 1,
+                  pointBackgroundColor: '#ff4a4a',
+                  pointHoverRadius: 7
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'bottom',
+                  labels: { boxWidth: 10, usePointStyle: true, pointStyle: 'rect', font: { size: 9.5, weight: 'bold' } }
+                }
+              },
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  max: 70,
+                  ticks: { stepSize: 10, font: { size: 10, weight: 'medium' } },
+                  grid: { color: '#f1f5f9' }
+                },
+                x: { ticks: { font: { size: 10, weight: 'medium' } }, grid: { display: false } }
+              }
+            }
+          });
+        } catch (err) { console.error("Error al crear chartMeses:", err); }
+      }
 
       const elSemanas = document.getElementById('chartSemanas');
       if (elSemanas) {
-        chartSemanas = new Chart(elSemanas.getContext('2d'), {
-          type: 'line',
-          data: {
-            labels: weekLabels.length > 0 ? weekLabels : ['S1'],
-            datasets: [{ label: 'Curva Epidémica', data: weekData.length > 0 ? weekData : [0], borderColor: '#7c3aed', backgroundColor: 'rgba(124, 58, 237, 0.1)', fill: true, tension: 0.3 }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-        });
+        try {
+          const weekLabels = [];
+          const weekData = [];
+          for (let i = 1; i <= 52; i++) {
+            weekLabels.push(`SE ${i}`);
+            weekData.push(casesByWeek[i] || 0);
+          }
+
+          chartSemanas = new Chart(elSemanas.getContext('2d'), {
+            type: 'line',
+            data: {
+              labels: weekLabels,
+              datasets: [{
+                label: 'Curva Epidémica S.E.',
+                data: weekData,
+                borderColor: '#064e3b', // Verde oscuro forestal
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: '#064e3b',
+                tension: 0.1,
+                fill: false
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                y: { beginAtZero: true, max: 35, ticks: { stepSize: 5, precision: 0 } },
+                x: {
+                  ticks: {
+                    autoSkip: false,
+                    callback: function(val, index) {
+                      // Solo mostramos los ticks impares para asemejar a image_014888.png (SE 1, SE 3, SE 5...)
+                      return (index % 2 === 0) ? `SE ${index + 1}` : '';
+                    }
+                  },
+                  grid: { display: false }
+                }
+              }
+            }
+          });
+        } catch (err) { console.error("Error al crear chartSemanas:", err); }
       }
 
       const elSexo = document.getElementById('chartSexo');
       if (elSexo) {
-        chartSexo = new Chart(elSexo.getContext('2d'), {
-          type: 'doughnut',
-          data: {
-            labels: ['Femenino', 'Masculino'],
-            datasets: [{ data: [casesBySexo["F"], casesBySexo["M"]], backgroundColor: ['#ec4899', '#0284c7'], borderWidth: 2 }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
-        });
+        try {
+          chartSexo = new Chart(elSexo.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels: ['Femenino', 'Masculino'],
+              datasets: [{ data: [casesBySexo["F"], casesBySexo["M"]], backgroundColor: ['#ec4899', '#0284c7'], borderWidth: 2 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+          });
+        } catch (err) { console.error("Error al crear chartSexo:", err); }
       }
 
       const elGlicemico = document.getElementById('chartGlicemico');
       if (elGlicemico) {
-        chartGlicemico = new Chart(elGlicemico.getContext('2d'), {
-          type: 'doughnut',
-          data: {
-            labels: ['Controlados', 'Descompensados'],
-            datasets: [{ data: [casesByGlicemico["controlado"], casesByGlicemico["descompensado"]], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 2 }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
-        });
+        try {
+          chartGlicemico = new Chart(elGlicemico.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+              labels: ['Controlados', 'Descompensados'],
+              datasets: [{ data: [casesByGlicemico["controlado"], casesByGlicemico["descompensated"]], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 2 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+          });
+        } catch (err) { console.error("Error al crear chartGlicemico:", err); }
       }
 
       const elComorb = document.getElementById('chartComorbilidades');
       if (elComorb) {
-        chartComorbilidades = new Chart(elComorb.getContext('2d'), {
-          type: 'bar',
-          data: {
-            labels: Object.keys(casesByComorbilidad),
-            datasets: [{ data: Object.values(casesByComorbilidad), backgroundColor: '#1e3a8a', borderRadius: 4 }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
-        });
+        try {
+          chartComorbilidades = new Chart(elComorb.getContext('2d'), {
+            type: 'bar',
+            data: {
+              labels: Object.keys(casesByComorbilidad),
+              datasets: [{ data: Object.values(casesByComorbilidad), backgroundColor: '#1e3a8a', borderRadius: 4 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+          });
+        } catch (err) { console.error("Error al crear chartComorbilidades:", err); }
       }
 
       const elTipoDb = document.getElementById('chartTipoDiabetes');
       if (elTipoDb) {
-        chartTipoDiabetes = new Chart(elTipoDb.getContext('2d'), {
-          type: 'pie',
-          data: {
-            labels: ['Tipo 1', 'Tipo 2', 'Gestacional'],
-            datasets: [{ data: [casesByTipoDiabetes["Tipo 1"], casesByTipoDiabetes["Tipo 2"], casesByTipoDiabetes["Gestacional"]], backgroundColor: ['#818cf8', '#0284c7', '#ec4899'], borderWidth: 2 }]
-          },
-          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
-        });
+        try {
+          chartTipoDiabetes = new Chart(elTipoDb.getContext('2d'), {
+            type: 'pie',
+            data: {
+              labels: ['Tipo 1', 'Tipo 2', 'Gestacional'],
+              datasets: [{ data: [casesByTipoDiabetes["Tipo 1"], casesByTipoDiabetes["Tipo 2"], casesByTipoDiabetes["Gestacional"]], backgroundColor: ['#818cf8', '#0284c7', '#ec4899'], borderWidth: 2 }]
+            },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+          });
+        } catch (err) { console.error("Error al crear chartTipoDiabetes:", err); }
       }
     }
 
@@ -2666,20 +2902,14 @@
       const chkMes = document.getElementById('chk_g_mes').checked;
       const chkSemana = document.getElementById('chk_g_semana').checked;
       const chkSexo = document.getElementById('chk_g_sexo').checked;
-      const chkGlicemico = document.getElementById('chk_g_glicemico').checked;
-      const chkComorb = document.getElementById('chk_g_comorbilidades').checked;
-      const chkTipoDB = document.getElementById('chk_g_tipodb').checked;
 
       const c_ano = document.getElementById('container_report_ano'); if (c_ano) c_ano.style.display = chkAno ? 'flex' : 'none';
       const c_mes = document.getElementById('container_report_mes'); if (c_mes) c_mes.style.display = chkMes ? 'flex' : 'none';
       const c_sem = document.getElementById('container_report_semana'); if (c_sem) c_sem.style.display = chkSemana ? 'flex' : 'none';
       const c_sex = document.getElementById('container_report_sexo'); if (c_sex) c_sex.style.display = chkSexo ? 'flex' : 'none';
-      const c_gli = document.getElementById('container_report_glicemico'); if (c_gli) c_gli.style.display = chkGlicemico ? 'flex' : 'none';
-      const c_com = document.getElementById('container_report_comorbilidades'); if (c_com) c_com.style.display = chkComorb ? 'flex' : 'none';
-      const c_tdb = document.getElementById('container_report_tipodb'); if (c_tdb) c_tdb.style.display = chkTipoDB ? 'flex' : 'none';
 
       const gridContainer = document.getElementById('reportChartsGrid');
-      const activeChartsCount = [chkAno, chkMes, chkSemana, chkSexo, chkGlicemico, chkComorb, chkTipoDB].filter(Boolean).length;
+      const activeChartsCount = [chkAno, chkMes, chkSemana, chkSexo].filter(Boolean).length;
 
       if (gridContainer) {
         if (reportLayout === 'grilla') {
@@ -2717,21 +2947,18 @@
       const rep_date = document.getElementById('txt_report_date'); if (rep_date) rep_date.innerText = new Date().toLocaleDateString('es-PE');
       const rep_cases = document.getElementById('txt_report_cases_total'); if (rep_cases) rep_cases.innerText = database.length;
 
-      renderReportCharts(chkAno, chkMes, chkSemana, chkSexo, chkGlicemico, chkComorb, chkTipoDB);
+      renderReportCharts(chkAno, chkMes, chkSemana, chkSexo);
     }
 
-    function renderReportCharts(showAno, showMes, showSemana, showSexo, showGlicemico, showComorb, showTipoDB) {
+    function renderReportCharts(showAno, showMes, showSemana, showSexo) {
       recalculateAnalyticsData();
 
-      const { casesByYear, casesByMonth, casesByWeek, casesBySexo, casesByGlicemico, casesByComorbilidad, casesByTipoDiabetes } = precalculatedMetrics;
+      const { casesByYear, casesByMonth, monthlyDataByYear, casesByWeek, casesBySexo } = precalculatedMetrics;
 
       if (chartAnoRep) chartAnoRep.destroy();
       if (chartMesRep) chartMesRep.destroy();
       if (chartSemanaRep) chartSemanaRep.destroy();
       if (chartSexoRep) chartSexoRep.destroy();
-      if (chartGlicemicoRep) chartGlicemicoRep.destroy();
-      if (chartComorbilidadesRep) chartComorbilidadesRep.destroy();
-      if (chartTipoDiabetesRep) chartTipoDiabetesRep.destroy();
 
       const optionsConfig = {
         responsive: true,
@@ -2748,108 +2975,114 @@
       if (showAno) {
         const el = document.getElementById('chartAnoReport');
         if (el) {
-          chartAnoRep = new Chart(el.getContext('2d'), {
-            type: 'bar',
-            data: {
-              labels: Object.keys(casesByYear),
-              datasets: [{ data: Object.values(casesByYear), backgroundColor: '#1e3a8a', borderRadius: 4 }]
-            },
-            options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 8, weight: 'bold' } } } } }
-          });
+          try {
+            chartAnoRep = new Chart(el.getContext('2d'), {
+              type: 'bar',
+              data: {
+                labels: ['2024', '2025', '2026'],
+                datasets: [{ data: [casesByYear["2024"] || 0, casesByYear["2025"] || 0, casesByYear["2026"] || 0], backgroundColor: ['#e2e8f0', '#10b981', '#064e3b'] }]
+              },
+              options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 8, weight: 'bold' } } } } }
+            });
+          } catch (err) { console.error(err); }
         }
       }
 
       if (showMes) {
         const el = document.getElementById('chartMesReport');
         if (el) {
-          chartMesRep = new Chart(el.getContext('2d'), {
-            type: 'bar',
-            data: {
-              labels: Object.keys(casesByMonth),
-              datasets: [{ data: Object.values(casesByMonth), backgroundColor: '#0d9488', borderRadius: 4 }]
-            },
-            options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 7, weight: 'bold' } } } } }
-          });
+          try {
+            const shortMonths = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            chartMesRep = new Chart(el.getContext('2d'), {
+              type: 'line',
+              data: {
+                labels: shortMonths,
+                datasets: [
+                  {
+                    label: '2025',
+                    data: monthlyDataByYear["2025"],
+                    borderColor: '#0db29a',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2.5,
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 2,
+                    pointBackgroundColor: '#0db29a'
+                  },
+                  {
+                    label: '2026',
+                    data: monthlyDataByYear["2026"],
+                    borderColor: '#ff4a4a',
+                    backgroundColor: 'transparent',
+                    borderWidth: 2.5,
+                    tension: 0.4,
+                    fill: false,
+                    pointRadius: 2,
+                    pointBackgroundColor: '#ff4a4a'
+                  }
+                ]
+              },
+              options: {
+                ...optionsConfig,
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: { boxWidth: 8, font: { size: 7.5, weight: 'bold' }, color: '#000000' }
+                  }
+                },
+                scales: {
+                  y: { beginAtZero: true, max: 70, ticks: { precision: 0, font: { size: 7.5 } } },
+                  x: { ticks: { font: { size: 7.5, weight: 'bold' } } }
+                }
+              }
+            });
+          } catch (err) { console.error(err); }
         }
       }
 
       if (showSemana) {
-        const sortedWeeks = Object.keys(casesByWeek).sort((a,b) => a-b);
-        const weekLabels = sortedWeeks.map(w => `S${w}`);
-        const weekData = sortedWeeks.map(w => casesByWeek[w]);
+        const weekLabels = [];
+        const weekData = [];
+        for (let i = 1; i <= 52; i++) {
+          weekLabels.push(`SE ${i}`);
+          weekData.push(casesByWeek[i] || 0);
+        }
 
         const el = document.getElementById('chartSemanaReport');
         if (el) {
-          chartSemanaRep = new Chart(el.getContext('2d'), {
-            type: 'line',
-            data: {
-              labels: weekLabels.length > 0 ? weekLabels : ['S1'],
-              datasets: [{ data: weekData.length > 0 ? weekData : [0], borderColor: '#7c3aed', backgroundColor: 'rgba(124, 58, 237, 0.05)', fill: true, tension: 0.2 }]
-            },
-            options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { font: { size: 7 } } } } }
-          });
+          try {
+            chartSemanaRep = new Chart(el.getContext('2d'), {
+              type: 'line',
+              data: {
+                labels: weekLabels,
+                datasets: [{ data: weekData, borderColor: '#064e3b', backgroundColor: 'transparent', borderWidth: 1.5, pointRadius: 1 }]
+              },
+              options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { ticks: { autoSkip: true, maxTicksLimit: 12, font: { size: 7 } } } } }
+            });
+          } catch (err) { console.error(err); }
         }
       }
 
       if (showSexo) {
         const el = document.getElementById('chartSexoReport');
         if (el) {
-          chartSexoRep = new Chart(el.getContext('2d'), {
-            type: 'pie',
-            data: {
-              labels: ['Fem.', 'Masc.'],
-              datasets: [{ data: [casesBySexo["F"], casesBySexo["M"]], backgroundColor: ['#ec4899', '#0284c7'], borderWidth: 1 }]
-            },
-            options: optionsConfig
-          });
-        }
-      }
-
-      if (showGlicemico) {
-        const el = document.getElementById('chartGlicemicoReport');
-        if (el) {
-          chartGlicemicoRep = new Chart(el.getContext('2d'), {
-            type: 'pie',
-            data: {
-              labels: ['Controlados', 'Descomp.'],
-              datasets: [{ data: [casesByGlicemico["controlado"], casesByGlicemico["descompensated"] || casesByGlicemico["descompensado"]], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 1 }]
-            },
-            options: optionsConfig
-          });
-        }
-      }
-
-      if (showComorb) {
-        const el = document.getElementById('chartComorbilidadesReport');
-        if (el) {
-          chartComorbilidadesRep = new Chart(el.getContext('2d'), {
-            type: 'bar',
-            data: {
-              labels: Object.keys(casesByComorbilidad),
-              datasets: [{ data: Object.values(casesByComorbilidad), backgroundColor: '#1e3a8a', borderRadius: 4 }]
-            },
-            options: { ...optionsConfig, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0, font: { size: 8 } } }, x: { font: { size: 8, weight: 'bold' } } } }
-          });
-        }
-      }
-
-      if (showTipoDB) {
-        const el = document.getElementById('chartTipoDiabetesReport');
-        if (el) {
-          chartTipoDiabetesRep = new Chart(el.getContext('2d'), {
-            type: 'pie',
-            data: {
-              labels: ['Tipo 1', 'Tipo 2', 'Gestacional'],
-              datasets: [{ data: [casesByTipoDiabetes["Tipo 1"], casesByTipoDiabetes["Tipo 2"], casesByTipoDiabetes["Gestacional"]], backgroundColor: ['#818cf8', '#0284c7', '#ec4899'], borderWidth: 1 }]
-            },
-            options: optionsConfig
-          });
+          try {
+            chartSexoRep = new Chart(el.getContext('2d'), {
+              type: 'pie',
+              data: {
+                labels: ['Fem.', 'Masc.'],
+                datasets: [{ data: [casesBySexo["F"], casesBySexo["M"]], backgroundColor: ['#ec4899', '#0284c7'], borderWidth: 1 }]
+              },
+              options: optionsConfig
+            });
+          } catch (err) { console.error(err); }
         }
       }
     }
 
     function selectAllReportCharts() {
-      ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'].forEach(id => {
+      ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.checked = true;
       });
@@ -2857,7 +3090,7 @@
     }
 
     function clearReportSelection() {
-      ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo', 'chk_g_glicemico', 'chk_g_comorbilidades', 'chk_g_tipodb'].forEach(id => {
+      ['chk_g_ano', 'chk_g_mes', 'chk_g_semana', 'chk_g_sexo'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.checked = false;
       });
@@ -2885,7 +3118,6 @@
       const atencionFiles = [];
       const labFiles = [];
       
-      // Clasificación de archivos en lote
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const type = detectFileType(file);
@@ -2896,12 +3128,10 @@
         }
       }
 
-      // Procesar atenciones primero para estructurar la cola de folios
       if (atencionFiles.length > 0) {
         await simulatePDFExtraction(atencionFiles);
       }
 
-      // Procesar todos los archivos de laboratorio recibidos en lote
       if (labFiles.length > 0) {
         await processMultipleLabFiles(labFiles);
       }
@@ -2925,12 +3155,11 @@
           statusText.innerText = `Analizando resultado (${i+1}/${files.length}): ${file.name}...`;
         }
 
-        // Simular retraso de lectura OCR del archivo
         await new Promise(resolve => setTimeout(resolve, 600));
 
         let matchedPatient = null;
         
-        // Intento de cruce por números de H.C. o DNI contenidos en el nombre de archivo
+        // Buscar coincidencia por Historia Clínica o DNI en el nombre del archivo
         const fileNumbers = fileName.match(/\d+/g);
         if (fileNumbers && fileNumbers.length > 0) {
           for (let num of fileNumbers) {
@@ -2939,7 +3168,7 @@
           }
         }
         
-        // Intento de cruce por nombres/apellidos contenidos en el nombre de archivo
+        // Si no se encuentra, buscar por coincidencia parcial de nombres/apellidos
         if (!matchedPatient) {
           matchedPatient = simulatorDatabase.find(p => {
             const patNorm = p.paterno.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -2949,7 +3178,6 @@
           });
         }
 
-        // Si se encuentra coincidencia, se acoplan los resultados legítimos de laboratorio
         if (matchedPatient) {
           const realLabData = legitimateLabDatabase[matchedPatient.hc] || generateClinicalLabProfile(matchedPatient);
 
@@ -2968,7 +3196,7 @@
 
           processedCount++;
         } else {
-          // Si no hay correspondencia directa de archivo, acoplamos al paciente activo actual
+          // Fallback: Acoplar al paciente actualmente seleccionado en el simulador si no hay coincidencia directa
           if (activeSimulatorId) {
             const activePatient = simulatorDatabase.find(p => p.id === activeSimulatorId);
             if (activePatient && !activePatient.labLinked) {
@@ -3133,7 +3361,6 @@
       });
 
       function completeExtraction() {
-        // Plantillas base de datos reales
         const baseTemplates = [
           { day: "01", paterno: "MURO", materno: "AREVALO", nombres: "CECILIA", dni: "80518117", hc: "87921", sexo: "F", edad: "46", db: "t2", tto: "Metformina 1000 mg VO al día.", peso: "60.5", talla: "1.50", pa_sis: "110", pa_dia: "62" },
           { day: "12", paterno: "DAMIAN", materno: "SANTA MARIA", nombres: "ANA ISABEL", dni: "06691190", hc: "321080", sexo: "F", edad: "59", db: "t2", tto: "Metformina 850 mg + Losartán 50 mg VO diario.", peso: "67.0", talla: "1.56", pa_sis: "162", pa_dia: "90" }
@@ -3205,7 +3432,6 @@
             pa_sis: mockData.pa_sis,
             pa_dia: mockData.pa_dia,
             
-            // Inicializados vacíos por defecto de auditoría esperando su examen de laboratorio competente
             glicemia: "(--)",
             glic_post: "(--)",
             hba1c: "(--)",
@@ -3347,15 +3573,15 @@
                     <span class="font-extrabold uppercase text-amber-500 flex items-center gap-1 text-[8.5px]">
                       <i class="fa-solid fa-file-medical"></i> FOLIO ${String(idx + 1).padStart(2, '0')} (${p.date.split('/')[0]})
                     </span>
-                    <span class="font-extrabold px-1 rounded text-[7.5px] uppercase tracking-wider border ${p.labLinked ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}">
-                      ${p.labLinked ? 'Lab: Vinculado ✓' : 'Lab: Pendiente'}
+                    <span class="font-extrabold px-1 rounded text-[7.5px] uppercase tracking-wider border ${p.labLinked && p.glicemia !== '(--)' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}">
+                      ${p.labLinked && p.glicemia !== '(--)' ? 'Lab: Vinculado ✓' : 'Lab: Pendiente'}
                     </span>
                   </div>
                   <p class="font-semibold text-slate-200 uppercase text-[9.5px]">${p.paterno} ${p.materno}, ${p.nombres}</p>
                   <div class="flex justify-between text-[8px] text-slate-400 mt-1">
                     <span>H.C: ${p.hc}</span>
                     <span>Glic: <strong>${p.glicemia}</strong></span>
-                    <span>HbA1c: <strong>${p.hba1c}${p.labLinked ? '%' : ''}</strong></span>
+                    <span>HbA1c: <strong>${p.hba1c}${p.labLinked && p.glicemia !== '(--)' ? '%' : ''}</strong></span>
                   </div>
                 `;
                 patientListContainer.appendChild(card);
@@ -3556,6 +3782,7 @@
       const dropZoneSide = document.getElementById('dropZoneSide');
       if (!dropZoneSide) return;
 
+      // Prevent defaults globales para evitar redirecciones del navegador
       window.addEventListener("dragover", function(e) {
         e.preventDefault();
       }, false);
